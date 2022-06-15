@@ -1,0 +1,24 @@
+version: '3.1'
+services:
+    frontend:
+        image: hbd-demo-frontend:latest
+        build:
+            context: ./frontend/
+            dockerfile: Dockerfile
+        command: sh -c "npm install && quasar dev"
+        volumes:
+            - ./frontend/:/usr/src/app/
+        container_name: hbd-demo-frontend
+        ports:
+            - 8082:8080
+    backend:
+        build:
+            context: ./backend/
+            dockerfile: Dockerfile
+        image: hbd-demo-backend:latest
+        container_name: hbd-demo-backend
+        volumes:
+            - ./backend/:/workspace/
+        command: sh -c "flask run -p 5003 --host=0.0.0.0"
+        ports:
+            - 61113:5003

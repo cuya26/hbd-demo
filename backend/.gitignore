@@ -1,0 +1,7 @@
+# Backend gitignore
+__pycache__/
+venv/
+*.ckpt
+
+# Folders
+.vscode

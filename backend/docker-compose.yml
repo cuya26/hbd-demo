@@ -1,0 +1,22 @@
+version: '3.1'
+services:
+  backend-gpu:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    image: hbd-demo-backend-gpu:latest
+    container_name: hbd-demo-backend-gpu
+    volumes:
+      - ./:/workspace/
+    command: sh -c "flask run -p 5003 --host=0.0.0.0"
+    environment:
+    - PYTHONUNBUFFERED=1
+    ports:
+      - 61114:5003
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

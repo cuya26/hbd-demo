@@ -1,0 +1,13 @@
+version: '3.1'
+services:
+    frontend:
+        image: hbd-demo-frontend:latest
+        build:
+            context: ./
+            dockerfile: Dockerfile
+        command: sh -c "npm install && quasar dev"
+        volumes:
+            - ./:/usr/src/app/
+        container_name: hdb-demo-frontend
+        ports:
+            - 8080:8080
