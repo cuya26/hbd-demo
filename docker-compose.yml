@@ -10,7 +10,7 @@ services:
             - ./frontend/:/usr/src/app/
         container_name: hbd-demo-frontend
         ports:
-            - 8080:8080
+            - 51118:51118
     backend:
         build:
             context: ./backend/
@@ -23,4 +23,11 @@ services:
         environment:
             - PYTHONUNBUFFERED=1
         ports:
-            - 61113:5003
+            - 51119:5003
+        deploy:
+            resources:
+                reservations:
+                    devices:
+                        - driver: nvidia
+                          count: 1
+                          capabilities: [gpu]
