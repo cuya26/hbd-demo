@@ -1,9 +1,9 @@
-# Backend gitignore
 __pycache__/
 venv/
 *.ckpt
 *.json
-*.zip
 data/checkpoints/*/
+*.zip
+*.tar.gz
 # Folders
 .vscode
