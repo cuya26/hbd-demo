@@ -17,7 +17,7 @@ def discharge_letters():
             with open('data/discharge_letters.json') as f:
                 return jsonify(json.load(f))
         else:
-            return jsonify([])
+            return jsonify({})
 
 @app.route('/extract_data_table', methods=['POST'])
 def extract_data_table():

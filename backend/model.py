@@ -1,17 +1,38 @@
-from bs4 import ResultSet
+from dis import dis
+from googletrans import Translator
+from pyparsing import null_debug_action
 from simplet5 import SimpleT5
 from os import path
 import torch
-from transformers import AutoTokenizer
+from transformers import AutoTokenizer, pipeline, LongformerForSequenceClassification, BertForSequenceClassification, AutoModelForSequenceClassification
+import spacy
+nlp = spacy.load("en_core_sci_md")
 
 class Predictor:
     def __init__(self) -> None:
-        self.model = SimpleT5()
-        checkpoint_name = 'simplet5-epoch-6-train-loss-0.2724-val-loss-0.1477'
-        self.model.load_model("t5","data/checkpoints/"+checkpoint_name, use_gpu=False)
-        self.tokenizer = AutoTokenizer.from_pretrained('t5-large')
+        # self.model = SimpleT5()
+        # checkpoint_name = 'simplet5-epoch-6-train-loss-0.2724-val-loss-0.1477'
+        # self.model.load_model("t5","data/checkpoints/"+checkpoint_name, use_gpu=True)
+        # self.tokenizer = AutoTokenizer.from_pretrained('t5-large')
+        self.translator = Translator()
+        self.model = None
+        self.tokenizer = None
+
+        self.ctx_cats = {}
+        self.ctx_cats['Action'] = {'Inzio':0, 'Fine':1, 'Incremento':2, 'Decremento':3, 'Altri cambiamenti':4, 'Unica dose':5, 'Sconociuto':6}
+        self.ctx_cats['Negation'] = {'Si':0, 'No':1}
+        self.ctx_cats['Temporality'] = {'Passato':0,'Presente':1,'Futuro':2,'Sconosciuto':3}
+        self.ctx_cats['Certainty'] = {'Certo':0, 'Ipotetico':1, 'Condizionale':2, 'Sconosciuto':3}
+        self.ctx_cats['Actor'] = {'Medico':0, 'Paziente':1, 'Sconosciuto':2}
+        self.ctx_cats['disposition-type'] = {'Disposizione':0,'Nessuna Disposizione':1,'Indeterminato':2}
 
     def inference(self, input_text):
+        self.model = SimpleT5()
+        checkpoint_name = 'simplet5-epoch-6-train-loss-0.2724-val-loss-0.1477'
+        self.model.load_model("t5","data/checkpoints/"+checkpoint_name, use_gpu=True)
+        self.tokenizer = AutoTokenizer.from_pretrained('t5-large')
+
+        input_text = self.translator.translate(input_text, src='it', dest='en').text
         text = input_text.replace('\t', ' ').replace('\n', ' ')
         text_filtered = ''
         for char_index, char in enumerate(text):
@@ -46,6 +67,7 @@ class Predictor:
         entity_list = []
         for text_slice in text_slices:
             print('results for the slice')
+            # text_slice = self.translator.translate(text_slice, src='it', dest='en').text
             results = self.model.predict(
                 attribute + text_slice,
                 num_beams=2,
@@ -61,11 +83,37 @@ class Predictor:
             # print('results:', results)
         print('entity_list:', entity_list)
         entity_list = list(set(entity_list))
-        entity_list = [entity.lower().strip() for entity in entity_list if entity.strip() != '']
-        
+        entity_list = [
+            entity.lower().strip() for entity in entity_list\
+            if entity.strip() != ''
+        ]
 
-        results_with_pos =[]
-        for entity in entity_list:   
+        def slice_txt(text, value): #truncate centered on drug name for long sentences
+            try:
+                if len(text) > 512:
+                    start = max(0, text.index(value.lower())-256)
+                    return text[start:start+512]
+                return text
+            except ValueError:
+                print(text, '\n', value)
+
+        final_results = []
+        doc = nlp(input_text)
+        del self.model
+        del self.tokenizer
+
+        self.model = BertForSequenceClassification.from_pretrained('data/checkpoints/model_trained_disposition-type/')
+        self.tokenizer = AutoTokenizer.from_pretrained('emilyalsentzer/Bio_ClinicalBERT')
+        
+        self.model.eval()
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.model.to(device)
+        inv_map = {v: k for k, v in self.ctx_cats['disposition-type'].items()}
+        generator = pipeline(task="text-classification", model=self.model, tokenizer=self.tokenizer, device=0) #device=0 per gpu, -1 per cpu
+        def get_label(text):
+            return inv_map[int(generator(text)[0]['label'][-1])]
+        # translated_text = self.translator.translate(text_filtered, src='it', dest='en').text
+        for entity in entity_list:
             for punctuation in [',', '.', ' ', '\n', '\t', ':', ';', '(', '[', '{']:
                 search_start = 0
                 # if entity == 'ativan':
@@ -74,9 +122,46 @@ class Predictor:
                     start = input_text.lower().find(punctuation + entity, search_start) + 1
                     end = start + len(entity)
                     search_start = end
-                    pos = [start, end]
-                    results_with_pos.append([entity, pos])
-        print('results with pos', results_with_pos)
-        filtered_entities, pos_entities = zip(*results_with_pos)
-        # print(entity_list)
-        return filtered_entities
+                    sentence = doc.char_span(start, end, alignment_mode='expand').sent.text
+                    sentence = ''.join(sentence).replace('\n', ' ').replace('\t', ' ').replace('\u2006', ' ') # I replace the new lines and the tabs with spaces
+                    text_filtered = ''
+                    for char_index, char in enumerate(sentence):
+                        if char_index < (len(sentence)-1):
+                            if not(sentence[char_index + 1] == ' ' and char == ' '):
+                                text_filtered += char
+                    sentence = text_filtered.lower() # uncase the text
+                    sentence = slice_txt(sentence, entity)
+                    sentence = entity + ' : ' + sentence
+                    # sentence = self.translator.translate(sentence, src='it', dest='en').text
+                    disposition = get_label(sentence)
+                    final_results.append(dict(disposition=disposition, sentence=sentence, entity=entity, pos=dict(start=start, end=end)))
+                
+
+        # print('try')
+        # self.model = BertForSequenceClassification.from_pretrained('data/checkpoints/Bio_ClinicalBERT_model_trained_Action/')
+        # print('it works')
+        del self.model
+        contexts = [
+            'Action',
+            'Actor',
+            'Temporality',
+            'Certainty',
+            'Negation'
+        ]
+        for context in contexts:
+            self.model = BertForSequenceClassification.from_pretrained(f'data/checkpoints/Bio_ClinicalBERT_model_trained_{context}/')
+            self.model.eval()
+            # self.model.to(device)
+            inv_map = {v: k for k, v in self.ctx_cats[context].items()}
+            generator = pipeline(task="text-classification", model=self.model, tokenizer=self.tokenizer, device=0) #device=0 per gpu, -1 per cpu
+            def get_label(text):
+                return inv_map[int(generator(text)[0]['label'][-1])]
+
+            for result_index, single_result in enumerate(final_results):
+                if single_result['disposition'] == 'Disposizione':
+                    # print(single_result)
+                    final_results[result_index][context] = get_label(single_result['sentence'])
+
+        del self.model
+        del self.tokenizer
+        return final_results
