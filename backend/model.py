@@ -3,9 +3,20 @@ from pyparsing import null_debug_action
 from simplet5 import SimpleT5
 from os import path
 import torch
-from transformers import AutoTokenizer, pipeline, LongformerForSequenceClassification, BertForSequenceClassification, AutoModelForSequenceClassification
+from transformers import AutoTokenizer, QuestionAnsweringPipeline, pipeline, LongformerForSequenceClassification, BertForSequenceClassification, AutoModelForSequenceClassification
 import spacy
+from transformers import AutoTokenizer, AutoModelForQuestionAnswering, pipeline
 nlp = spacy.load("en_core_sci_md")
+
+def question_and_answering_pipeline(input_text, question):
+    model_checkpoint = "deepset/xlm-roberta-large-squad2"
+    nlp = pipeline('question-answering', model=model_checkpoint, tokenizer=model_checkpoint)
+    qa_input = {
+        'question': input_text,
+        'context': question
+    }
+    answer = nlp(qa_input)
+    return answer
 
 class Predictor:
     def __init__(self) -> None:

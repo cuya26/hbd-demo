@@ -71,7 +71,7 @@
             <q-card-section v-if="modelName==='question answering'" class="q-pa-md">
               <div class="q-pb-md">
                 <div class="q-py-sm text-primary">Question:</div>
-                <q-input @keyup.enter="answer='The answer is 42'" outlined v-model="question" placeholder="Write a question and press enter"/>
+                <q-input @keyup.enter="answerQuestion()" outlined v-model="question" placeholder="Write a question and press enter"/>
               </div>
               <!-- <div class="q-pa-md row justify-evenly">
                 <q-btn rounded color="primary" label="Compute" :disable="dischargeLetterName===null"/>
@@ -158,7 +158,10 @@ export default defineComponent({
     answerQuestion () {
       api.post(
         '/answer_question',
-        { input_text: this.letterDict[this.dischargeLetterName]}
+        {
+          input_text: this.letterDict[this.dischargeLetterName],
+          question: this.question
+        },
       ).then( (response) => {
         console.log(response.data)
         this.answer = response.data
