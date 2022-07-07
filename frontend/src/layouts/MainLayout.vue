@@ -1,13 +1,22 @@
 <template>
   <q-layout view="lHh Lpr lFf">
     <q-header elevated>
-        <q-toolbar-title class="column" style="text-align:center">
+        <!-- <img src="quasar-logo-vertical.svg"/> -->
+        <q-toolbar-title class="row justify-between" style="text-align:center">
+        <div class="column justify-evenly">
+          <img src="../assets/XAI_lab_logo.png" style="width: 210px;"/>
+        </div>
+        <div>
           <div>
             HBD-Demo
           </div>
           <div style="font-size:small;">
             Health Big Data Project, Working Group 1: Text Analysis
           </div>
+        </div>
+        <div class="column justify-evenly">
+          <img src="../assets/Logo_polimi.png" style="width: 200px;"/>
+        </div>
         </q-toolbar-title>
     </q-header>
 
