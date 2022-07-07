@@ -12,11 +12,11 @@ def question_and_answering_pipeline(input_text, question):
     model_checkpoint = "deepset/xlm-roberta-large-squad2"
     nlp = pipeline('question-answering', model=model_checkpoint, tokenizer=model_checkpoint)
     qa_input = {
-        'question': input_text,
-        'context': question
+        'question': question,
+        'context': input_text,
     }
     answer = nlp(qa_input)
-    return answer
+    return answer["answer"]
 
 class Predictor:
     def __init__(self) -> None:
