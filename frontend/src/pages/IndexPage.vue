@@ -1,6 +1,6 @@
 <template>
   <q-page padding class="row items-strech">
-    <div class="col-12 column q-pt-sm no-wrap">
+    <div class="col-12 column no-wrap">
       <div class="row no-wrap justify-between" style="height: 100%">
         <div class="column no-wrap col-7">
           <div class="q-pb-md">
@@ -8,7 +8,7 @@
               <q-select style="width: 300px" dense outlined v-model="dischargeLetterName" :options="letterNames" label="Choose a Letter" />
             </div>
           </div>
-          <q-card class="col-7 items-strech" style="height: 610px">
+          <q-card class="col-7 items-strech" style="height: 590px">
             <div class="col-12 column no-wrap" style="height: 100%">
               <q-card-section class="row justify-evenly">
                 <div class="text-h6 text-primary">Discharge Letter</div>
@@ -35,7 +35,7 @@
             </div>
           </div>
 
-          <q-card class="col-4" style="height: 610px">
+          <q-card class="col-4" style="height: 590px">
             <q-card-section class="q-pb-none row justify-evenly" >
               <div class="text-h6 text-primary">Model Output</div>
             </q-card-section>
