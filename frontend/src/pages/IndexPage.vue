@@ -2,27 +2,36 @@
   <q-page padding class="row items-strech">
     <div class="col-12 column no-wrap">
       <div class="row no-wrap justify-between" style="height: 100%">
-        <div class="column no-wrap col-7">
+        <div class="column no-wrap" style="width: 55%">
           <div class="q-pb-md">
             <div class="row justify-evenly">
-              <q-select style="width: 300px" dense outlined v-model="dischargeLetterName" :options="letterNames" label="Choose a Letter" />
+              <q-select style="width: 300px" dense outlined v-model="dischargeLetterName" :options="letterNames" label="Choose the input document" />
             </div>
           </div>
-          <q-card class="col-7 items-strech" style="height: 590px">
+          <q-card class="items-strech" style="height: 590px">
             <div class="col-12 column no-wrap" style="height: 100%">
               <q-card-section class="row justify-evenly">
-                <div class="text-h6 text-primary">Discharge Letter</div>
+                <div class="text-h6 text-primary">Input Text</div>
               </q-card-section>
-              <q-card-section style="max-height: 80%">
+              <q-card-section style="max-height: 90%">
                 <div style="overflow: auto; flex-grow: 1;max-height: 100%">
-                  <div class="text-grey-7" style="white-space: pre-line">{{dischargeLetterName == null ? '' : letterDict[dischargeLetterName]}}</div>
+                  <q-input
+                  outlined
+                  class="text-grey-7"
+                  type="textarea"
+                  input-style="min-height: 490px"
+                  style="white-space: pre-line;"
+                  v-model="letterDict[dischargeLetterName]"
+                  />
+                  <!-- <q-input outlined v-model="text" :dense="dense" /> -->
+                  <!-- <div class="text-grey-7" style="white-space: pre-line">{{dischargeLetterName == null ? '' : letterDict[dischargeLetterName]}}</div> -->
                 </div>
               </q-card-section>
             </div>
           </q-card>
         </div>
 
-        <div class="column no-wrap col-4">
+        <div class="column no-wrap" style="width: 42%">
           <div class="q-pb-md">
             <div class="row justify-evenly">
               <q-select
@@ -35,7 +44,7 @@
             </div>
           </div>
 
-          <q-card class="col-4" style="height: 590px">
+          <q-card class="" style="height: 590px">
             <q-card-section class="q-pb-none row justify-evenly" >
               <div class="text-h6 text-primary">Model Output</div>
             </q-card-section>
@@ -62,11 +71,11 @@
             <q-card-section v-if="modelName==='question answering'" class="q-pa-md">
               <div class="q-pb-md">
                 <div class="q-py-sm text-primary">Question:</div>
-                <q-input outlined v-model="question" placeholder="Write a question"/>
+                <q-input @keyup.enter="answer='The answer is 42'" outlined v-model="question" placeholder="Write a question and press enter"/>
               </div>
-              <div class="q-pa-md row justify-evenly">
+              <!-- <div class="q-pa-md row justify-evenly">
                 <q-btn rounded color="primary" label="Compute" :disable="dischargeLetterName===null"/>
-              </div>
+              </div> -->
               <div>
                 <div class="q-py-sm text-primary">Answer:</div>
                 <div class="q-px-sm q-py-md text-grey-9"  style="border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 56px">
@@ -84,7 +93,7 @@
 <style lang="sass">
 .my-sticky-virtscroll-table
   /* height or max-height is important */
-  height: 470px
+  height: 455px
 
   .q-table__top,
   .q-table__bottom,
