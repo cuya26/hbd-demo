@@ -16,14 +16,34 @@ def question_and_answering_pipeline(input_text, question):
     input_text = re.sub("\t+|\t ", ' ', input_text)
     input_text = re.sub(" +", ' ', input_text)
     input_text = input_text.lower()
-    model_checkpoint = "deepset/xlm-roberta-large-squad2"
-    nlp = pipeline('question-answering', model=model_checkpoint, tokenizer=model_checkpoint)
-    qa_input = {
-        'question': question,
-        'context': input_text,
-    }
-    answer = nlp(qa_input)
-    return answer["answer"]
+
+    model_name = "deepset/xlm-roberta-large-squad2"
+    nlp = pipeline('question-answering', model=model_name, tokenizer=model_name)
+
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    input_text_ids = tokenizer.encode(
+        input_text,
+        return_tensors='pt',
+        add_special_tokens=True
+    )
+    text_slices = []
+    start_slice = 0
+    max_lenght = 500
+    print('slicing...')
+    for end_slice in range(max_lenght, input_text_ids.shape[1], max_lenght):
+        text_slices.append(tokenizer.decode(input_text_ids[0, start_slice:end_slice], skip_special_tokens=True))
+        start_slice = end_slice
+    text_slices.append(tokenizer.decode(input_text_ids[0,start_slice:], skip_special_tokens=True))
+    print('end slicing')
+
+    answers = []
+    for text_slice in text_slices:
+        qa_input = {
+            'question': question,
+            'context': text_slice,
+        }
+        answers.append(nlp(qa_input)["answer"])
+    return '\t'.join(answers)
 
 class Predictor:
     def __init__(self) -> None:
