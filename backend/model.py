@@ -6,9 +6,16 @@ import torch
 from transformers import AutoTokenizer, QuestionAnsweringPipeline, pipeline, LongformerForSequenceClassification, BertForSequenceClassification, AutoModelForSequenceClassification
 import spacy
 from transformers import AutoTokenizer, AutoModelForQuestionAnswering, pipeline
+import re
 nlp = spacy.load("en_core_sci_md")
 
 def question_and_answering_pipeline(input_text, question):
+    # input preprocessing
+    input_text = re.sub(" +", ' ', input_text)
+    input_text = re.sub("\s*\n\s*(\s*\n\s*)+", '\n\n', input_text)
+    input_text = re.sub("\t+|\t ", ' ', input_text)
+    input_text = re.sub(" +", ' ', input_text)
+    input_text = input_text.lower()
     model_checkpoint = "deepset/xlm-roberta-large-squad2"
     nlp = pipeline('question-answering', model=model_checkpoint, tokenizer=model_checkpoint)
     qa_input = {
