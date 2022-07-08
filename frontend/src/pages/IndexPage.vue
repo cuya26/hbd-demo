@@ -70,18 +70,36 @@
               />
             </q-card-section>
             <q-card-section v-if="modelName==='question answering'" class="q-pa-md">
-              <div class="q-pb-md">
-                <div class="q-py-sm text-primary">Question:</div>
-                <q-input @keyup.enter="answerQuestion()" outlined v-model="question" placeholder="Write a question and press enter"/>
+              <div class="row justify-evenly">
+                <q-radio dense v-model="questionType" val="free" label="Free question" />
+                <q-radio dense v-model="questionType" val="default" label="Default questions" />
               </div>
-              <!-- <div class="q-pa-md row justify-evenly">
-                <q-btn rounded color="primary" label="Compute" :disable="dischargeLetterName===null"/>
-              </div> -->
-              <div>
-                <div class="q-py-sm text-primary">Answer:</div>
-                <div class="q-px-sm q-py-md text-grey-9"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 90px">
-                  <div style="">
-                    {{answer}}
+              <div v-if="questionType==='default'">
+                <div class="q-pb-md"></div>
+                  <div class="row justify-evenly"><q-btn rounded color="primary" dense style="width: 80px" label="compute"></q-btn></div>
+                  <div v-for="element in defaultQuestionsAnswers" :key="element">
+                    <div class="q-py-sm text-primary">{{element["question"] + ":"}}</div>
+                    <div class="q-px-sm q-py-md text-grey-9"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 40px">
+                      <div style="">
+                        {{element["answer"]}}
+                      </div>
+                    </div>
+                </div>
+              </div>
+              <div v-if="questionType==='free'">
+                <div class="q-pb-md">
+                  <div class="q-py-sm text-primary">Question:</div>
+                  <q-input @keyup.enter="answerQuestion()" outlined v-model="question" placeholder="Write a question and press enter"/>
+                </div>
+                <!-- <div class="q-pa-md row justify-evenly">
+                  <q-btn rounded color="primary" label="Compute" :disable="dischargeLetterName===null"/>
+                </div> -->
+                <div>
+                  <div class="q-py-sm text-primary">Answer:</div>
+                  <div class="q-px-sm q-py-md text-grey-9"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 90px">
+                    <div style="">
+                      {{answer}}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -145,7 +163,17 @@ export default defineComponent({
       ]),
       columns,
       question: ref(null),
-      answer: ref(null)
+      answer: ref(null),
+      questionType: ref('default'),
+      defaultQuestionsAnswers: ref(
+        [
+          {question:"Qual è la condizione patologica?", answer: null},
+          {question:"Qual è l\'età?", answer: null},
+          {question:"Qual è il sesso?", answer: null},
+          {question:"Quali farmaci assume attualmente?", answer: null},
+          {question:"Quali sono le procedure chirurgiche applicate?", answer: null}
+        ]
+      )
     }
   },
   methods : {
@@ -169,8 +197,19 @@ export default defineComponent({
         console.log(response.data)
         this.answer = response.data
       })
+    },
+    answerQuestionList () {
+      api.post(
+        '/answer_question_list',
+        {
+          input_text: this.letterDict[this.dischargeLetterName],
+          question_answer_list: this.defaultQuestionsAnswers
+        },
+      ).then( (response) => {
+        console.log(response.data)
+        this.defaultQuestionsAnswers = response.data
+      })
     }
-
   },
   created () {
     api.get(

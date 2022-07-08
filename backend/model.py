@@ -43,10 +43,15 @@ def question_and_answering_pipeline(input_text, question):
             'context': text_slice,
         }
         answer_dict = nlp(qa_input)
-        if answer_dict > 0.1:
-            answers.append(f'Answer text slice {index + 1}: {answer_dict["answer"]}, score: {"{:.2f}".format(answer_dict["score"]*100)}%')
+        if answer_dict["score"] > 0.2:
+            # answers.append(f'Answer text slice {index + 1}: {answer_dict["answer"]}, score: {"{:.2f}".format(answer_dict["score"]*100)}%')
             answers.append(f'Answer text slice {index + 1}: {answer_dict["answer"]}')
-    return '\n'.join(answers)
+    if len(answers) == 1:
+        return answers[0].split(': ')[1]
+    elif len(answers)==0:
+        return "L'informazione non è presente nel testo"
+    else:
+        return '\n'.join(answers)
 
 class Predictor:
     def __init__(self) -> None:
