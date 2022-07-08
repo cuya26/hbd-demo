@@ -17,6 +17,7 @@
                 <div style="overflow: auto; flex-grow: 1;max-height: 100%">
                   <q-input
                   outlined
+                  placeholder="Insert text or choose a discharge letter"
                   class="text-grey-7"
                   type="textarea"
                   input-style="min-height: 490px"
@@ -78,8 +79,10 @@
               </div> -->
               <div>
                 <div class="q-py-sm text-primary">Answer:</div>
-                <div class="q-px-sm q-py-md text-grey-9"  style="white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 56px">
-                  {{answer}}
+                <div class="q-px-sm q-py-md text-grey-9"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 90px">
+                  <div style="">
+                    {{answer}}
+                  </div>
                 </div>
               </div>
             </q-card-section>
