@@ -9,7 +9,7 @@ from transformers import AutoTokenizer, AutoModelForQuestionAnswering, pipeline
 import re
 nlp = spacy.load("en_core_sci_md")
 
-def question_and_answering_pipeline(input_text, question):
+def question_and_answering_pipeline(input_text, question_list):
     # input preprocessing
     input_text = re.sub(" +", ' ', input_text)
     input_text = re.sub("\s*\n\s*(\s*\n\s*)+", '\n\n', input_text)
@@ -28,30 +28,34 @@ def question_and_answering_pipeline(input_text, question):
     )
     text_slices = []
     start_slice = 0
-    max_lenght = 512
-    print('slicing...')
+    max_lenght = 500
+    # print('slicing...')
     for end_slice in range(max_lenght, input_text_ids.shape[1], max_lenght):
         text_slices.append(tokenizer.decode(input_text_ids[0, start_slice:end_slice], skip_special_tokens=True))
         start_slice = end_slice
     text_slices.append(tokenizer.decode(input_text_ids[0,start_slice:], skip_special_tokens=True))
-    print('end slicing')
-
-    answers = []
-    for index, text_slice in enumerate(text_slices):
-        qa_input = {
-            'question': question,
-            'context': text_slice,
-        }
-        answer_dict = nlp(qa_input)
-        if answer_dict["score"] > 0.2:
-            # answers.append(f'Answer text slice {index + 1}: {answer_dict["answer"]}, score: {"{:.2f}".format(answer_dict["score"]*100)}%')
-            answers.append(f'Answer text slice {index + 1}: {answer_dict["answer"]}')
-    if len(answers) == 1:
-        return answers[0].split(': ')[1]
-    elif len(answers)==0:
-        return "L'informazione non è presente nel testo"
-    else:
-        return '\n'.join(answers)
+    # print('end slicing')
+    answer_list = []
+    for question in question_list:
+        print(f'answering question: {question}')
+        answers = []
+        for index, text_slice in enumerate(text_slices):
+            qa_input = {
+                'question': question,
+                'context': text_slice,
+            }
+            answer_dict = nlp(qa_input)
+            if answer_dict["score"] > 0.2:
+                # answers.append(f'Answer text slice {index + 1}: {answer_dict["answer"]}, score: {"{:.2f}".format(answer_dict["score"]*100)}%')
+                answers.append(f'Answer text slice {index + 1}: {answer_dict["answer"]}')
+        if len(answers) == 1:
+            answer = answers[0].split(': ')[1]
+        elif len(answers)==0:
+            answer = "L'informazione non è presente nel testo"
+        else:
+            answer = '\n'.join(answers)
+        answer_list.append({ 'question': question, 'answer': answer})
+    return answer_list
 
 class Predictor:
     def __init__(self) -> None:

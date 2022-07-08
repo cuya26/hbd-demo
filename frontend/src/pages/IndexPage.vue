@@ -76,10 +76,10 @@
               </div>
               <div v-if="questionType==='default'">
                 <div class="q-pb-md"></div>
-                  <div class="row justify-evenly"><q-btn rounded color="primary" dense style="width: 80px" label="compute"></q-btn></div>
+                  <div class="row justify-evenly"><q-btn rounded @click="answerQuestionList" color="primary" dense style="width: 80px" label="compute"></q-btn></div>
                   <div v-for="element in defaultQuestionsAnswers" :key="element">
                     <div class="q-py-sm text-primary">{{element["question"] + ":"}}</div>
-                    <div class="q-px-sm q-py-md text-grey-9"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 40px">
+                    <div class="q-px-sm q-py-md text-grey-9"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 45px">
                       <div style="">
                         {{element["answer"]}}
                       </div>
@@ -162,6 +162,7 @@ export default defineComponent({
         'question answering'
       ]),
       columns,
+      loading: ref(false),
       question: ref(null),
       answer: ref(null),
       questionType: ref('default'),
@@ -178,15 +179,21 @@ export default defineComponent({
   },
   methods : {
     extractValues () {
+      this.loading=true
       api.post(
         '/extract_data_table',
         { input_text: this.letterDict[this.dischargeLetterName]}
       ).then( (response) => {
         console.log(response.data)
         this.medicationList = response.data
+      }).catch((error)=>{
+        this.loading=false
+        console.log('ops an error occurs')
+        error.message
       })
     },
     answerQuestion () {
+      this.loading=true
       api.post(
         '/answer_question',
         {
@@ -194,20 +201,32 @@ export default defineComponent({
           question: this.question
         },
       ).then( (response) => {
+        this.loading=false
         console.log(response.data)
         this.answer = response.data
+      }).catch((error)=>{
+        this.loading=false
+        console.log('ops an error occurs')
+        error.message
       })
     },
     answerQuestionList () {
+      this.loading=true
       api.post(
         '/answer_question_list',
         {
           input_text: this.letterDict[this.dischargeLetterName],
           question_answer_list: this.defaultQuestionsAnswers
         },
+        { timeout: 120000 },
       ).then( (response) => {
+        this.loading=true
         console.log(response.data)
         this.defaultQuestionsAnswers = response.data
+      }).catch((error)=>{
+        this.loading=false
+        console.log('ops an error occurs')
+        error.message
       })
     }
   },
