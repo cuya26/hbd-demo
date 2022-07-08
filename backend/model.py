@@ -28,7 +28,7 @@ def question_and_answering_pipeline(input_text, question):
     )
     text_slices = []
     start_slice = 0
-    max_lenght = 500
+    max_lenght = 512
     print('slicing...')
     for end_slice in range(max_lenght, input_text_ids.shape[1], max_lenght):
         text_slices.append(tokenizer.decode(input_text_ids[0, start_slice:end_slice], skip_special_tokens=True))
@@ -37,13 +37,13 @@ def question_and_answering_pipeline(input_text, question):
     print('end slicing')
 
     answers = []
-    for text_slice in text_slices:
+    for index, text_slice in enumerate(text_slices):
         qa_input = {
             'question': question,
             'context': text_slice,
         }
-        answers.append(nlp(qa_input)["answer"])
-    return '\t'.join(answers)
+        answers.append(f'Answer {index}: {nlp(qa_input)["answer"]}')
+    return '\n'.join(answers)
 
 class Predictor:
     def __init__(self) -> None:
