@@ -10,7 +10,7 @@ services:
             - ./frontend/:/usr/src/app/
         container_name: hbd-demo-frontend
         ports:
-            - 51118:51118
+            - 51118:8080
     backend:
         build:
             context: ./backend/
