@@ -43,7 +43,9 @@ def question_and_answering_pipeline(input_text, question):
             'context': text_slice,
         }
         answer_dict = nlp(qa_input)
-        answers.append(f'Answer text slice {index + 1}: {answer_dict["answer"]}, score: {"{:.2f}".format(answer_dict["score"]*100)}%')
+        if answer_dict > 0.1:
+            answers.append(f'Answer text slice {index + 1}: {answer_dict["answer"]}, score: {"{:.2f}".format(answer_dict["score"]*100)}%')
+            answers.append(f'Answer text slice {index + 1}: {answer_dict["answer"]}')
     return '\n'.join(answers)
 
 class Predictor:
