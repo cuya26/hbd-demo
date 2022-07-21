@@ -5,7 +5,22 @@
         <div class="column no-wrap" style="width: 55%">
           <div class="q-pb-md">
             <div class="row justify-evenly">
-              <q-select style="width: 300px" dense outlined v-model="dischargeLetterName" :options="letterNames" label="Choose the input document" />
+              <q-select v-if="dischargeLetterLoaded" style="width: 300px" dense outlined v-model="dischargeLetterName" :options="letterNames" label="Choose the input document" />
+              <q-btn
+              v-if="!dischargeLetterLoaded"
+              style="height: 40px"
+              rounded 
+              color="primary"
+              label="Upload Letters"
+              @click="this.$refs.filePicker.$el.click()"
+              />
+              <q-file
+                v-model="upload"
+                v-show="false"
+                ref="filePicker"
+                accept=".json"
+                @update:model-value="loadLetters"
+              />
             </div>
           </div>
           <q-card class="items-strech" style="height: 590px">
@@ -135,6 +150,7 @@
 <script>
 import { defineComponent, ref } from 'vue'
 import { api } from 'boot/axios'
+import { exportFile } from 'quasar'
 
 
 const columns = [
@@ -152,6 +168,8 @@ export default defineComponent({
   name: 'IndexPage',
   setup () {
     return {
+      upload: ref(null),
+      dischargeLetterLoaded: ref(false),
       dischargeLetterName: ref(null),
       letterNames: ref([]),
       medicationList: ref([]),
@@ -218,7 +236,7 @@ export default defineComponent({
           input_text: this.letterDict[this.dischargeLetterName],
           question_answer_list: this.defaultQuestionsAnswers
         },
-        { timeout: 120000 },
+        // { timeout: 120000 },
       ).then( (response) => {
         this.loading=true
         console.log(response.data)
@@ -228,22 +246,36 @@ export default defineComponent({
         console.log('ops an error occurs')
         error.message
       })
+    },
+    loadLetters (upload) {
+      var reader = new FileReader()
+      reader.onload = (e) => {
+        // console.log(reader.result)
+        // console.log(e)
+        const sessionJSON = JSON.parse(reader.result)
+        // console.log(sessionJSON)
+        this.letterDict = sessionJSON
+        this.letterNames = Object.keys(this.letterDict).sort((a, b) => {
+          if (a.split('_')[0].length !== b.split('_')[0].length) return b.split('_')[0].length - a.split('_')[0].length
+          else return parseInt(a.split('_')[1]) - parseInt(b.split('_')[1])
+        })
+        this.dischargeLetterLoaded = true
+      }
+      reader.readAsText(upload)
     }
   },
   created () {
-    api.get(
-      '/discharge_letters'
-    ).then( (response)=> {
-      console.log(response.data)
-      this.letterDict = response.data
-      this.letterNames = Object.keys(this.letterDict).sort((a, b) => {
-        if (a.split('_')[0].length !== b.split('_')[0].length) return b.split('_')[0].length - a.split('_')[0].length
-        else return parseInt(a.split('_')[1]) - parseInt(b.split('_')[1])
-      })
-      // console.log(Object.keys(this.letterDict).sort((a, b) => Number(a.split('_')[1]) < Number(b.split('_')[1])))
-      // console.log(['sd_3', 'sd_33', 'sd_11'].sort((a,b)=> parseInt(a.split('_')[1]) - parseInt(b.split('_')[1]) ))
-      console.log(this.letterNames)
-    })
+    // api.get(
+    //   '/discharge_letters'
+    // ).then( (response)=> {
+    //   console.log(response.data)
+    //   this.letterDict = response.data
+    //   this.letterNames = Object.keys(this.letterDict).sort((a, b) => {
+    //     if (a.split('_')[0].length !== b.split('_')[0].length) return b.split('_')[0].length - a.split('_')[0].length
+    //     else return parseInt(a.split('_')[1]) - parseInt(b.split('_')[1])
+    //   })
+    //   console.log(this.letterNames)
+    // })
   }
 })
 </script>

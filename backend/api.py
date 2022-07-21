@@ -10,14 +10,14 @@ CORS(app)
 pred = Predictor()
 
 
-@app.route('/discharge_letters', methods=['GET'])
-def discharge_letters():
-    if request.method == 'GET':
-        if path.isfile('data/discharge_letters.json'):
-            with open('data/discharge_letters.json') as f:
-                return jsonify(json.load(f))
-        else:
-            return jsonify({})
+# @app.route('/discharge_letters', methods=['GET'])
+# def discharge_letters():
+#     if request.method == 'GET':
+#         if path.isfile('data/discharge_letters.json'):
+#             with open('data/discharge_letters.json') as f:
+#                 return jsonify(json.load(f))
+#         else:
+#             return jsonify({})
 
 @app.route('/extract_data_table', methods=['POST'])
 def extract_data_table():
