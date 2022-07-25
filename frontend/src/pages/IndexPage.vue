@@ -54,8 +54,17 @@
               style="width: 300px"
               dense
               outlined
+              v-model="taskName"
+              :options="taskNames"
+              label="Choose a Task"
+              @update:model-value="modelName=null"
+              />
+              <q-select
+              style="width: 300px"
+              dense
+              outlined
               v-model="modelName"
-              :options="modelNames"
+              :options="modelNames[taskName]"
               label="Choose a Model"/>
             </div>
           </div>
@@ -64,7 +73,7 @@
             <q-card-section class="q-pb-none row justify-evenly" >
               <div class="text-h6 text-primary">Model Output</div>
             </q-card-section>
-            <q-card-section v-if="modelName==='track1 n2c2 pipeline1'" class="q-pa-md">
+            <q-card-section v-if="modelNames['pharmacological event extraction'].includes(modelName)" class="q-pa-md">
               <div class="q-px-md q-pb-md row justify-evenly">
                 <q-btn @click="extractValues" rounded color="primary" label="Compute" :disable="dischargeLetterName===null"/>
               </div>
@@ -82,16 +91,29 @@
                 separator="cell"
                 :columns="columns"
                 :rows="medicationList"
-              />
+                :loading="loading"
+              >
+                <template v-slot:loading>
+                  <q-inner-loading showing color="primary" />
+                </template>
+              </q-table>
             </q-card-section>
-            <q-card-section v-if="modelName==='question answering'" class="q-pa-md">
+            <q-card-section v-if="modelNames['question answering (extractive)'].includes(modelName)" class="q-pa-md">
               <div class="row justify-evenly">
                 <q-radio dense v-model="questionType" val="free" label="Free question" />
                 <q-radio dense v-model="questionType" val="default" label="Default questions" />
               </div>
               <div v-if="questionType==='default'">
                 <div class="q-pb-md"></div>
-                  <div class="row justify-evenly"><q-btn rounded @click="answerQuestionList" color="primary" dense style="width: 80px" label="compute"></q-btn></div>
+                  <div class="row justify-evenly">
+                    <q-btn
+                    rounded
+                    @click="answerQuestionList"
+                    color="primary"
+                    dense style="width: 80px"
+                    label="compute"
+                    :loading="loading"/>
+                  </div>
                   <div v-for="element in defaultQuestionsAnswers" :key="element">
                     <div class="q-py-sm text-primary">{{element["question"] + ":"}}</div>
                     <div class="q-px-sm q-py-md text-grey-9"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 45px">
@@ -104,7 +126,12 @@
               <div v-if="questionType==='free'">
                 <div class="q-pb-md">
                   <div class="q-py-sm text-primary">Question:</div>
-                  <q-input @keyup.enter="answerQuestion()" outlined v-model="question" placeholder="Write a question and press enter"/>
+                  <q-input
+                  @keyup.enter="answerQuestion()"
+                  outlined
+                  v-model="question"
+                  placeholder="Write a question and press enter"
+                  :loading="loading"/>
                 </div>
                 <!-- <div class="q-pa-md row justify-evenly">
                   <q-btn rounded color="primary" label="Compute" :disable="dischargeLetterName===null"/>
@@ -150,7 +177,6 @@
 <script>
 import { defineComponent, ref } from 'vue'
 import { api } from 'boot/axios'
-import { exportFile } from 'quasar'
 
 
 const columns = [
@@ -168,6 +194,14 @@ export default defineComponent({
   name: 'IndexPage',
   setup () {
     return {
+      taskName: ref(null),
+      taskNames: ref([
+        "pharmacological event extraction",
+        "question answering (extractive)",
+        "question answering (generative) TODO",
+        "anonymisation TODO",
+        "patient cohort search TODO"
+      ]),
       upload: ref(null),
       dischargeLetterLoaded: ref(false),
       dischargeLetterName: ref(null),
@@ -175,10 +209,13 @@ export default defineComponent({
       medicationList: ref([]),
       letterDict: ref({}),
       modelName: ref(null),
-      modelNames: ref([
-        'track1 n2c2 pipeline1',
-        'question answering'
-      ]),
+      modelNames: ref({
+        "pharmacological event extraction" : ['track1 n2c2 pipeline1'],
+        "question answering (extractive)": ['deepset/xlm-roberta-large-squad2'],
+        "question answering (generative) TODO": ["We are still working on it"],
+        "anonymisation TODO": ["We are still working on it"],
+        "patient cohort search TODO": ["We are still working on it"]
+      }),
       columns,
       loading: ref(false),
       question: ref(null),
@@ -202,6 +239,7 @@ export default defineComponent({
         '/extract_data_table',
         { input_text: this.letterDict[this.dischargeLetterName]}
       ).then( (response) => {
+        this.loading=false
         console.log(response.data)
         this.medicationList = response.data
       }).catch((error)=>{
@@ -236,9 +274,9 @@ export default defineComponent({
           input_text: this.letterDict[this.dischargeLetterName],
           question_answer_list: this.defaultQuestionsAnswers
         },
-        // { timeout: 120000 },
+        { timeout: 120000 },
       ).then( (response) => {
-        this.loading=true
+        this.loading=false
         console.log(response.data)
         this.defaultQuestionsAnswers = response.data
       }).catch((error)=>{
