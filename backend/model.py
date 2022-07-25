@@ -6,6 +6,7 @@ import torch
 from transformers import AutoTokenizer, QuestionAnsweringPipeline, pipeline, LongformerForSequenceClassification, BertForSequenceClassification, AutoModelForSequenceClassification
 import spacy
 from transformers import AutoTokenizer, AutoModelForQuestionAnswering, pipeline
+from pipelines import pipeline as generativePipeline
 import re
 nlp = spacy.load("en_core_sci_md")
 
@@ -19,10 +20,13 @@ def question_and_answering_pipeline(model_type, model_name, input_text, question
 
     if model_type == 'generative':
         task = "multitask-qa-qg"
+        nlp = generativePipeline(task, model=model_name)
+        translator = Translator()
     else:
         task = 'question-answering'
+        nlp = pipeline(task, model=model_name, tokenizer=model_name)
 
-    nlp = pipeline(task, model=model_name, tokenizer=model_name)
+  
 
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     input_text_ids = tokenizer.encode(
@@ -38,20 +42,29 @@ def question_and_answering_pipeline(model_type, model_name, input_text, question
         text_slices.append(tokenizer.decode(input_text_ids[0, start_slice:end_slice], skip_special_tokens=True))
         start_slice = end_slice
     text_slices.append(tokenizer.decode(input_text_ids[0,start_slice:], skip_special_tokens=True))
-    # print('end slicing')
+    print('Number of slicing:', len(text_slices))
+
     answer_list = []
     for question in question_list:
         print(f'answering question: {question}')
+        if model_type == "generative":
+            question = translator.translate(question, src='it', dest='en').text
         answers = []
         for index, text_slice in enumerate(text_slices):
+            if model_type == "generative":
+                text_slice = translator.translate(text_slice, src='it', dest='en').text
             qa_input = {
                 'question': question,
                 'context': text_slice,
             }
-            answer_dict = nlp(qa_input)
-            if answer_dict["score"] > 0.2:
-                # answers.append(f'Answer text slice {index + 1}: {answer_dict["answer"]}, score: {"{:.2f}".format(answer_dict["score"]*100)}%')
-                answers.append(f'Answer text slice {index + 1}: {answer_dict["answer"]}')
+            if model_type == "generative":
+                answer = nlp(qa_input)
+                answers.append(f'Answer text slice {index + 1}: {answer}')
+            else:
+                answer_dict = nlp(qa_input)
+                if answer_dict["score"] > 0.2:
+                    # answers.append(f'Answer text slice {index + 1}: {answer_dict["answer"]}, score: {"{:.2f}".format(answer_dict["score"]*100)}%')
+                    answers.append(f'Answer text slice {index + 1}: {answer_dict["answer"]}')
         if len(answers) == 1:
             answer = answers[0].split(': ')[1]
         elif len(answers)==0:
