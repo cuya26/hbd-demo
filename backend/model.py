@@ -9,7 +9,7 @@ from transformers import AutoTokenizer, AutoModelForQuestionAnswering, pipeline
 import re
 nlp = spacy.load("en_core_sci_md")
 
-def question_and_answering_pipeline(input_text, question_list):
+def question_and_answering_pipeline(model_type, model_name, input_text, question_list):
     # input preprocessing
     input_text = re.sub(" +", ' ', input_text)
     input_text = re.sub("\s*\n\s*(\s*\n\s*)+", '\n\n', input_text)
@@ -17,8 +17,12 @@ def question_and_answering_pipeline(input_text, question_list):
     input_text = re.sub(" +", ' ', input_text)
     input_text = input_text.lower()
 
-    model_name = "deepset/xlm-roberta-large-squad2"
-    nlp = pipeline('question-answering', model=model_name, tokenizer=model_name)
+    if model_type == 'generative':
+        task = "multitask-qa-qg"
+    else:
+        task = 'question-answering'
+
+    nlp = pipeline(task, model=model_name, tokenizer=model_name)
 
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     input_text_ids = tokenizer.encode(

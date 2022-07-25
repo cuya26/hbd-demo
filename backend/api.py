@@ -31,16 +31,20 @@ def answer_question():
     if request.method == 'POST':
         input_text = request.get_json()['input_text']
         question = request.get_json()['question']
-        answer_list = question_and_answering_pipeline(input_text, [question])
+        model_type = request.get_json()['model_type']
+        model_name = request.get_json()['model_name']
+        answer_list = question_and_answering_pipeline(model_type, model_name, input_text, [question])
         return jsonify(answer_list[0]['answer'])
 
 @app.route('/answer_question_list', methods=['POST'])
 def answer_question_list():
     if request.method == 'POST':
         input_text = request.get_json()['input_text']
+        model_type = request.get_json()['model_type']
+        model_name = request.get_json()['model_name']
         question_answer_list = request.get_json()['question_answer_list']
         question_list = [element['question'] for element in question_answer_list]
-        return jsonify(question_and_answering_pipeline(input_text, question_list))
+        return jsonify(question_and_answering_pipeline(model_type, model_name, input_text, question_list))
 
 
 if __name__ == '__main__':

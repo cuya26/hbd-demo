@@ -98,7 +98,9 @@
                 </template>
               </q-table>
             </q-card-section>
-            <q-card-section v-if="modelNames['question answering (extractive)'].includes(modelName)" class="q-pa-md">
+            <q-card-section
+            v-if="modelNames['question answering (extractive)'].includes(modelName) || modelNames['question answering (generative)'].includes(modelName)"
+            class="q-pa-md">
               <div class="row justify-evenly">
                 <q-radio dense v-model="questionType" val="free" label="Free question" />
                 <q-radio dense v-model="questionType" val="default" label="Default questions" />
@@ -198,7 +200,7 @@ export default defineComponent({
       taskNames: ref([
         "pharmacological event extraction",
         "question answering (extractive)",
-        "question answering (generative) TODO",
+        "question answering (generative)",
         "anonymisation TODO",
         "patient cohort search TODO"
       ]),
@@ -212,7 +214,7 @@ export default defineComponent({
       modelNames: ref({
         "pharmacological event extraction" : ['track1 n2c2 pipeline1'],
         "question answering (extractive)": ['deepset/xlm-roberta-large-squad2'],
-        "question answering (generative) TODO": ["We are still working on it"],
+        "question answering (generative)": ["valhalla/t5-base-qa-qg-hl"],
         "anonymisation TODO": ["We are still working on it"],
         "patient cohort search TODO": ["We are still working on it"]
       }),
@@ -223,11 +225,11 @@ export default defineComponent({
       questionType: ref('default'),
       defaultQuestionsAnswers: ref(
         [
-          {question:"Qual è la condizione patologica?", answer: null},
-          {question:"Qual è l\'età?", answer: null},
-          {question:"Qual è il sesso?", answer: null},
-          {question:"Quali farmaci assume attualmente?", answer: null},
-          {question:"Quali sono le procedure chirurgiche applicate?", answer: null}
+          {question:"Qual è la condizione patologica del paziente?", answer: null},
+          {question:"Qual è l\'età del paziente?", answer: null},
+          {question:"Qual è il sesso del paziente?", answer: null},
+          {question:"Quali farmaci assume attualmente il paziente?", answer: null},
+          {question:"Quali sono le procedure chirurgiche applicate al paziente?", answer: null}
         ]
       )
     }
@@ -250,9 +252,14 @@ export default defineComponent({
     },
     answerQuestion () {
       this.loading=true
+      let modelType = null
+      if (this.taskName == "question answering (extractive)") modelType = 'extractive'
+      else modelType = 'generative'
       api.post(
         '/answer_question',
         {
+          model_type: modelType,
+          model_name: this.modelName,
           input_text: this.letterDict[this.dischargeLetterName],
           question: this.question
         },
