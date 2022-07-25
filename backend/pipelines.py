@@ -2,7 +2,7 @@ import itertools
 import logging
 from typing import Optional, Dict, Union
 
-from nltk import sent_tokenize
+# from nltk import sent_tokenize
 
 import torch
 from transformers import(
