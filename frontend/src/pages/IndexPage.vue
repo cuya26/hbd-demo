@@ -5,7 +5,7 @@
         <div class="column no-wrap" style="width: 55%">
           <div class="q-pb-md">
             <div class="row justify-evenly">
-              <q-select v-if="dischargeLetterLoaded" style="width: 300px" dense outlined v-model="dischargeLetterName" :options="letterNames" label="Choose the input document" />
+              <q-select v-if="dischargeLetterLoaded" style="width: 300px" dense outlined v-model="dischargeLetterName" @update:model-value="inputLetter=letterDict[dischargeLetterName]" :options="letterNames" label="Choose the input document" />
               <q-btn
               v-if="!dischargeLetterLoaded"
               style="height: 40px"
@@ -37,7 +37,7 @@
                   type="textarea"
                   input-style="min-height: 490px"
                   style="white-space: pre-line;"
-                  v-model="letterDict[dischargeLetterName]"
+                  v-model="inputLetter" 
                   />
                   <!-- <q-input outlined v-model="text" :dense="dense" /> -->
                   <!-- <div class="text-grey-7" style="white-space: pre-line">{{dischargeLetterName == null ? '' : letterDict[dischargeLetterName]}}</div> -->
@@ -75,7 +75,7 @@
             </q-card-section>
             <q-card-section v-if="modelNames['pharmacological event extraction'].includes(modelName)" class="q-pa-md">
               <div class="q-px-md q-pb-md row justify-evenly">
-                <q-btn @click="extractValues" rounded color="primary" label="Compute" :disable="dischargeLetterName===null"/>
+                <q-btn @click="extractValues" rounded color="primary" label="Compute" :disable="inputLetter===null"/>
               </div>
               <q-table
                 class="my-sticky-virtscroll-table"
@@ -114,6 +114,7 @@
                     color="primary"
                     dense style="width: 80px"
                     label="compute"
+                    :disable="inputLetter===null"
                     :loading="loading"/>
                   </div>
                   <div v-for="element in defaultQuestionsAnswers" :key="element">
@@ -132,6 +133,7 @@
                   @keyup.enter="answerQuestion()"
                   outlined
                   v-model="question"
+                  :disable="inputLetter===null"
                   placeholder="Write a question and press enter"
                   :loading="loading"/>
                 </div>
@@ -196,6 +198,7 @@ export default defineComponent({
   name: 'IndexPage',
   setup () {
     return {
+      inputLetter: ref(null),
       taskName: ref(null),
       taskNames: ref([
         "pharmacological event extraction",
@@ -239,7 +242,7 @@ export default defineComponent({
       this.loading=true
       api.post(
         '/extract_data_table',
-        { input_text: this.letterDict[this.dischargeLetterName]}
+        { input_text: this.inputLetter}
       ).then( (response) => {
         this.loading=false
         console.log(response.data)
@@ -260,7 +263,7 @@ export default defineComponent({
         {
           model_type: modelType,
           model_name: this.modelName,
-          input_text: this.letterDict[this.dischargeLetterName],
+          input_text: this.inputLetter,
           question: this.question
         },
       ).then( (response) => {
@@ -283,10 +286,10 @@ export default defineComponent({
         {
           model_type: modelType,
           model_name: this.modelName,
-          input_text: this.letterDict[this.dischargeLetterName],
+          input_text: this.inputLetter,
           question_answer_list: this.defaultQuestionsAnswers
         },
-        { timeout: 120000 },
+        { timeout: 60000 },
       ).then( (response) => {
         this.loading=false
         console.log(response.data)
