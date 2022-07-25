@@ -59,12 +59,12 @@ def question_and_answering_pipeline(model_type, model_name, input_text, question
             }
             if model_type == "generative":
                 answer = nlp(qa_input)
-                answers.append(f'Answer text slice {index + 1}: {answer}')
+                answers.append(f'Answer for part{index + 1} of the text: {answer}')
             else:
                 answer_dict = nlp(qa_input)
                 if answer_dict["score"] > 0.2:
                     # answers.append(f'Answer text slice {index + 1}: {answer_dict["answer"]}, score: {"{:.2f}".format(answer_dict["score"]*100)}%')
-                    answers.append(f'Answer text slice {index + 1}: {answer_dict["answer"]}')
+                    answers.append(f'Answer for part{index + 1} of the text: {answer_dict["answer"]}')
         if len(answers) == 1:
             answer = answers[0].split(': ')[1]
         elif len(answers)==0:

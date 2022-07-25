@@ -118,7 +118,7 @@
                   </div>
                   <div v-for="element in defaultQuestionsAnswers" :key="element">
                     <div class="q-py-sm text-primary">{{element["question"] + ":"}}</div>
-                    <div class="q-px-sm q-py-md text-grey-9"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 45px">
+                    <div class="q-px-sm q-py-md text-grey-9"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 52px">
                       <div style="">
                         {{element["answer"]}}
                       </div>
@@ -275,9 +275,14 @@ export default defineComponent({
     },
     answerQuestionList () {
       this.loading=true
+      let modelType = null
+      if (this.taskName == "question answering (extractive)") modelType = 'extractive'
+      else modelType = 'generative'
       api.post(
         '/answer_question_list',
         {
+          model_type: modelType,
+          model_name: this.modelName,
           input_text: this.letterDict[this.dischargeLetterName],
           question_answer_list: this.defaultQuestionsAnswers
         },
