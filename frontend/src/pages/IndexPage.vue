@@ -57,14 +57,14 @@
               v-model="taskName"
               :options="taskNames"
               label="Choose a Task"
-              @update:model-value="modelName=null"
+              @update:model-value="setupName=null"
               />
               <q-select
               style="width: 300px"
               dense
               outlined
-              v-model="modelName"
-              :options="modelNames[taskName]"
+              v-model="setupName"
+              :options="setupNames[taskName]"
               label="Choose a Model"/>
             </div>
           </div>
@@ -73,7 +73,7 @@
             <q-card-section class="q-pb-none row justify-evenly" >
               <div class="text-h6 text-primary">Model Output</div>
             </q-card-section>
-            <q-card-section v-if="modelNames['pharmacological event extraction'].includes(modelName)" class="q-pa-md">
+            <q-card-section v-if="setupNames['pharmacological event extraction'].includes(setupName)" class="q-pa-md">
               <div class="q-px-md q-pb-md row justify-evenly">
                 <q-btn @click="extractValues" rounded color="primary" label="Compute" :disable="inputLetter===null"/>
               </div>
@@ -99,7 +99,7 @@
               </q-table>
             </q-card-section>
             <q-card-section
-            v-if="modelNames['question answering (extractive)'].includes(modelName) || modelNames['question answering (generative)'].includes(modelName)"
+            v-if="setupNames['question answering (extractive)'].includes(setupName) || setupNames['question answering (generative)'].includes(setupName)"
             class="q-pa-md">
               <div class="row justify-evenly">
                 <q-radio dense v-model="questionType" val="free" label="Free question" />
@@ -117,7 +117,7 @@
                     :disable="inputLetter===null"
                     :loading="loading"/>
                   </div>
-                  <div v-for="element in defaultQuestionsAnswers" :key="element">
+                  <div v-for="element in defaultQuestionsAnswers[modelConfig[setupName].lang]" :key="element">
                     <div class="q-py-sm text-primary">{{element["question"] + ":"}}</div>
                     <div class="q-px-sm q-py-md text-grey-9"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 52px">
                       <div style="">
@@ -213,11 +213,14 @@ export default defineComponent({
       letterNames: ref([]),
       medicationList: ref([]),
       letterDict: ref({}),
-      modelName: ref(null),
-      modelNames: ref({
-        "pharmacological event extraction" : ['track1 n2c2 pipeline1'],
-        "question answering (extractive)": ['deepset/xlm-roberta-large-squad2'],
-        "question answering (generative)": ["valhalla/t5-base-qa-qg-hl"],
+      setupName: ref(null),
+      setupNames: ref({
+        "pharmacological event extraction" : ['track1 n2c2 pipeline1 (en)'],
+        "question answering (extractive)": ['roberta-large (it)'],
+        "question answering (generative)": [
+          "t5-base (en)",
+          "t5-base (it)"
+        ],
         "anonymisation TODO": ["We are still working on it"],
         "patient cohort search TODO": ["We are still working on it"]
       }),
@@ -226,14 +229,32 @@ export default defineComponent({
       question: ref(null),
       answer: ref(null),
       questionType: ref('default'),
+      modelConfig: ref(
+        {
+          "track1 n2c2 pipeline1 (en)": {modelName: 'track1 n2c2 pipeline1', lang: "en"},
+          'roberta-large (it)': {modelName: 'deepset/xlm-roberta-large-squad2', lang:"it"},
+          "t5-base (en)": {modelName: "valhalla/t5-base-qa-qg-hl", lang: "en"},
+          "t5-base (it)": {modelName: "Narrativa/mT5-base-finetuned-tydiQA-xqa", lang: "it"}
+
+        }
+      ),
       defaultQuestionsAnswers: ref(
-        [
-          {question:"Qual è la condizione patologica del paziente?", answer: null},
-          {question:"Qual è l\'età del paziente?", answer: null},
-          {question:"Qual è il sesso del paziente?", answer: null},
-          {question:"Quali farmaci assume attualmente il paziente?", answer: null},
-          {question:"Quali sono le procedure chirurgiche applicate al paziente?", answer: null}
-        ]
+        {
+          it: [
+            {question:"Qual è la condizione patologica del paziente?", answer: null},
+            {question:"Qual è l\'età del paziente?", answer: null},
+            {question:"Qual è il sesso del paziente?", answer: null},
+            {question:"Quali farmaci assume attualmente il paziente?", answer: null},
+            {question:"Quali sono le procedure chirurgiche applicate al paziente?", answer: null}
+          ],
+          en: [
+            {question:"What is the patient's pathological condition?", answer: null},
+            {question:"What is the age of the patient?", answer: null},
+            {question:"What is the patient's gender?", answer: null},
+            {question:"What medications does the patient currently take?", answer: null},
+            {question:"What are the surgical procedures applied to the patient?", answer: null}
+          ]
+        }
       )
     }
   },
@@ -262,7 +283,8 @@ export default defineComponent({
         '/answer_question',
         {
           model_type: modelType,
-          model_name: this.modelName,
+          model_name: this.modelConfig[this.setupName].modelName,
+          model_lang: this.modelConfig[this.setupName].lang,
           input_text: this.inputLetter,
           question: this.question
         },
@@ -281,19 +303,21 @@ export default defineComponent({
       let modelType = null
       if (this.taskName == "question answering (extractive)") modelType = 'extractive'
       else modelType = 'generative'
+      let lang = this.modelConfig[this.setupName].lang
       api.post(
         '/answer_question_list',
         {
           model_type: modelType,
-          model_name: this.modelName,
+          model_name: this.modelConfig[this.setupName].modelName,
+          model_lang: lang,
           input_text: this.inputLetter,
-          question_answer_list: this.defaultQuestionsAnswers
+          question_answer_list: this.defaultQuestionsAnswers[lang]
         },
         { timeout: 60000 },
       ).then( (response) => {
         this.loading=false
         console.log(response.data)
-        this.defaultQuestionsAnswers = response.data
+        this.defaultQuestionsAnswers[lang] = response.data
       }).catch((error)=>{
         this.loading=false
         console.log('ops an error occurs')

@@ -10,7 +10,7 @@ from pipelines import pipeline as generativePipeline
 import re
 nlp = spacy.load("en_core_sci_md")
 
-def question_and_answering_pipeline(model_type, model_name, input_text, question_list):
+def question_and_answering_pipeline(model_type, model_name, input_text, question_list, model_lang):
     # input preprocessing
     input_text = re.sub(" +", ' ', input_text)
     input_text = re.sub("\s*\n\s*(\s*\n\s*)+", '\n\n', input_text)
@@ -47,11 +47,9 @@ def question_and_answering_pipeline(model_type, model_name, input_text, question
     answer_list = []
     for question in question_list:
         print(f'answering question: {question}')
-        if model_type == "generative":
-            question = translator.translate(question, src='it', dest='en').text
         answers = []
         for index, text_slice in enumerate(text_slices):
-            if model_type == "generative":
+            if model_lang == "en":
                 text_slice = translator.translate(text_slice, src='it', dest='en').text
             qa_input = {
                 'question': question,
