@@ -51,14 +51,15 @@ def question_and_answering_pipeline(model_type, model_name, input_text, question
         for index, text_slice in enumerate(text_slices):
             if model_lang == "en":
                 text_slice = translator.translate(text_slice, src='it', dest='en').text
-            qa_input = {
-                'question': question,
-                'context': text_slice,
-            }
             if model_type == "generative":
+                qa_input = f"question: {question} context: {text_slice}"
                 answer = nlp(qa_input)[0]["generated_text"]
                 answers.append(f'Answer for part {index + 1} of the text: {answer}')
             else:
+                qa_input = {
+                    'question': question,
+                    'context': text_slice,
+                }
                 answer_dict = nlp(qa_input)
                 if answer_dict["score"] > 0.2:
                     # answers.append(f'Answer text slice {index + 1}: {answer_dict["answer"]}, score: {"{:.2f}".format(answer_dict["score"]*100)}%')
