@@ -5,10 +5,10 @@ from os import path
 import torch
 from transformers import AutoTokenizer, QuestionAnsweringPipeline, pipeline, LongformerForSequenceClassification, BertForSequenceClassification, AutoModelForSequenceClassification
 import spacy
-from transformers import AutoTokenizer, AutoModelForQuestionAnswering, pipeline
-from pipelines import pipeline as generativePipeline
+from transformers import AutoTokenizer, pipeline
 import re
 nlp = spacy.load("en_core_sci_md")
+
 
 def question_and_answering_pipeline(model_type, model_name, input_text, question_list, model_lang):
     # input preprocessing
@@ -19,8 +19,8 @@ def question_and_answering_pipeline(model_type, model_name, input_text, question
     input_text = input_text.lower()
 
     if model_type == 'generative':
-        task = "multitask-qa-qg"
-        nlp = generativePipeline(task, model=model_name)
+        task = "text2text-generation"
+        nlp = pipeline(task, model=model_name, tokenizer=model_name)
         translator = Translator()
     else:
         task = 'question-answering'
@@ -56,7 +56,7 @@ def question_and_answering_pipeline(model_type, model_name, input_text, question
                 'context': text_slice,
             }
             if model_type == "generative":
-                answer = nlp(qa_input)
+                answer = nlp(qa_input)[0]["generated_text"]
                 answers.append(f'Answer for part {index + 1} of the text: {answer}')
             else:
                 answer_dict = nlp(qa_input)
