@@ -36,7 +36,7 @@ def question_and_answering_pipeline(model_type, model_name, input_text, question
     )
     text_slices = []
     start_slice = 0
-    max_lenght = 500
+    max_lenght = 301
     # print('slicing...')
     for end_slice in range(max_lenght, input_text_ids.shape[1], max_lenght):
         text_slices.append(tokenizer.decode(input_text_ids[0, start_slice:end_slice], skip_special_tokens=True))
@@ -52,7 +52,7 @@ def question_and_answering_pipeline(model_type, model_name, input_text, question
             if model_lang == "en":
                 text_slice = translator.translate(text_slice, src='it', dest='en').text
             if model_type == "generative":
-                qa_input = f"question: {question} context: {text_slice}"
+                qa_input = f"question: {question}  context: {text_slice}"
                 answer = nlp(qa_input)[0]["generated_text"]
                 answers.append(f'Answer for part {index + 1} of the text: {answer}')
             else:
