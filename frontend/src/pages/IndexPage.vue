@@ -65,7 +65,9 @@
               outlined
               v-model="setupName"
               :options="setupNames[taskName]"
-              label="Choose a Model"/>
+              label="Choose a Model"
+              @update:model-value="resetResult"
+              />
             </div>
           </div>
 
@@ -100,7 +102,7 @@
             </q-card-section>
             <q-card-section
             v-if="setupNames['question answering (extractive)'].includes(setupName) || setupNames['question answering (generative)'].includes(setupName)"
-            class="q-pa-md">
+            class="q-pa-md" style="max-height: 90%; overflow:auto">
               <div class="row justify-evenly">
                 <q-radio dense v-model="questionType" val="free" label="Free question" />
                 <q-radio dense v-model="questionType" val="default" label="Default questions" />
@@ -119,7 +121,11 @@
                   </div>
                   <div v-for="element in defaultQuestionsAnswers[modelConfig[setupName].lang]" :key="element">
                     <div class="q-py-sm text-primary">{{element["question"] + ":"}}</div>
-                    <div class="q-px-sm q-py-md text-grey-9"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 52px">
+                    <div
+                    class="q-px-sm q-py-sm text-grey-9"
+                    style="overflow: visible;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: fit-content; min-height: 50px;"
+
+                    >
                       <div style="">
                         {{element["answer"]}}
                       </div>
@@ -241,17 +247,17 @@ export default defineComponent({
       defaultQuestionsAnswers: ref(
         {
           it: [
-            {question:"Qual è la condizione patologica del paziente?", answer: null},
+            {question:"Quali patologie presenta il paziente?", answer: null},
             {question:"Qual è l\'età del paziente?", answer: null},
             {question:"Qual è il sesso del paziente?", answer: null},
             {question:"Quali farmaci assume attualmente il paziente?", answer: null},
             {question:"Quali sono le procedure chirurgiche applicate al paziente?", answer: null}
           ],
           en: [
-            {question:"What is the patient's pathological condition?", answer: null},
+            {question:"What pathologies does the patient have?", answer: null},
             {question:"What is the age of the patient?", answer: null},
-            {question:"What is the patient's gender?", answer: null},
-            {question:"What medications does the patient currently take?", answer: null},
+            {question:"What is the patient's sex?", answer: null},
+            {question:"What drugs does the patient currently take?", answer: null},
             {question:"What are the surgical procedures applied to the patient?", answer: null}
           ]
         }
@@ -339,6 +345,15 @@ export default defineComponent({
         this.dischargeLetterLoaded = true
       }
       reader.readAsText(upload)
+    },
+    resetResult () {
+      if ( this.taskName.includes('question') ){
+        for ( const lang of Object.keys(this.defaultQuestionsAnswers) ) {
+          for ( const index of Object.keys(this.defaultQuestionsAnswers[lang]) )
+            this.defaultQuestionsAnswers[lang][index]["answer"] = null
+            this.question = null
+        }
+      }
     }
   },
   created () {
