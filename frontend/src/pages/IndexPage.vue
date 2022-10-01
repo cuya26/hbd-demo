@@ -132,6 +132,24 @@
                     </div>
                 </div>
               </div>
+              <q-dialog v-model="showSaliencyMap">
+                <q-card class="column no-wrap" style="min-width: 100%; height: 95%">
+                  <q-card-section class="row justify-between">
+                    <div class="text-h5">Interpretation</div>
+                    <div class="col-1 justify-end row">
+                      <q-btn class='' icon="close" flat round dense v-close-popup />
+                    </div>
+                  </q-card-section>
+                  <q-card-section>
+                    <div class="" sytle='height:500px'>
+                    <!-- {{paperList.length === 0 ? '' : paperList[currentPaper].abstract}} -->
+                      <mark v-for="element in saliencyMap" :key="element" :class="element.color">
+                        {{ element.text }}
+                      </mark>
+                    </div>
+                  </q-card-section>
+                </q-card>
+              </q-dialog>
               <div v-if="questionType==='free'">
                 <div class="q-pb-md">
                   <div class="q-py-sm text-primary">Question:</div>
@@ -148,7 +166,7 @@
                 </div> -->
                 <div>
                   <div class="q-py-sm text-primary">Answer:</div>
-                  <div class="q-px-sm q-py-md text-grey-9"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 90px">
+                  <div @click="showSaliencyMap=true" class="q-px-sm q-py-md text-grey-9"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 90px">
                     <div style="">
                       {{answer}}
                     </div>
@@ -204,6 +222,8 @@ export default defineComponent({
   name: 'IndexPage',
   setup () {
     return {
+      showSaliencyMap: ref(false),
+      saliencyMap: ref([]),
       inputLetter: ref(null),
       taskName: ref(null),
       taskNames: ref([
@@ -297,7 +317,8 @@ export default defineComponent({
       ).then( (response) => {
         this.loading=false
         console.log(response.data)
-        this.answer = response.data
+        this.answer = response.data['answer']
+        this.saliencyMap = response.data['saliency_map'][0]
       }).catch((error)=>{
         this.loading=false
         console.log('ops an error occurs')
