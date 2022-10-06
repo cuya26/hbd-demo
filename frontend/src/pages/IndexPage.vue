@@ -25,12 +25,17 @@
           </div>
           <q-card class="items-strech" style="height: 590px">
             <div class="col-12 column no-wrap" style="height: 100%">
-              <q-card-section class="row justify-evenly">
+              <q-card-section class="row justify-between">
+                <div></div>
                 <div class="text-h6 text-primary">Input Text</div>
+                <div class="col-1 justify-end row">
+                  <q-btn v-if="!editMode" label="edit" class="text-primary" flat rounded dense @click="editMode=true" />
+                </div>
               </q-card-section>
               <q-card-section style="max-height: 90%">
                 <div style="overflow: auto; flex-grow: 1;max-height: 100%">
                   <q-input
+                  v-if="editMode"
                   outlined
                   placeholder="Insert text or choose a discharge letter"
                   class="text-grey-7"
@@ -41,6 +46,13 @@
                   />
                   <!-- <q-input outlined v-model="text" :dense="dense" /> -->
                   <!-- <div class="text-grey-7" style="white-space: pre-line">{{dischargeLetterName == null ? '' : letterDict[dischargeLetterName]}}</div> -->
+                </div>
+                <div v-if="!editMode" class="text-grey-7" style="overflow: auto; flex-grow: 1;max-height: 100%">
+                  <div style="min-height: 490px">
+                  <mark v-for="element in saliencyMap" :key="element" :class="element.color">
+                    {{ element.text }}
+                  </mark>
+                  </div>
                 </div>
               </q-card-section>
             </div>
@@ -121,18 +133,32 @@
                   </div>
                   <div v-for="element in defaultQuestionsAnswers[modelConfig[setupName].lang]" :key="element">
                     <div class="q-py-sm text-primary">{{element["question"] + ":"}}</div>
-                    <div
+                    <!-- <div
                     class="q-px-sm q-py-sm text-grey-9"
                     style="overflow: visible;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: fit-content; min-height: 50px;"
-
                     >
                       <div style="">
                         {{element["answer"]}}
                       </div>
+                    </div> -->
+                    <div v-if="freeQuestionResponse['noAnswer'] == true" class="q-px-sm q-py-md col-12 text-grey-9"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 55px">
+                      {{"L'informazione non è presente nel testo"}}
+                    </div>
+                    <div class="q-py-sm" v-for="answer in element.answers" :key="answer">
+                      <div v-if="answer.score.toFixed(2) > answerScoreTreshould" class="row justify-between">
+                        <div class="q-px-sm q-py-md col-10 text-grey-9"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 55px">
+                          <div style="">
+                            {{answer.text}} 
+                          </div>
+                        </div>
+                        <div class="q-px-sm q-py-md text-grey-9 row justify-evenly"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 55px; width: 60px">
+                            {{answer.score.toFixed(2)*100+'%'}}
+                        </div>
+                      </div>
                     </div>
                 </div>
               </div>
-              <q-dialog v-model="showSaliencyMap">
+              <!-- <q-dialog v-model="showSaliencyMap">
                 <q-card class="column no-wrap" style="min-width: 100%; height: 95%">
                   <q-card-section class="row justify-between">
                     <div class="text-h5">Interpretation</div>
@@ -142,14 +168,13 @@
                   </q-card-section>
                   <q-card-section>
                     <div class="" sytle='height:500px'>
-                    <!-- {{paperList.length === 0 ? '' : paperList[currentPaper].abstract}} -->
                       <mark v-for="element in saliencyMap" :key="element" :class="element.color">
                         {{ element.text }}
                       </mark>
                     </div>
                   </q-card-section>
                 </q-card>
-              </q-dialog>
+              </q-dialog> -->
               <div v-if="questionType==='free'">
                 <div class="q-pb-md">
                   <div class="q-py-sm text-primary">Question:</div>
@@ -165,12 +190,27 @@
                   <q-btn rounded color="primary" label="Compute" :disable="dischargeLetterName===null"/>
                 </div> -->
                 <div>
-                  <div class="q-py-sm text-primary">Answer:</div>
-                  <div @click="showSaliencyMap=true" class="q-px-sm q-py-md text-grey-9"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 90px">
+                  <div class="q-py-sm text-primary">Answers:</div>
+                  <div v-if="freeQuestionResponse['noAnswer'] == true" class="q-px-sm q-py-md col-12 text-grey-9"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 55px">
+                    {{"L'informazione non è presente nel testo"}}
+                  </div>
+                  <div class="q-py-sm" v-for="answer in freeQuestionResponse.answers" :key="answer">
+                    <div v-if="answer.score.toFixed(2) > answerScoreTreshould" class="row justify-between">
+                      <div @click="editMode=false;saliencyMap=answer.saliency_map" class="q-px-sm q-py-md col-10 text-grey-9"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 55px">
+                        <div style="">
+                          {{answer.text}} 
+                        </div>
+                      </div>
+                      <div class="q-px-sm q-py-md text-grey-9 row justify-evenly"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 55px; width: 60px">
+                          {{answer.score.toFixed(2)*100+'%'}}
+                      </div>
+                    </div>
+                  </div>
+                  <!-- <div @click="showSaliencyMap=true" class="q-px-sm q-py-md text-grey-9"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 90px">
                     <div style="">
                       {{answer}}
                     </div>
-                  </div>
+                  </div> -->
                 </div>
               </div>
             </q-card-section>
@@ -222,6 +262,7 @@ export default defineComponent({
   name: 'IndexPage',
   setup () {
     return {
+      editMode: ref(true),
       showSaliencyMap: ref(false),
       saliencyMap: ref([]),
       inputLetter: ref(null),
@@ -253,7 +294,8 @@ export default defineComponent({
       columns,
       loading: ref(false),
       question: ref(null),
-      answer: ref(null),
+      freeQuestionResponse: ref({answers: [], noAnswer: false}),
+      answerScoreTreshould: ref(0.1),
       questionType: ref('default'),
       modelConfig: ref(
         {
@@ -302,6 +344,7 @@ export default defineComponent({
     },
     answerQuestion () {
       this.loading=true
+      this.editMode=true
       let modelType = null
       if (this.taskName == "question answering (extractive)") modelType = 'extractive'
       else modelType = 'generative'
@@ -312,13 +355,22 @@ export default defineComponent({
           model_name: this.modelConfig[this.setupName].modelName,
           model_lang: this.modelConfig[this.setupName].lang,
           input_text: this.inputLetter,
-          question: this.question
+          question: this.question,
+          compute_saliency_map: true,
         },
+        { timeout: 360000 },
       ).then( (response) => {
         this.loading=false
         console.log(response.data)
-        this.answer = response.data['answer']
-        this.saliencyMap = response.data['saliency_map'][0]
+        this.freeQuestionResponse = response.data
+        let noAnswer = true
+        for (const answer of this.freeQuestionResponse.answers ){
+          if (answer.score.toFixed(2) > this.answerScoreTreshould){
+            noAnswer = false
+          }
+        }
+        this.freeQuestionResponse['noAnswer'] = noAnswer
+        // this.saliencyMap = response.data['saliency_map'][0]
       }).catch((error)=>{
         this.loading=false
         console.log('ops an error occurs')
@@ -327,6 +379,7 @@ export default defineComponent({
     },
     answerQuestionList () {
       this.loading=true
+      this.editMode=true
       let modelType = null
       if (this.taskName == "question answering (extractive)") modelType = 'extractive'
       else modelType = 'generative'
@@ -338,9 +391,10 @@ export default defineComponent({
           model_name: this.modelConfig[this.setupName].modelName,
           model_lang: lang,
           input_text: this.inputLetter,
-          question_answer_list: this.defaultQuestionsAnswers[lang]
+          question_answer_list: this.defaultQuestionsAnswers[lang],
+          compute_saliency_map: false
         },
-        { timeout: 60000 },
+        { timeout: 360000 },
       ).then( (response) => {
         this.loading=false
         console.log(response.data)
