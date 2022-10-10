@@ -34,8 +34,15 @@ def answer_question():
         model_type = request.get_json()['model_type']
         model_name = request.get_json()['model_name']
         model_lang = request.get_json()['model_lang']
-        answer_list = question_and_answering_pipeline(model_type, model_name, input_text, [question], model_lang)
-        return jsonify(answer_list[0]['answer'])
+        compute_saliency_map = request.get_json()['compute_saliency_map']
+        answer_list = question_and_answering_pipeline(
+            model_type, model_name,
+            input_text,
+            [question],
+            model_lang,
+            compute_saliency_map
+        )
+        return jsonify(answer_list[0])
 
 @app.route('/answer_question_list', methods=['POST'])
 def answer_question_list():
@@ -44,9 +51,19 @@ def answer_question_list():
         model_type = request.get_json()['model_type']
         model_name = request.get_json()['model_name']
         model_lang = request.get_json()['model_lang']
+        compute_saliency_map = request.get_json()['compute_saliency_map']
         question_answer_list = request.get_json()['question_answer_list']
         question_list = [element['question'] for element in question_answer_list]
-        return jsonify(question_and_answering_pipeline(model_type, model_name, input_text, question_list, model_lang))
+        return jsonify(
+            question_and_answering_pipeline(
+                model_type,
+                model_name,
+                input_text,
+                question_list,
+                model_lang,
+                compute_saliency_map
+            )
+        )
 
 
 if __name__ == '__main__':
