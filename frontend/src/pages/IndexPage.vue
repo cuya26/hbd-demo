@@ -83,10 +83,12 @@
             </div>
           </div>
 
+          <!-- Model Output Card -->
           <q-card class="" style="height: 590px">
             <q-card-section class="q-pb-none row justify-evenly" >
               <div class="text-h6 text-primary">Model Output</div>
             </q-card-section>
+            <!-- pharmacological event extraction Section -->
             <q-card-section v-if="setupNames['pharmacological event extraction'].includes(setupName)" class="q-pa-md">
               <div class="q-px-md q-pb-md row justify-evenly">
                 <q-btn @click="extractValues" rounded color="primary" label="Compute" :disable="inputLetter===null"/>
@@ -112,9 +114,9 @@
                 </template>
               </q-table>
             </q-card-section>
-            <q-card-section
-            v-if="setupNames['question answering (extractive)'].includes(setupName) || setupNames['question answering (generative)'].includes(setupName)"
-            class="q-pa-md" style="max-height: 90%; overflow:auto">
+            <q-card-section v-if="setupNames['question answering (extractive)'].includes(setupName) || setupNames['question answering (generative)'].includes(setupName)"
+            class="q-pa-md" style="max-height: 90%; overflow:auto"
+            >
               <div class="row justify-evenly">
                 <q-radio dense v-model="questionType" val="free" label="Free question" />
                 <q-radio dense v-model="questionType" val="default" label="Default questions" />
@@ -214,6 +216,15 @@
                 </div>
               </div>
             </q-card-section>
+            <q-card-section v-if="setupNames['de-identification'].includes(setupName)">
+              <div class="q-pl-sm">
+                <q-btn
+                label="de-identificate"
+                rounded color="primary"
+                @click="deidentificate()"
+              />
+              </div>
+            </q-card-section>
           </q-card>
         </div>
       </div>
@@ -271,7 +282,7 @@ export default defineComponent({
         "pharmacological event extraction",
         "question answering (extractive)",
         "question answering (generative)",
-        "anonymisation TODO",
+        "de-identification",
         "patient cohort search TODO"
       ]),
       upload: ref(null),
@@ -285,10 +296,10 @@ export default defineComponent({
         "pharmacological event extraction" : ['track1 n2c2 pipeline1 (en)'],
         "question answering (extractive)": ['roberta-large (it)'],
         "question answering (generative)": [
-          "t5-base (en)",
+          "translate: it->en,  t5-base (en), translate: en->it",
           "t5-base (it)"
         ],
-        "anonymisation TODO": ["We are still working on it"],
+        "de-identification": ["baseline"],
         "patient cohort search TODO": ["We are still working on it"]
       }),
       columns,
@@ -301,7 +312,7 @@ export default defineComponent({
         {
           "track1 n2c2 pipeline1 (en)": {modelName: 'track1 n2c2 pipeline1', lang: "en"},
           'roberta-large (it)': {modelName: 'deepset/xlm-roberta-large-squad2', lang:"it"},
-          "t5-base (en)": {modelName: "valhalla/t5-base-qa-qg-hl", lang: "en"},
+          "translate: it->en,  t5-base (en), translate: en->it": {modelName: "valhalla/t5-base-qa-qg-hl", lang: "en"},
           "t5-base (it)": {modelName: "Narrativa/mT5-base-finetuned-tydiQA-xqa", lang: "it"}
 
         }
@@ -404,6 +415,19 @@ export default defineComponent({
         console.log('ops an error occurs')
         error.message
       })
+    },
+    deidentificate () {
+      api.post({
+        model_type: modelType,
+        model_name: this.modelConfig[this.setupName].modelName,
+        model_lang: lang,
+        input_text: this.inputLetter,
+        to_hide: [],
+        date_level_anonymization: 2
+      }).then( (response) => {
+
+
+      }).catch()
     },
     loadLetters (upload) {
       var reader = new FileReader()
