@@ -23,7 +23,7 @@
               />
             </div>
           </div>
-          <q-card class="items-strech" style="height: 590px">
+          <q-card class="items-strech" style="height: 100%">
             <div class="col-12 column no-wrap" style="height: 100%">
               <q-card-section class="row justify-between">
                 <div></div>
@@ -40,7 +40,7 @@
                   placeholder="Insert text or choose a discharge letter"
                   class="text-grey-7"
                   type="textarea"
-                  input-style="min-height: 490px"
+                  input-style="min-height: 560px"
                   style="white-space: pre-line;"
                   v-model="inputLetter" 
                   />
@@ -63,7 +63,7 @@
           <div class="q-pb-md">
             <div class="row justify-evenly">
               <q-select
-              style="width: 300px"
+              style="width: 48%"
               dense
               outlined
               v-model="taskName"
@@ -72,7 +72,7 @@
               @update:model-value="setupName=null"
               />
               <q-select
-              style="width: 300px"
+              style="width: 48%"
               dense
               outlined
               v-model="setupName"
@@ -84,9 +84,14 @@
           </div>
 
           <!-- Model Output Card -->
-          <q-card class="" style="height: 590px">
-            <q-card-section class="q-pb-none row justify-evenly" >
-              <div class="text-h6 text-primary">Model Output</div>
+          <q-card class="" style="height: 100%">
+            <q-card-section class=" row justify-between" >
+              <div class="col-2"></div>
+              <div class="text-h6 text-primary">Output</div>
+                <div class="col-2" v-if="!deidentified"></div>
+                <div v-if="deidentified" class="col-2 justify-end row">
+                  <q-btn label="change" class="text-primary" flat rounded dense @click="deidentified=false" />
+                </div>
             </q-card-section>
             <!-- pharmacological event extraction Section -->
             <q-card-section v-if="setupNames['pharmacological event extraction'].includes(setupName)" class="q-pa-md">
@@ -216,13 +221,46 @@
                 </div>
               </div>
             </q-card-section>
-            <q-card-section v-if="setupNames['de-identification'].includes(setupName)">
-              <div class="q-pl-sm">
-                <q-btn
-                label="de-identificate"
-                rounded color="primary"
-                @click="deidentificate()"
-              />
+            <q-card-section v-if="setupNames['deidentification'].includes(setupName)"
+            class="q-pa-md" style="height: 90%"
+            >
+              <div v-if="!deidentified" class="q-pl-sm q-pt-sm column justify-begin no-wrap" style="height:100%">
+                <div class=" q-py-md row justify-evenly">
+                  <q-btn
+                  style="width: 100px"
+                  dense
+                  label="de-identify"
+                  rounded
+                  :loading="loading"
+                  color="primary"
+                  @click="deidentify()"
+                />
+                </div>
+
+                <div class="q-pl-md q-py-md column">
+                  <q-checkbox v-model="deidentificationSelection" :val="1" label="Telephone" />
+                  <q-checkbox v-model="deidentificationSelection" :val="2" label="Zip Code" />
+                  <q-checkbox v-model="deidentificationSelection" :val="3" label="Email" />
+                  <q-checkbox v-model="deidentificationSelection" :val="4" label="Person" />
+                  <q-checkbox v-model="deidentificationSelection" :val="5" label="Organization" />
+                  <q-checkbox v-model="deidentificationSelection" :val="6" label="Address" />
+                  <q-checkbox v-model="deidentificationSelection" :val="7" label="Date" />
+                  <q-checkbox v-model="deidentificationSelection" :val="8" label="Codice Fiscale" />
+                </div>
+                
+                <div class="q-pl-md q-py-md" v-if="deidentificationSelection.includes(7)">
+                  <q-select
+                  v-model="dateAnonymLevel"
+                  :options="optionsDateAnonymLevel"
+                  dense
+                  outlined
+                  label="Select level of date anonymization"
+                  style="width: 300px"
+                />
+                </div>
+              </div>
+              <div v-if="deidentified" class="q-pa-md q-m" style="white-space: pre-line; max-height: 560px; min-height: 560px ;overflow:auto; border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px;">
+                {{deidentifiedText}}
               </div>
             </q-card-section>
           </q-card>
@@ -273,6 +311,15 @@ export default defineComponent({
   name: 'IndexPage',
   setup () {
     return {
+      deidentified: ref(false),
+      dateAnonymLevel: ref('hide date'),
+      optionsDateAnonymLevel: ref([
+        'hide date',
+        'Keep only the year',
+        'keep only month'
+      ]),
+      deidentificationSelection: ref([1,2,3,4,5,6,7,8]),
+      deidentifiedText: ref(''),
       editMode: ref(true),
       showSaliencyMap: ref(false),
       saliencyMap: ref([]),
@@ -282,7 +329,7 @@ export default defineComponent({
         "pharmacological event extraction",
         "question answering (extractive)",
         "question answering (generative)",
-        "de-identification",
+        "deidentification",
         "patient cohort search TODO"
       ]),
       upload: ref(null),
@@ -299,7 +346,7 @@ export default defineComponent({
           "translate: it->en,  t5-base (en), translate: en->it",
           "t5-base (it)"
         ],
-        "de-identification": ["baseline"],
+        "deidentification": ["baseline"],
         "patient cohort search TODO": ["We are still working on it"]
       }),
       columns,
@@ -416,18 +463,26 @@ export default defineComponent({
         error.message
       })
     },
-    deidentificate () {
-      api.post({
-        model_type: modelType,
-        model_name: this.modelConfig[this.setupName].modelName,
-        model_lang: lang,
+    deidentify () {
+      this.loading = true
+      api.post(
+        '/deidentify',
+        {
+        model_type: 'modelType',
+        model_name: 'this.modelConfig[this.setupName].modelName',
+        model_lang: 'lang',
         input_text: this.inputLetter,
-        to_hide: [],
-        date_level_anonymization: 2
+        to_hide: this.deidentificationSelection,
+        date_level_anonymization: 0
       }).then( (response) => {
-
-
-      }).catch()
+        this.deidentifiedText = response.data['deidentified_text']
+        this.deidentified = true
+        this.loading = false
+      }).catch( (error) => {
+        this.loading=false
+        console.log('ops an error occurs')
+        error.message
+      })
     },
     loadLetters (upload) {
       var reader = new FileReader()
