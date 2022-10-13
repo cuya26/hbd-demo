@@ -26,10 +26,10 @@
           <q-card class="items-strech" style="height: 100%">
             <div class="col-12 column no-wrap" style="height: 100%">
               <q-card-section class="row justify-between">
-                <div></div>
+                <div class="col-1"></div>
                 <div class="text-h6 text-primary">Input Text</div>
                 <div class="col-1 justify-end row">
-                  <q-btn v-if="!editMode" label="edit" class="text-primary" flat rounded dense @click="editMode=true" />
+                  <q-btn v-if="!editMode" label="edit" class="text-primary col-1" flat rounded dense @click="editMode=true" />
                 </div>
               </q-card-section>
               <q-card-section style="max-height: 90%">
@@ -229,6 +229,7 @@
                   <q-btn
                   style="width: 100px"
                   dense
+                  :disable="inputLetter===null"
                   label="de-identify"
                   rounded
                   :loading="loading"
@@ -238,6 +239,7 @@
                 </div>
 
                 <div class="q-pl-md q-py-md column">
+                  <div class="">Select the entities that you want to de-identify:</div>
                   <q-checkbox v-model="deidentificationSelection" :val="1" label="Telephone" />
                   <q-checkbox v-model="deidentificationSelection" :val="2" label="Zip Code" />
                   <q-checkbox v-model="deidentificationSelection" :val="3" label="Email" />
