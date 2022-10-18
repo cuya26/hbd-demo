@@ -47,7 +47,13 @@
                   <!-- <q-input outlined v-model="text" :dense="dense" /> -->
                   <!-- <div class="text-grey-7" style="white-space: pre-line">{{dischargeLetterName == null ? '' : letterDict[dischargeLetterName]}}</div> -->
                 </div>
-                <div v-if="!editMode" class="text-grey-7" style="overflow: auto; flex-grow: 1;max-height: 100%">
+
+                <div style="height: 100%;" v-if="!editMode && loadingSaliencyMap" class="row justify-evenly">
+                  <div style="height: 100%;" class="column justify-evenly">
+                    <q-spinner color="primary" size="6em" />
+                  </div>
+                </div>
+                <div v-if="!editMode && !loadingSaliencyMap" class="text-grey-7" style="overflow: auto; flex-grow: 1;max-height: 100%">
                   <div style="min-height: 490px">
                   <mark v-for="element in saliencyMap" :key="element" :class="element.color">
                     {{ element.text }}
@@ -117,16 +123,21 @@
                 <template v-slot:loading>
                   <q-inner-loading showing color="primary" />
                 </template>
+                <template v-slot:body-cell="props">
+                  <q-td :props="props">
+                      <span style="cursor: pointer">{{ props.value }}</span>
+                  </q-td>
+                </template>
               </q-table>
             </q-card-section>
             <q-card-section v-if="setupNames['question answering (extractive)'].includes(setupName) || setupNames['question answering (generative)'].includes(setupName)"
             class="q-pa-md" style="max-height: 90%; overflow:auto"
             >
-              <div class="row justify-evenly">
+              <!-- <div class="row justify-evenly">
                 <q-radio dense v-model="questionType" val="free" label="Free question" />
                 <q-radio dense v-model="questionType" val="default" label="Default questions" />
-              </div>
-              <div v-if="questionType==='default'">
+              </div> -->
+              <!-- <div v-if="questionType==='default'">
                 <div class="q-pb-md"></div>
                   <div class="row justify-evenly">
                     <q-btn
@@ -139,7 +150,7 @@
                     :loading="loading"/>
                   </div>
                   <div v-for="element in defaultQuestionsAnswers[modelConfig[setupName].lang]" :key="element">
-                    <div class="q-py-sm text-primary">{{element["question"] + ":"}}</div>
+                    <div class="q-py-sm text-primary">{{element["question"] + ":"}}</div> -->
                     <!-- <div
                     class="q-px-sm q-py-sm text-grey-9"
                     style="overflow: visible;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: fit-content; min-height: 50px;"
@@ -148,7 +159,7 @@
                         {{element["answer"]}}
                       </div>
                     </div> -->
-                    <div v-if="freeQuestionResponse['noAnswer'] == true" class="q-px-sm q-py-md col-12 text-grey-9"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 55px">
+                    <!-- <div v-if="freeQuestionResponse['noAnswer'] == true" class="q-px-sm q-py-md col-12 text-grey-9"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 55px">
                       {{"L'informazione non è presente nel testo"}}
                     </div>
                     <div class="q-py-sm" v-for="answer in element.answers" :key="answer">
@@ -164,7 +175,7 @@
                       </div>
                     </div>
                 </div>
-              </div>
+              </div> -->
               <!-- <q-dialog v-model="showSaliencyMap">
                 <q-card class="column no-wrap" style="min-width: 100%; height: 95%">
                   <q-card-section class="row justify-between">
@@ -182,8 +193,20 @@
                   </q-card-section>
                 </q-card>
               </q-dialog> -->
+              <div class="q-py-sm">
+                <div class="text-primary">Default Questions (click to load it):</div>
+                <div v-for="element in defaultQuestionsAnswers[modelConfig[setupName].lang]" :key="element">
+                    <div
+                      :style="inputLetter===null?'cursor: not-allowed':'cursor: pointer'" 
+                      @click="inputLetter===null?null:(question=element['question'],answerQuestion())"
+                      class="q-pl-xl q-py-sm text-grey-8 disable"
+                    >
+                      {{'- ' + element["question"]}}
+                    </div>
+                </div>
+              </div>
               <div v-if="questionType==='free'">
-                <div class="q-pb-md">
+                <div class="q-py-sm">
                   <div class="q-py-sm text-primary">Question:</div>
                   <q-input
                   @keyup.enter="answerQuestion()"
@@ -201,9 +224,9 @@
                   <div v-if="freeQuestionResponse['noAnswer'] == true" class="q-px-sm q-py-md col-12 text-grey-9"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 55px">
                     {{"L'informazione non è presente nel testo"}}
                   </div>
-                  <div class="q-py-sm" v-for="answer in freeQuestionResponse.answers" :key="answer">
+                  <div class="q-py-sm" v-for="(answer, answer_index) in freeQuestionResponse.answers" :key="answer">
                     <div v-if="answer.score.toFixed(2) > answerScoreTreshould" class="row justify-between">
-                      <div @click="editMode=false;saliencyMap=answer.saliency_map" class="q-px-sm q-py-md col-10 text-grey-9"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 55px">
+                      <div @click="loadSaliencyMap(answer.slice_index, answer.text , answer_index, answer.question)" class="q-px-sm q-py-md col-10 text-grey-9"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 55px">
                         <div style="">
                           {{answer.text}} 
                         </div>
@@ -313,6 +336,7 @@ export default defineComponent({
   name: 'IndexPage',
   setup () {
     return {
+      loadingSaliencyMap: ref(false),
       deidentified: ref(false),
       dateAnonymLevel: ref('hide date'),
       optionsDateAnonymLevel: ref([
@@ -355,14 +379,30 @@ export default defineComponent({
       loading: ref(false),
       question: ref(null),
       freeQuestionResponse: ref({answers: [], noAnswer: false}),
-      answerScoreTreshould: ref(0.1),
-      questionType: ref('default'),
+      answerScoreTreshould: ref(0.0),
+      questionType: ref('free'),
       modelConfig: ref(
         {
-          "track1 n2c2 pipeline1 (en)": {modelName: 'track1 n2c2 pipeline1', lang: "en"},
-          'roberta-large (it)': {modelName: 'deepset/xlm-roberta-large-squad2', lang:"it"},
-          "translate: it->en,  t5-base (en), translate: en->it": {modelName: "valhalla/t5-base-qa-qg-hl", lang: "en"},
-          "t5-base (it)": {modelName: "Narrativa/mT5-base-finetuned-tydiQA-xqa", lang: "it"}
+          "track1 n2c2 pipeline1 (en)": {
+            modelName: 'track1 n2c2 pipeline1',
+            lang: "en",
+            modelType: 't5-ner'
+          },
+          'roberta-large (it)': {
+            modelName: 'deepset/xlm-roberta-large-squad2',
+            lang:"it",
+            modelType: 'roberta-qa'
+          },
+          "translate: it->en,  t5-base (en), translate: en->it": {
+            modelName: "valhalla/t5-base-qa-qg-hl",
+            lang: "en",
+            modelType: 't5-qa'
+          },
+          "t5-base (it)": {
+            modelName: "Narrativa/mT5-base-finetuned-tydiQA-xqa",
+            lang: "it",
+            modelType: 't5-qa'
+          }
 
         }
       ),
@@ -387,6 +427,32 @@ export default defineComponent({
     }
   },
   methods : {
+    loadSaliencyMap (sliceIndex, answer, answer_index, question) {
+      this.loadingSaliencyMap = true
+      this.editMode=false
+      api.post(
+        '/compute_saliency_map',
+        {
+          input_text: this.inputLetter,
+          slice_index: sliceIndex,
+          answer: answer,
+          question: question,
+          model_type: this.modelConfig[this.setupName].modelType,
+          model_name: this.modelConfig[this.setupName].modelName,
+          model_lang: this.modelConfig[this.setupName].lang,
+        },
+        { timeout: 360000 }
+      ).then ( (response) => {
+        this.loadingSaliencyMap = false
+        console.log(response.data.saliency_map)
+        console.log(this.freeQuestionResponse)
+        this.saliencyMap = response.data.saliency_map
+      }).catch( (error) =>{
+        this.loadingSaliencyMap = false
+        console.log('ops an error occurs during the computing of the saliency maps')
+        error.message
+      })
+    },
     extractValues () {
       this.loading=true
       api.post(
@@ -405,18 +471,15 @@ export default defineComponent({
     answerQuestion () {
       this.loading=true
       this.editMode=true
-      let modelType = null
-      if (this.taskName == "question answering (extractive)") modelType = 'extractive'
-      else modelType = 'generative'
       api.post(
         '/answer_question',
         {
-          model_type: modelType,
+          model_type: this.modelConfig[this.setupName].modelType,
           model_name: this.modelConfig[this.setupName].modelName,
           model_lang: this.modelConfig[this.setupName].lang,
           input_text: this.inputLetter,
           question: this.question,
-          compute_saliency_map: true,
+          compute_saliency_map: false,
         },
         { timeout: 360000 },
       ).then( (response) => {
@@ -425,7 +488,7 @@ export default defineComponent({
         this.freeQuestionResponse = response.data
         let noAnswer = true
         for (const answer of this.freeQuestionResponse.answers ){
-          if (answer.score.toFixed(2) > this.answerScoreTreshould){
+          if (answer.score.toFixed(2) >= this.answerScoreTreshould){
             noAnswer = false
           }
         }
