@@ -23,16 +23,16 @@
               />
             </div>
           </div>
-          <q-card class="items-strech" style="height: 100%">
+          <q-card class="items-strech" style="height: 680px">
             <div class="col-12 column no-wrap" style="height: 100%">
               <q-card-section class="row justify-between">
-                <div class="col-1"></div>
+                <div class="col-2"></div>
                 <div class="text-h6 text-primary">Input Text</div>
-                <div class="col-1 justify-end row">
-                  <q-btn v-if="!editMode" label="edit" class="text-primary col-1" flat rounded dense @click="editMode=true" />
+                <div class="col-2 justify-end row">
+                  <q-btn v-if="!editMode" label="edit" class="text-primary" flat rounded dense @click="editMode=true" />
                 </div>
               </q-card-section>
-              <q-card-section style="max-height: 90%">
+              <q-card-section style="height: 90%">
                 <div style="overflow: auto; flex-grow: 1;max-height: 100%">
                   <q-input
                   v-if="editMode"
@@ -54,8 +54,8 @@
                   </div>
                 </div>
                 <div v-if="!editMode && !loadingSaliencyMap" class="text-grey-7" style="overflow: auto; flex-grow: 1;max-height: 100%">
-                  <div style="min-height: 490px">
-                  <mark v-for="element in saliencyMap" :key="element" :class="element.color">
+                  <div style="min-height: 490px; white-space: pre-line">
+                  <mark style="white-space: pre-line;" v-for="element in saliencyMap" :key="element" :class="element.color">
                     {{ element.text }}
                   </mark>
                   </div>
@@ -90,7 +90,7 @@
           </div>
 
           <!-- Model Output Card -->
-          <q-card class="" style="height: 100%">
+          <q-card class="" style="height: 680px">
             <q-card-section class=" row justify-between" >
               <div class="col-2"></div>
               <div class="text-h6 text-primary">Output</div>
@@ -117,6 +117,7 @@
                 :virtual-scroll-sticky-size-start="48"
                 separator="cell"
                 :columns="columns"
+                :visible-columns="visibleColumns"
                 :rows="medicationList"
                 :loading="loading"
               >
@@ -125,13 +126,13 @@
                 </template>
                 <template v-slot:body-cell="props">
                   <q-td :props="props">
-                      <span style="cursor: pointer">{{ props.value }}</span>
+                      <span style="cursor: pointer" @click="loadSaliencyMapDrugExtraction(props.row.sentence, props.value, props.col.name)">{{ props.value }}</span>
                   </q-td>
                 </template>
               </q-table>
             </q-card-section>
             <q-card-section v-if="setupNames['question answering (extractive)'].includes(setupName) || setupNames['question answering (generative)'].includes(setupName)"
-            class="q-pa-md" style="max-height: 90%; overflow:auto"
+            class="q-pa-md" style="height: 85%; overflow:auto"
             >
               <!-- <div class="row justify-evenly">
                 <q-radio dense v-model="questionType" val="free" label="Free question" />
@@ -194,7 +195,7 @@
                 </q-card>
               </q-dialog> -->
               <div class="q-py-sm">
-                <div class="text-primary">Default Questions (click to load it):</div>
+                <div class="text-primary">Some default questions (click to load):</div>
                 <div v-for="element in defaultQuestionsAnswers[modelConfig[setupName].lang]" :key="element">
                     <div
                       :style="inputLetter===null?'cursor: not-allowed':'cursor: pointer'" 
@@ -226,7 +227,7 @@
                   </div>
                   <div class="q-py-sm" v-for="(answer, answer_index) in freeQuestionResponse.answers" :key="answer">
                     <div v-if="answer.score.toFixed(2) > answerScoreTreshould" class="row justify-between">
-                      <div @click="loadSaliencyMap(answer.slice_index, answer.text , answer_index, answer.question)" class="q-px-sm q-py-md col-10 text-grey-9"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 55px">
+                      <div @click="loadSaliencyMapQA(answer.slice_index, answer.text , answer_index, answer.question)" class="q-px-sm q-py-md col-10 text-grey-9"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 55px">
                         <div style="">
                           {{answer.text}} 
                         </div>
@@ -298,7 +299,7 @@
 <style lang="sass">
 .my-sticky-virtscroll-table
   /* height or max-height is important */
-  height: 455px
+  height: 500px
 
   .q-table__top,
   .q-table__bottom,
@@ -323,7 +324,7 @@ import { api } from 'boot/axios'
 
 const columns = [
   { name: 'drug', label: 'Farmaco', field: 'entity', required: true, sortable: true, align: 'left'},
-  // { name: 'drug', label: 'Sentence', field: 'sentence', required: true, sortable: true, align: 'left'},
+  { name: 'sentence', label: 'Sentence', field: 'sentence', required: false, sortable: false, align: 'left'},
   { name: 'disposition', label: 'Evento', field: 'disposition', required: true, sortable: true, align: 'left' },
   { name: 'action', label: 'Azione', field: 'Action', required: true, sortable: true, align: 'left' },
   { name: 'negation', label: 'Negazione', field: 'Negation', required: true, sortable: true, align: 'left' },
@@ -332,10 +333,21 @@ const columns = [
   { name: 'certainty', label: 'Certezza', field: 'Certainty', required: true, sortable: true, align: 'left' }
 ]
 
+const visibleColumns = [
+'drug',
+'disposition',
+'action',
+'negation',
+'temporality',
+'actor',
+'certainty',
+]
+
 export default defineComponent({
   name: 'IndexPage',
   setup () {
     return {
+      visibleColumns,
       loadingSaliencyMap: ref(false),
       deidentified: ref(false),
       dateAnonymLevel: ref('hide date'),
@@ -386,7 +398,42 @@ export default defineComponent({
           "track1 n2c2 pipeline1 (en)": {
             modelName: 'track1 n2c2 pipeline1',
             lang: "en",
-            modelType: 't5-ner'
+            modelType: 't5-ner',
+            'drug': {
+              modelName: 'simplet5-epoch-6-train-loss-0.2724-val-loss-0.1477',
+              lang: "en",
+              modelType: 't5-ner'
+            },
+            'disposition': {
+              modelName: 'Bio_ClinicalBERT_model_trained_disposition-type',
+              lang: 'en',
+              modelType: 'bert-dee'
+            },
+            'action': {
+              modelName: 'Bio_ClinicalBERT_model_trained_Action',
+              lang: 'en',
+              modelType: 'bert-dee'
+            },
+            'negation': {
+              modelName: 'Bio_ClinicalBERT_model_trained_Negation',
+              lang: 'en',
+              modelType: 'bert-dee'
+            },
+            'temporality': {
+              modelName: 'Bio_ClinicalBERT_model_trained_Temporality',
+              lang: 'en',
+              modelType: 'bert-dee'
+            },
+            'actor': {
+              modelName: 'Bio_ClinicalBERT_model_trained_Actor',
+              lang: 'en',
+              modelType: 'bert-dee'
+            },
+            'certainty': {
+              modelName: 'Bio_ClinicalBERT_model_trained_Certainty',
+              lang: 'en',
+              modelType: 'bert-dee'
+            }
           },
           'roberta-large (it)': {
             modelName: 'deepset/xlm-roberta-large-squad2',
@@ -427,12 +474,13 @@ export default defineComponent({
     }
   },
   methods : {
-    loadSaliencyMap (sliceIndex, answer, answer_index, question) {
+    loadSaliencyMapQA (sliceIndex, answer, answer_index, question) {
       this.loadingSaliencyMap = true
       this.editMode=false
       api.post(
         '/compute_saliency_map',
         {
+          task_type: 'qa',
           input_text: this.inputLetter,
           slice_index: sliceIndex,
           answer: answer,
@@ -446,6 +494,32 @@ export default defineComponent({
         this.loadingSaliencyMap = false
         console.log(response.data.saliency_map)
         console.log(this.freeQuestionResponse)
+        this.saliencyMap = response.data.saliency_map
+      }).catch( (error) =>{
+        this.loadingSaliencyMap = false
+        console.log('ops an error occurs during the computing of the saliency maps')
+        error.message
+      })
+    },
+    loadSaliencyMapDrugExtraction (sentence, target, colName) {
+      
+      this.loadingSaliencyMap = true
+      this.editMode=false
+      api.post(
+        '/compute_saliency_map',
+        { 
+          task_type: 'drug_event_extraction',
+          task: colName,
+          input_text: this.inputLetter,
+          sentence: sentence,
+          target_text: target,
+          model_type: this.modelConfig[this.setupName][colName].modelType,
+          model_name: this.modelConfig[this.setupName][colName].modelName,
+          model_lang: this.modelConfig[this.setupName][colName].lang,
+        },
+        { timeout: 360000 }
+      ).then ( (response) => {
+        this.loadingSaliencyMap = false
         this.saliencyMap = response.data.saliency_map
       }).catch( (error) =>{
         this.loadingSaliencyMap = false
