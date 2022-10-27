@@ -264,14 +264,14 @@
 
                 <div class="q-pl-md q-py-md column">
                   <div class="">Select the entities that you want to de-identify:</div>
-                  <q-checkbox v-model="deidentificationSelection" :val="1" label="Telephone" />
-                  <q-checkbox v-model="deidentificationSelection" :val="2" label="Zip Code" />
-                  <q-checkbox v-model="deidentificationSelection" :val="3" label="Email" />
-                  <q-checkbox v-model="deidentificationSelection" :val="4" label="Person" />
-                  <q-checkbox v-model="deidentificationSelection" :val="5" label="Organization" />
-                  <q-checkbox v-model="deidentificationSelection" :val="6" label="Address" />
-                  <q-checkbox v-model="deidentificationSelection" :val="7" label="Date" />
-                  <q-checkbox v-model="deidentificationSelection" :val="8" label="Codice Fiscale" />
+                  <q-checkbox v-model="deidentificationSelection" :val="1" color="yellow-5" label="Telephone" />
+                  <q-checkbox v-model="deidentificationSelection" :val="2" color="brown-5" label="Zip Code" />
+                  <q-checkbox v-model="deidentificationSelection" :val="3" color="indigo-5" label="Email" />
+                  <q-checkbox v-model="deidentificationSelection" :val="4" color="pink-5" label="Person" />
+                  <q-checkbox v-model="deidentificationSelection" :val="5" color="teal-5" label="Organization" />
+                  <q-checkbox v-model="deidentificationSelection" :val="6" color="orange-5" label="Address" />
+                  <q-checkbox v-model="deidentificationSelection" :val="7" color="green-5" label="Date" />
+                  <q-checkbox v-model="deidentificationSelection" :val="8" color="red-6" label="Codice Fiscale" />
                 </div>
                 
                 <div class="q-pl-md q-py-md" v-if="deidentificationSelection.includes(7)">
@@ -285,8 +285,8 @@
                 />
                 </div>
               </div>
-              <div v-if="deidentified" class="q-pa-md q-m" style="white-space: pre-line; max-height: 560px; min-height: 560px ;overflow:auto; border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px;">
-                {{deidentifiedText}}
+              <div v-show="deidentified" ref="deidentifiedTextDiv"  class="q-pa-md q-m" style="white-space: pre-line; max-height: 560px; min-height: 560px ;overflow:auto; border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px;">
+                ""
               </div>
             </q-card-section>
           </q-card>
@@ -356,6 +356,11 @@ export default defineComponent({
         'Keep only the year',
         'keep only month'
       ]),
+      dictDateAnonymLevel: ref({
+        'hide date': 0,
+        'Keep only the year': 1,
+        'keep only month': 2
+      }),
       deidentificationSelection: ref([1,2,3,4,5,6,7,8]),
       deidentifiedText: ref(''),
       editMode: ref(true),
@@ -604,6 +609,7 @@ export default defineComponent({
     },
     deidentify () {
       this.loading = true
+    
       api.post(
         '/deidentify',
         {
@@ -612,9 +618,11 @@ export default defineComponent({
         model_lang: 'lang',
         input_text: this.inputLetter,
         to_hide: this.deidentificationSelection,
-        date_level_anonymization: 0
+        date_level_anonymization: this.dictDateAnonymLevel[this.dateAnonymLevel]
       }).then( (response) => {
-        this.deidentifiedText = response.data['deidentified_text']
+        let deidentifiedText = response.data['deidentified_text']
+        this.$refs.deidentifiedTextDiv.innerHTML = this.highlight(deidentifiedText)
+        // this.deidentifiedText = this.deidentifiedText.replace(/<DATA>/, '<span class="bg-primary"><DATA></span>')
         this.deidentified = true
         this.loading = false
       }).catch( (error) => {
@@ -622,6 +630,24 @@ export default defineComponent({
         console.log('ops an error occurs')
         error.message
       })
+    },
+    highlight (text) {
+      
+      text = text.replace(/</g, '&lt').replace(/>/g, '&gt')
+      
+      text = text.replace(/&ltTELEFONO&gt/g, '<span class="bg-yellow-3">&ltTELEFONO&gt</span>')
+      text = text.replace(/&ltCAP&gt/g, '<span class="bg-brown-3">&ltCAP&gt</span>')
+      text = text.replace(/&ltE-MAIL&gt/g, '<span class="bg-indigo-3">&ltE-MAIL&gt</span>')
+      text = text.replace(/&ltPERSONA&gt/g, '<span class="bg-pink-3">&ltPERSONA&gt</span>')
+      text = text.replace(/&ltORGANIZZAZIONE&gt/g, '<span class="bg-teal-3">&ltORGANIZZAZIONE&gt</span>')
+      text = text.replace(/&ltINDIRIZZO&gt/g, '<span class="bg-orange-3">&ltINDIRIZZO&gt</span>')
+      text = text.replace(/&ltDATA&gt/g, '<span class="bg-green-3">&ltDATA&gt</span>')
+      text = text.replace(/&ltCF&gt/g, '<span class="bg-red-4">&ltCF&gt</span>')
+
+      // this.$refs.deidentifiedTextDiv.$el
+      // this.$refs.deidentifiedTextDiv.replace(/prova/, '<span>prova</span>')
+      // this.$refs.deidentifiedTextDiv.innerHTML = this.$refs.deidentifiedTextDiv.innerHTML.replace(/<DATA>/, '<span>####</span>')
+      return text
     },
     loadLetters (upload) {
       var reader = new FileReader()
