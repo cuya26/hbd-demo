@@ -1,5 +1,5 @@
-Flask==2.0.2
-Flask-Cors==3.0.10
+fastapi
+uvicorn
 python-dotenv==0.19.1
 simplet5
 transformers
@@ -7,3 +7,7 @@ torch
 scispacy
 https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.5.0/en_core_sci_md-0.5.0.tar.gz
 googletrans==3.1.0a0
+captum
+stanza
+datefinder
+protobuf==3.20.*

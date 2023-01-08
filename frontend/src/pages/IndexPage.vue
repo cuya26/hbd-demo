@@ -68,7 +68,7 @@
         <div class="column no-wrap" style="width: 42%">
           <div class="q-pb-md">
             <div class="row justify-evenly">
-              <q-select
+              <!-- <q-select
               style="width: 48%"
               dense
               outlined
@@ -76,15 +76,41 @@
               :options="taskNames"
               label="Choose a Task"
               @update:model-value="setupName=null"
-              />
+              /> -->
+              <q-select
+                outlined
+                v-model="taskName"
+                :options="taskOptionGroups"
+                dense
+                label="Choose a Task"
+                @update:model-value="updateTaskName"
+                style="width: 48%"
+              >
+                <template v-slot:option="scope">
+                  <q-item v-if="!scope.opt.group"
+                    v-bind="scope.itemProps"
+                  >              
+                    
+                    <q-item-section>
+                      <q-item-label class="q-pl-md">{{ scope.opt.label }}</q-item-label>
+                    </q-item-section>
+                  </q-item>
+                  <q-item v-if="scope.opt.group"
+                  >
+                    <q-item-section>
+                      <q-item-label class="text-bold text-primary">{{ scope.opt.group + ':' }}</q-item-label>
+                    </q-item-section>
+                  </q-item>
+                </template>
+              </q-select>
               <q-select
               style="width: 48%"
               dense
               outlined
               v-model="setupName"
-              :options="setupNames[taskName]"
+              :options="taskName?taskOptionGroups.filter(optionTask => optionTask.value === taskName)[0]['modelNames']:[]"
               label="Choose a Model"
-              @update:model-value="resetResult"
+              @update:model-value="whenChangeSetupModel"
               />
             </div>
           </div>
@@ -96,7 +122,7 @@
               <div class="text-h6 text-primary">Output</div>
                 <div class="col-2" v-if="!deidentified"></div>
                 <div v-if="deidentified" class="col-2 justify-end row">
-                  <q-btn label="change" class="text-primary" flat rounded dense @click="deidentified=false" />
+                  <q-btn label="Reset" class="text-primary" flat rounded dense @click="deidentified=false" />
                 </div>
             </q-card-section>
             <!-- pharmacological event extraction Section -->
@@ -164,7 +190,7 @@
                       {{"L'informazione non è presente nel testo"}}
                     </div>
                     <div class="q-py-sm" v-for="answer in element.answers" :key="answer">
-                      <div v-if="answer.score.toFixed(2) > answerScoreTreshould" class="row justify-between">
+                      <div v-if="answer.score.toFixed(2) > answerScoreThreshold" class="row justify-between">
                         <div class="q-px-sm q-py-md col-10 text-grey-9"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 55px">
                           <div style="">
                             {{answer.text}} 
@@ -225,15 +251,15 @@
                   <div v-if="freeQuestionResponse['noAnswer'] == true" class="q-px-sm q-py-md col-12 text-grey-9"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 55px">
                     {{"L'informazione non è presente nel testo"}}
                   </div>
-                  <div class="q-py-sm" v-for="(answer, answer_index) in freeQuestionResponse.answers" :key="answer">
-                    <div v-if="answer.score.toFixed(2) > answerScoreTreshould" class="row justify-between">
+                  <div class="" v-for="(answer, answer_index) in freeQuestionResponse.answers" :key="answer">
+                    <div v-if="answer.score.toFixed(3) > modelConfig[setupName].thresold" class="q-py-sm row justify-between">
                       <div @click="loadSaliencyMapQA(answer.slice_index, answer.text , answer_index, answer.question)" class="q-px-sm q-py-md col-10 text-grey-9"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 55px">
                         <div style="">
                           {{answer.text}} 
                         </div>
                       </div>
                       <div class="q-px-sm q-py-md text-grey-9 row justify-evenly"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 55px; width: 60px">
-                          {{answer.score.toFixed(2)*100+'%'}}
+                          {{(answer.score*100).toFixed() + '%'}}
                       </div>
                     </div>
                   </div>
@@ -246,10 +272,10 @@
               </div>
             </q-card-section>
             <q-card-section v-if="setupNames['deidentification'].includes(setupName)"
-            class="q-pa-md" style="height: 90%"
+            class="" style="height: 90%"
             >
               <div v-if="!deidentified" class="q-pl-sm q-pt-sm column justify-begin no-wrap" style="height:100%">
-                <div class=" q-py-md row justify-evenly">
+                <div class=" q-pb-md row justify-evenly">
                   <q-btn
                   style="width: 100px"
                   dense
@@ -264,17 +290,28 @@
 
                 <div class="q-pl-md q-py-md column">
                   <div class="">Select the entities that you want to de-identify:</div>
-                  <q-checkbox v-model="deidentificationSelection" :val="1" color="yellow-5" label="Telephone" />
-                  <q-checkbox v-model="deidentificationSelection" :val="2" color="brown-5" label="Zip Code" />
-                  <q-checkbox v-model="deidentificationSelection" :val="3" color="indigo-5" label="Email" />
-                  <q-checkbox v-model="deidentificationSelection" :val="4" color="pink-5" label="Person" />
-                  <q-checkbox v-model="deidentificationSelection" :val="5" color="teal-5" label="Organization" />
-                  <q-checkbox v-model="deidentificationSelection" :val="6" color="orange-5" label="Address" />
-                  <q-checkbox v-model="deidentificationSelection" :val="7" color="green-5" label="Date" />
-                  <q-checkbox v-model="deidentificationSelection" :val="8" color="red-6" label="Codice Fiscale" />
+                  <div class="row justify-start q-pb-sm" v-for="entityType in Object.keys(deidentificationConf[setupName])" :key="entityType">
+                    <q-checkbox
+                    v-model="deidentificationConf[setupName][entityType].show"
+                    style="width: 150px"
+                    :color="deidentificationConf[setupName][entityType].color"
+                    :label="deidentificationConf[setupName][entityType].name"
+                    @update:model-value="value => resetDeidModel(value, entityType)"
+                    />
+                    
+                    <q-select
+                    v-if="deidentificationConf[setupName][entityType].show && setupName==='custom'"
+                    v-model="deidentificationConf[setupName][entityType].value"
+                    :options="deidentificationConf[setupName][entityType].options"
+                    dense
+                    outlined
+                    style="width: 170px"
+                    />
+                  </div>
+                  <!-- <q-checkbox v-model="deidentificationDict['Codice Fiscale']" false-value="" true-value="select model" color="red-6" label="Codice Fiscale" /> -->
                 </div>
                 
-                <div class="q-pl-md q-py-md" v-if="deidentificationSelection.includes(7)">
+                <div class="q-pl-md" v-if="deidentificationConf[setupName].date?deidentificationConf[setupName]['date'].show:false">
                   <q-select
                   v-model="dateAnonymLevel"
                   :options="optionsDateAnonymLevel"
@@ -282,7 +319,7 @@
                   outlined
                   label="Select level of date anonymization"
                   style="width: 300px"
-                />
+                  />
                 </div>
               </div>
               <div v-show="deidentified" ref="deidentifiedTextDiv"  class="q-pa-md q-m" style="white-space: pre-line; max-height: 560px; min-height: 560px ;overflow:auto; border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px;">
@@ -357,11 +394,335 @@ export default defineComponent({
         'keep only month'
       ]),
       dictDateAnonymLevel: ref({
-        'hide date': 0,
-        'Keep only the year': 1,
-        'keep only month': 2
+        'hide date': 'hide',
+        'Keep only the year': 'year',
+        'keep only month': 'month'
       }),
-      deidentificationSelection: ref([1,2,3,4,5,6,7,8]),
+      // Person Name, Fiscal Code, Email, Telephone, Address, Zip Code, Age, Organisation, Date
+      deidentificationConf: ref({
+        'regex': {
+          'fiscal_code': {
+            show: true,
+            color: 'red-4',
+            options: [
+                'regex', 'john'
+              ],
+            value: 'regex',
+            default: 'regex',
+            name: ' Fiscal Code'
+          },
+          'email': {
+            show: true,
+            color: 'indigo-5',
+          options: [
+              'regex', 'john'
+            ],
+            value: 'regex',
+            default: 'regex',
+            name: 'Email'
+          },
+          'telephone': {
+            show: true,
+            color: 'yellow-5',
+          options: [
+              'regex', 'john'
+            ],
+            value: 'regex',
+            default: 'regex',
+            name: 'Telephone'
+
+          },
+          'zipcode': {
+            show: true,
+            color: 'brown-5',
+            options: [
+                'regex', 'john'
+              ],
+            value: 'regex',
+            default: 'regex',
+            name: 'Zip Code'
+          },
+          'date': {
+            show: true,
+            color: 'green-5',
+          options: [
+              'regex'
+            ],
+            value: 'regex',
+            default: 'regex',
+            name: 'Date'
+          },
+        },
+        'spaCy (open-source)': {
+          'person': {
+            show: true,
+            color: 'pink-5',
+            options: [
+              'john', 'spacy', 'stanza'
+            ],
+            value: 'spacy',
+            default: 'stanza',
+            name: 'Person Name'
+          },
+          'address': {
+            show: true,
+            color: 'orange-5',
+          options: [
+              'john', 'spacy', 'stanza'
+            ],
+            value: 'spacy',
+            default: 'stanza',
+            name: 'Address'
+          },
+          'organization': {
+            show: true,
+            color: 'teal-5',
+          options: [
+              'john', 'spacy', 'stanza'
+            ],
+            value: 'spacy',
+            default: 'stanza',
+            name: 'Organization',
+          },
+        },
+         'Stanza (open-source)': {
+          'person': {
+            show: true,
+            color: 'pink-5',
+            options: [
+              'john', 'spacy', 'stanza'
+            ],
+            value: 'stanza',
+            default: 'stanza',
+            name: 'Person Name'
+          },
+          'address': {
+            show: true,
+            color: 'orange-5',
+          options: [
+              'john', 'spacy', 'stanza'
+            ],
+            value: 'stanza',
+            default: 'stanza',
+            name: 'Address'
+          },
+          'organization': {
+            show: true,
+            color: 'teal-5',
+          options: [
+              'john', 'spacy', 'stanza'
+            ],
+            value: 'stanza',
+            default: 'stanza',
+            name: 'Organization',
+          }
+        },
+        'John Snow Labs (commercial)': {
+          'person': {
+            show: true,
+            color: 'pink-5',
+            options: [
+              'john', 'spacy', 'stanza'
+            ],
+            value: 'john',
+            default: 'stanza',
+            name: 'Person Name'
+          },
+          'fiscal_code': {
+            show: true,
+            color: 'red-4',
+          options: [
+              'regex', 'john'
+            ],
+            value: 'john',
+            default: 'regex',
+            name: ' Fiscal Code'
+          },
+          'telephone': {
+            show: true,
+            color: 'yellow-5',
+          options: [
+              'regex', 'john'
+            ],
+            value: 'john',
+            default: 'regex',
+            name: 'Telephone'
+
+          },
+          'address': {
+            show: true,
+            color: 'orange-5',
+          options: [
+              'john', 'spacy', 'stanza'
+            ],
+            value: 'john',
+            default: 'stanza',
+            name: 'Address'
+          },
+          'zipcode': {
+            show: true,
+            color: 'brown-5',
+          options: [
+              'regex', 'john'
+            ],
+            value: 'john',
+            default: 'regex',
+            name: 'Zip Code'
+          },
+          'age': {
+            show: true,
+            color: 'purple-5',
+          options: [
+              'john'
+            ],
+            value: 'john',
+            default: 'john',
+            name: 'Age'
+          },
+          'organization': {
+            show: true,
+            color: 'teal-5',
+          options: [
+              'john', 'spacy', 'stanza'
+            ],
+            value: 'john',
+            default: 'stanza',
+            name: 'Organization',
+          },
+        },
+        'custom': {
+          'person': {
+            show: true,
+            color: 'pink-5',
+            options: [
+              'john', 'spacy', 'stanza'
+            ],
+            value: 'stanza',
+            default: 'stanza',
+            name: 'Person Name'
+          },
+          'fiscal_code': {
+            show: true,
+            color: 'red-4',
+          options: [
+              'regex', 'john'
+            ],
+            value: 'regex',
+            default: 'regex',
+            name: ' Fiscal Code'
+          },
+          'email': {
+            show: true,
+            color: 'indigo-5',
+          options: [
+              'regex', 'john'
+            ],
+            value: 'regex',
+            default: 'regex',
+            name: 'Email'
+          },
+          'telephone': {
+            show: true,
+            color: 'yellow-5',
+          options: [
+              'regex', 'john'
+            ],
+            value: 'regex',
+            default: 'regex',
+            name: 'Telephone'
+          },
+          'address': {
+            show: true,
+            color: 'orange-5',
+          options: [
+              'john', 'spacy', 'stanza'
+            ],
+            value: 'stanza',
+            default: 'stanza',
+            name: 'Address'
+          },
+           'zipcode': {
+            show: true,
+            color: 'brown-5',
+          options: [
+              'regex', 'john'
+            ],
+            value: 'regex',
+            default: 'regex',
+            name: 'Zip Code'
+          },
+          'age': {
+            show: true,
+            color: 'purple-5',
+          options: [
+              'john'
+            ],
+            value: 'john',
+            default: 'john',
+            name: 'Age'
+          },
+          'organization': {
+            show: true,
+            color: 'teal-5',
+          options: [
+              'john', 'spacy', 'stanza'
+            ],
+            value: 'stanza',
+            default: 'stanza',
+            name: 'Organization',
+          },
+          'date': {
+            show: true,
+            color: 'green-5',
+          options: [
+              'regex'
+            ],
+            value: 'regex',
+            default: 'regex',
+            name: 'Date'
+          },
+        },
+      })
+      ,
+      deidentificationDict: ref({
+        'regex' : {
+          'telephone': "regex",
+          'date': "regex",
+          'email': "regex",
+          'zipcode': "regex",
+          'fiscal_code': "regex"
+        },
+        'spaCy (open-source)': {
+          'person': "spacy",
+          'organization': "spacy",
+          'address': "spacy"
+        },
+        'Stanza (open-source)': {
+          'person': "spacy",
+          'organization': "spacy",
+          'address': "spacy"
+        },
+        'John Snow Labs (commercial)': {
+          'person': "john",
+          'organization': "john",
+          'telephone': "john",
+          'age': "john",
+          'zipcode': "john",
+          'address': "john",
+          'fiscal_code': "john"
+        },
+        'custom': {
+          'person': "john",
+          'organization': "john",
+          'telephone': "john",
+          'date': "regex",
+          'age': "john",
+          'email': "regex",
+          'zipcode': "regex",
+          'address': "john",
+          'fiscal_code': "regex"
+        }
+      }),
       deidentifiedText: ref(''),
       editMode: ref(true),
       showSaliencyMap: ref(false),
@@ -369,12 +730,64 @@ export default defineComponent({
       inputLetter: ref(null),
       taskName: ref(null),
       taskNames: ref([
+        "deidentification",
         "pharmacological event extraction",
         "question answering (extractive)",
         "question answering (generative)",
-        "deidentification",
         "patient cohort search TODO"
       ]),
+      // Add hierarchy to the Tasks:
+      // - Privacy
+      // -- De-identifcation
+      // - Information Extraction
+      // -- Pharmaceutical Event Extraction
+      // -- Question Answering
+      // - Search
+      // -- Patient Cohort Selection (TODO)
+      taskOptionGroups: [
+        {
+          group: 'Privacy',
+          disable: true
+        },
+        {
+          label: 'De-Identification',
+          value: 'deidentification',
+          modelNames: [
+            'regex',
+            'spaCy (open-source)',
+            'Stanza (open-source)',
+            'John Snow Labs (commercial)',
+            'custom'
+          ]
+        },
+        {
+          group: 'Information Extraction',
+          disable: true
+        },
+        {
+          label: 'Pharmaceutical Event Extraction',
+          value: 'pharmacological event extraction',
+          modelNames: ['Track1 n2c2 Challenge (en)']
+        },
+        {
+          label: 'Question Answering',
+          value: 'question answering',
+          modelNames: [
+          "Translation-based: it->en, t5-base (english)",
+          'Extractive: Roberta-large (multilingual)',
+          "Generative: t5-base (multilingual)"
+        ],
+        },
+        {
+          group: 'Search',
+          disable: true
+        },
+        {
+          label: 'Patient Cohort Selection (TODO)',
+          value: 'patient cohort search TODO',
+          modelNames: ["We are still working on it"]
+        }
+      ],
       upload: ref(null),
       dischargeLetterLoaded: ref(false),
       dischargeLetterName: ref(null),
@@ -383,24 +796,33 @@ export default defineComponent({
       letterDict: ref({}),
       setupName: ref(null),
       setupNames: ref({
-        "pharmacological event extraction" : ['track1 n2c2 pipeline1 (en)'],
-        "question answering (extractive)": ['roberta-large (it)'],
+        "pharmacological event extraction" : ['Track1 n2c2 Challenge (en)'],
+        "question answering (extractive)": ['Extractive: Roberta-large (multilingual)'],
         "question answering (generative)": [
-          "translate: it->en,  t5-base (en), translate: en->it",
-          "t5-base (it)"
+          "Translation-based: it->en, t5-base (english)",
+          "Generative: t5-base (multilingual)"
         ],
-        "deidentification": ["baseline"],
+        "deidentification": [
+          'regex',
+          'spaCy (open-source)',
+          'Stanza (open-source)',
+          'John Snow Labs (commercial)',
+          'custom'
+        ],
         "patient cohort search TODO": ["We are still working on it"]
       }),
       columns,
       loading: ref(false),
       question: ref(null),
       freeQuestionResponse: ref({answers: [], noAnswer: false}),
-      answerScoreTreshould: ref(0.0),
+      answerScoreThreshold: ref({
+        'generative': 0.5,
+        'extractive': 0.0
+      }),
       questionType: ref('free'),
       modelConfig: ref(
         {
-          "track1 n2c2 pipeline1 (en)": {
+          'Track1 n2c2 Challenge (en)': {
             modelName: 'track1 n2c2 pipeline1',
             lang: "en",
             modelType: 't5-ner',
@@ -440,20 +862,23 @@ export default defineComponent({
               modelType: 'bert-dee'
             }
           },
-          'roberta-large (it)': {
+          'Extractive: Roberta-large (multilingual)': {
             modelName: 'deepset/xlm-roberta-large-squad2',
             lang:"it",
-            modelType: 'roberta-qa'
+            modelType: 'roberta-qa',
+            thresold: 0.0
           },
-          "translate: it->en,  t5-base (en), translate: en->it": {
+          "Translation-based: it->en, t5-base (english)": {
             modelName: "valhalla/t5-base-qa-qg-hl",
             lang: "en",
-            modelType: 't5-qa'
+            modelType: 't5-qa',
+            thresold: 0.6
           },
-          "t5-base (it)": {
+          "Generative: t5-base (multilingual)": {
             modelName: "Narrativa/mT5-base-finetuned-tydiQA-xqa",
             lang: "it",
-            modelType: 't5-qa'
+            modelType: 't5-qa',
+            thresold: 0.6
           }
 
         }
@@ -461,18 +886,18 @@ export default defineComponent({
       defaultQuestionsAnswers: ref(
         {
           it: [
-            {question:"Quali patologie presenta il paziente?", answer: null},
-            {question:"Qual è l\'età del paziente?", answer: null},
-            {question:"Qual è il sesso del paziente?", answer: null},
+            {question:"Quale patologia presenta il paziente?", answer: null},
             {question:"Quali farmaci assume attualmente il paziente?", answer: null},
-            {question:"Quali sono le procedure chirurgiche applicate al paziente?", answer: null}
+            {question:"A quali esami è stato sottoposto il paziente?", answer: null},
+            {question:"Quali sono gli interventi ai quali è stato sottoposto il paziente?", answer: null},
+            {question:"Qual è l'età del paziente?", answer: null}
           ],
           en: [
-            {question:"What pathologies does the patient have?", answer: null},
-            {question:"What is the age of the patient?", answer: null},
-            {question:"What is the patient's sex?", answer: null},
-            {question:"What drugs does the patient currently take?", answer: null},
-            {question:"What are the surgical procedures applied to the patient?", answer: null}
+            {question:"What pathology does the patient have?", answer: null},
+            {question:"What medication does the patient currently take?", answer: null},
+            {question:"Which diagnostic tests have been performed on the patient?", answer: null},
+            {question:"What interventions have been performed on the patient?", answer: null},
+            {question:"What is the age of the patient?", answer: null}
           ]
         }
       )
@@ -550,12 +975,14 @@ export default defineComponent({
     answerQuestion () {
       this.loading=true
       this.editMode=true
+      this.freeQuestionResponse = {answers: [], noAnswer: false}
       api.post(
         '/answer_question',
         {
           model_type: this.modelConfig[this.setupName].modelType,
           model_name: this.modelConfig[this.setupName].modelName,
           model_lang: this.modelConfig[this.setupName].lang,
+          // answer_number: this.modelConfig[this.setupName].answerNumber,
           input_text: this.inputLetter,
           question: this.question,
           compute_saliency_map: false,
@@ -567,12 +994,19 @@ export default defineComponent({
         this.freeQuestionResponse = response.data
         let noAnswer = true
         for (const answer of this.freeQuestionResponse.answers ){
-          if (answer.score.toFixed(2) >= this.answerScoreTreshould){
+          if (answer.score.toFixed(3) > this.modelConfig[this.setupName].thresold){
             noAnswer = false
           }
+          // if (answer.text !== ''){
+          //   noAnswer = false
+          // }
         }
-        this.freeQuestionResponse['noAnswer'] = noAnswer
-        // this.saliencyMap = response.data['saliency_map'][0]
+        console.log(noAnswer)
+        // this.freeQuestionResponse['noAnswer'] = noAnswer
+        // if (!noAnswer){
+        //   // TODO ordina risposte
+        //   this.freeQuestionResponse.answers = this.freeQuestionResponse.answers.slice(0,3)
+        // }
       }).catch((error)=>{
         this.loading=false
         console.log('ops an error occurs')
@@ -609,16 +1043,28 @@ export default defineComponent({
     },
     deidentify () {
       this.loading = true
-    
+      
+      let deidentificationModelDict = {}
+      for ( const [entityType, entityTypeDict] of Object.entries(this.deidentificationConf['custom'])) {
+        if ( this.deidentificationConf[this.setupName][entityType] ) {
+          deidentificationModelDict[entityType] = this.deidentificationConf[this.setupName][entityType].value
+        } else {
+          deidentificationModelDict[entityType] = ''
+        }
+      }
+      console.log(deidentificationModelDict)
       api.post(
         '/deidentify',
         {
-        model_type: 'modelType',
-        model_name: 'this.modelConfig[this.setupName].modelName',
-        model_lang: 'lang',
-        input_text: this.inputLetter,
-        to_hide: this.deidentificationSelection,
-        date_level_anonymization: this.dictDateAnonymLevel[this.dateAnonymLevel]
+        cfg: {
+          models: deidentificationModelDict,
+          mask: {
+            mode: "tag",
+            special_character: "*",
+            date_level: this.dictDateAnonymLevel[this.dateAnonymLevel]
+          }
+        },
+        input_text: this.inputLetter
       }).then( (response) => {
         let deidentifiedText = response.data['deidentified_text']
         this.$refs.deidentifiedTextDiv.innerHTML = this.highlight(deidentifiedText)
@@ -643,6 +1089,7 @@ export default defineComponent({
       text = text.replace(/&ltINDIRIZZO&gt/g, '<span class="bg-orange-3">&ltINDIRIZZO&gt</span>')
       text = text.replace(/&ltDATA&gt/g, '<span class="bg-green-3">&ltDATA&gt</span>')
       text = text.replace(/&ltCF&gt/g, '<span class="bg-red-4">&ltCF&gt</span>')
+      text = text.replace(/&ltETÀ&gt/g, '<span class="bg-purple-4">&ltETÀ&gt</span>')
 
       // this.$refs.deidentifiedTextDiv.$el
       // this.$refs.deidentifiedTextDiv.replace(/prova/, '<span>prova</span>')
@@ -665,14 +1112,26 @@ export default defineComponent({
       }
       reader.readAsText(upload)
     },
-    resetResult () {
+    whenChangeSetupModel () {
+      // reset answer question ansqwering model
       if ( this.taskName.includes('question') ){
+        this.freeQuestionResponse = {answers: [], noAnswer: false}
         for ( const lang of Object.keys(this.defaultQuestionsAnswers) ) {
           for ( const index of Object.keys(this.defaultQuestionsAnswers[lang]) )
             this.defaultQuestionsAnswers[lang][index]["answer"] = null
             this.question = null
         }
       }
+      // reset 
+      this.deidentified = false
+    },
+    resetDeidModel(value, entityType) {
+      if (value === true ) this.deidentificationConf[this.setupName][entityType].value = this.deidentificationConf[this.setupName][entityType].default
+      if (value === false) this.deidentificationConf[this.setupName][entityType].value = ''
+    },
+    updateTaskName () {
+      this.setupName = null
+      this.taskName = this.taskName.value
     }
   },
   created () {

@@ -3,7 +3,7 @@ from simplet5 import SimpleT5
 from os import path
 import torch
 import spacy
-from transformers import AutoTokenizer, pipeline, AutoModelForSeq2SeqLM, AutoModelForCausalLM
+from transformers import AutoTokenizer, pipeline, AutoModelForSeq2SeqLM, AutoModelForSequenceClassification, BertForSequenceClassification
 import re
 import numpy as np
 from torch.nn import functional as F
@@ -13,11 +13,11 @@ from operator import attrgetter
 from tqdm import tqdm
 import time
 
-nlp = spacy.load("en_core_sci_md")
 
 DEVICE = torch.device('cpu')
+MAX_LENGHT = 301
 
-def _get_embeddings(input_ids, model) -> torch.FloatTensor:
+def _get_embeddings(input_ids, model, model_type) -> torch.FloatTensor:
     """
     Get token embeddings and one-hot vector into vocab. It's done via matrix multiplication
     so that gradient attribution is available when needed.
@@ -29,8 +29,10 @@ def _get_embeddings(input_ids, model) -> torch.FloatTensor:
         inputs_embeds: Embeddings of the tokens. Dimensions are (sequence_len, d_embed)
         token_ids_tensor_one_hot: Dimensions are (sequence_len, vocab_size)
     """
-
-    embedding_matrix = model.shared.weight
+    if 't5' in model_type:
+        embedding_matrix = model.shared.weight
+    if 'bert' in model_type:
+        embedding_matrix = model.bert.embeddings.word_embeddings.weight
 
     vocab_size = embedding_matrix.shape[0]
     batch_size, num_tokens = input_ids.shape
@@ -40,7 +42,15 @@ def _get_embeddings(input_ids, model) -> torch.FloatTensor:
     inputs_embeds = torch.matmul(token_ids_tensor_one_hot, embedding_matrix)
     return inputs_embeds
 
-def custom_forward(input_embeds: torch.Tensor, decoder_input_embeds: torch.Tensor, input_attention_mask: torch.Tensor, model) -> torch.Tensor:
+def custom_forward_func_seq_cla(inputs_embeds, decoder_input_embeds, input_attention_mask, model):
+    output = model(
+        inputs_embeds=inputs_embeds,
+        attention_mask=input_attention_mask,
+        return_dict=True
+    )
+    return torch.softmax(output.logits, dim=-1)
+
+def custom_forward_generative(input_embeds: torch.Tensor, decoder_input_embeds: torch.Tensor, input_attention_mask: torch.Tensor, model) -> torch.Tensor:
     if decoder_input_embeds is not None:
         output = model(
             inputs_embeds=input_embeds,
@@ -56,17 +66,22 @@ def custom_forward(input_embeds: torch.Tensor, decoder_input_embeds: torch.Tenso
         )
     return F.softmax(output.logits[:, -1, :], dim=-1)
 
-def generate_attribution(model, input_ids, decoder_input_ids, attention_mask, generate_output):
-    prediction_ids = generate_output.sequences[0, 1:-1]
+def generate_attribution(model, input_ids, decoder_input_ids, attention_mask, prediction_ids, model_type):
+    # prediction_ids = generate_output.sequences[0, 1:-1]
     attribution_list = []
     for pred_id in prediction_ids:
 
-        input_embeds = _get_embeddings(input_ids, model)
+        input_embeds = _get_embeddings(input_ids, model, model_type)
 
         if decoder_input_ids is not None:
-          decoder_input_embeds = _get_embeddings(decoder_input_ids, model)
+          decoder_input_embeds = _get_embeddings(decoder_input_ids, model, model_type)
         else:
           decoder_input_embeds = None
+
+        if 't5' in model_type:
+            custom_forward = custom_forward_generative
+        if 'bert' in model_type:
+            custom_forward = custom_forward_func_seq_cla
 
         if decoder_input_embeds is None:
             forward_func = partial(custom_forward, decoder_input_embeds=decoder_input_embeds, input_attention_mask=attention_mask, model=model)
@@ -80,8 +95,9 @@ def generate_attribution(model, input_ids, decoder_input_ids, attention_mask, ge
 
         if decoder_input_embeds is not None:
             concat_attribution = torch.cat(attribution, dim=1)
+            attribution = concat_attribution
         # print('concat attribution shape', concat_attribution.shape)
-        attribution = concat_attribution.squeeze(0)
+        attribution = attribution.squeeze(0)
         # print('attribution after squeeze shape', attribution.shape)
         norm = torch.norm(attribution, dim=1)
         # print('attribution after norm', norm.shape)
@@ -107,7 +123,7 @@ def generate_attribution(model, input_ids, decoder_input_ids, attention_mask, ge
                 attention_mask = model._prepare_attention_mask_for_generation(input_ids, pad_token_id, eos_token_id)
     return attribution_list
 
-def attribution_parser(attribution_array, context_tokens, prefix_text, suffix_text):
+def attribution_parser(attribution_array, context_tokens, prefix_text, suffix_text, model_type):
     scores = np.mean(attribution_array, axis=0)
     max_scores = np.max(scores)
     max_scores = 1 if max_scores == 0.0 else max_scores
@@ -124,6 +140,12 @@ def attribution_parser(attribution_array, context_tokens, prefix_text, suffix_te
     new_values_list = []
     # print('scores', scores)
     # print('input_tokens', context_tokens)
+    if 'bert' in model_type:
+        token_prefix = ''
+        partial_token_prefix = '##'
+    if 't5' in model_type:
+        token_prefix = "▁"
+        partial_token_prefix = ''
     i = 1
     while i < len(values_list):
         end_word = False
@@ -134,27 +156,50 @@ def attribution_parser(attribution_array, context_tokens, prefix_text, suffix_te
             next_score = values_list[i][1]
             # if ((' ' or '▁' or '_' or '-' or ':' or ';' or '(' or ')')
             #         not in next_word.includes('▁')):
-            if "▁" not in next_word:
-                new_world += next_word
-                mean_scores.append(next_score)
-            else:
-                end_word = True
-                new_values_list.append(
-                    [new_world.replace("▁", " "), np.mean(mean_scores)]
-                )
-            i += 1
-            if i == len(values_list):
-                if not end_word:
-                    new_values_list.append(
-                        [new_world.replace("▁", " "), np.mean(mean_scores)]
-                    )
-                    end_word = True
+            if token_prefix != '':
+                if token_prefix not in next_word:
+                    new_world += next_word
+                    mean_scores.append(next_score)
                 else:
-                    mean_scores = [values_list[i-1][1]]
-                    new_world = values_list[i-1][0]
+                    end_word = True
                     new_values_list.append(
-                        [new_world.replace("▁", " "), np.mean(mean_scores)]
+                        [new_world.replace(token_prefix, " "), np.mean(mean_scores)]
                     )
+                i += 1
+                if i == len(values_list):
+                    if not end_word:
+                        new_values_list.append(
+                            [new_world.replace(token_prefix, " "), np.mean(mean_scores)]
+                        )
+                        end_word = True
+                    else:
+                        mean_scores = [values_list[i-1][1]]
+                        new_world = values_list[i-1][0]
+                        new_values_list.append(
+                            [new_world.replace(token_prefix, " "), np.mean(mean_scores)]
+                        )
+            if partial_token_prefix != '':
+                if partial_token_prefix in next_word:
+                    new_world += next_word
+                    mean_scores.append(next_score)
+                else:
+                    end_word = True
+                    new_values_list.append(
+                        [new_world.replace(partial_token_prefix, "") + " ", np.mean(mean_scores)]
+                    )
+                i += 1
+                if i == len(values_list):
+                    if not end_word:
+                        new_values_list.append(
+                            [new_world.replace(partial_token_prefix, "") + " ", np.mean(mean_scores)]
+                        )
+                        end_word = True
+                    else:
+                        mean_scores = [values_list[i-1][1]]
+                        new_world = values_list[i-1][0]
+                        new_values_list.append(
+                            [new_world.replace(partial_token_prefix, "") + " ", np.mean(mean_scores)]
+                        )
 
 
     word_list.append(new_values_list)
@@ -176,9 +221,6 @@ def attribution_parser(attribution_array, context_tokens, prefix_text, suffix_te
     gradient_input = [prefix_gradient_input + gradient_input[0] + suffix_gradient_input]
     return gradient_input
 
-
-
-
 def question_and_answering_pipeline(
     model_type,
     model_name,
@@ -194,9 +236,9 @@ def question_and_answering_pipeline(
     input_text = re.sub(" +", ' ', input_text)
     input_text = input_text.lower()
 
+    
 
-
-    if model_type == 'generative':
+    if model_type == 't5-qa':
         if model_lang == 'en':
             print('translating the text...')
             translator = Translator()
@@ -214,7 +256,7 @@ def question_and_answering_pipeline(
         text_slices = []
         start_slice = 0
         # max length of the slices
-        max_lenght = 300
+        max_lenght = MAX_LENGHT
         print('slicing...')
         for end_slice in range(max_lenght, input_text_ids.shape[1], max_lenght):
             text_slices.append(tokenizer.decode(input_text_ids[0, start_slice:end_slice], skip_special_tokens=True))
@@ -265,6 +307,7 @@ def question_and_answering_pipeline(
                     return_dict_in_generate=True,
                     output_scores=True,
                 )
+                prediction_ids = generate_output.sequences[0, 1:-1]
                 end = time.time()
                 gen_time = round(end-start, 2)
                 print(f'it takes {gen_time} seconds')
@@ -277,7 +320,8 @@ def question_and_answering_pipeline(
                         input_ids,
                         decoder_input_ids,
                         attention_mask,
-                        generate_output
+                        prediction_ids,
+                        model_type
                     )
                     end = time.time()
                     attr_time = round(end - start, 2)
@@ -292,22 +336,26 @@ def question_and_answering_pipeline(
 
                     prefix_text = ''.join(text_slices[:slice_index])
                     suffix_text = ''.join(text_slices[(slice_index + 1):])
-                    gradient_input = attribution_parser(attribution_array, context_tokens, prefix_text, suffix_text)
+                    gradient_input = attribution_parser(attribution_array, context_tokens, prefix_text, suffix_text, model_type)
                     gradient_input = gradient_input[0]
                 else:
                     gradient_input = None
                 answer = tokenizer.decode(generate_output.sequences[0], skip_special_tokens=True)
                 answer_score = F.softmax(generate_output.scores[0][0], dim=0)[generate_output.sequences[0, 1]].item()
                 # return [{ 'question': question, 'answer': answer, 'saliency_map': gradient_input, 'score': answer_score}]
-                answer_dict['answers'].append({ 'text': answer, 'saliency_map': gradient_input, 'score': answer_score})
+                answer_dict['answers'].append({
+                    'text': answer,
+                    'saliency_map': gradient_input,
+                    'score': answer_score,
+                    'slice_index': slice_index,
+                    'question': question
+                })
             answer_list.append(answer_dict)
         del model
         return answer_list
     else:
         task = 'question-answering'
         nlp = pipeline(task, model=model_name, tokenizer=model_name)
-
-    
 
         tokenizer = AutoTokenizer.from_pretrained(model_name)
         input_text_ids = tokenizer.encode(
@@ -317,7 +365,7 @@ def question_and_answering_pipeline(
         )
         text_slices = []
         start_slice = 0
-        max_lenght = 301
+        max_lenght = MAX_LENGHT
         # print('slicing...')
         for end_slice in range(max_lenght, input_text_ids.shape[1], max_lenght):
             text_slices.append(tokenizer.decode(input_text_ids[0, start_slice:end_slice], skip_special_tokens=True))
@@ -337,14 +385,248 @@ def question_and_answering_pipeline(
                 output = nlp(qa_input)
                 # if answer_dict["score"] > 0.2:
                     # answers.append(f'Answer text slice {index + 1}: {answer_dict["answer"]}, score: {"{:.2f}".format(answer_dict["score"]*100)}%')
-                answer_dict['answers'].append({ 'text': output["answer"], 'saliency_map': None, 'score': output["score"]})
+                answer_dict['answers'].append({
+                    'text': output["answer"],
+                    'saliency_map': None,
+                    'score': output["score"],
+                    'slice_index': index,
+                    'question': question
+                })
             answer_list.append(answer_dict)
             
         return answer_list
 
+
+def compute_saliency_map_qa(
+    input_text,
+    answer_text,
+    question,
+    slice_index,
+    model_type,
+    model_name,
+    model_lang
+):
+    input_text = re.sub(" +", ' ', input_text)
+    input_text = re.sub("\s*\n\s*(\s*\n\s*)+", '\n\n', input_text)
+    input_text = re.sub("\t+|\t ", ' ', input_text)
+    input_text = re.sub(" +", ' ', input_text)
+    input_text = input_text.lower()
+        
+
+    if model_type == 't5-qa':
+        if model_lang == 'en':
+            print('translating the text...')
+            translator = Translator()
+            input_text = translator.translate(input_text, src='it', dest='en').text
+        print('loading tokenizer...')
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
+        # encode the entire text
+        input_text_ids = tokenizer.encode(
+            input_text,
+            return_tensors='pt',
+            add_special_tokens=True
+        )
+
+        # split the long texts into slices
+        text_slices = []
+        start_slice = 0
+        # max length of the slices
+        max_lenght = MAX_LENGHT
+        print('slicing...')
+        for end_slice in range(max_lenght, input_text_ids.shape[1], max_lenght):
+            text_slices.append(tokenizer.decode(input_text_ids[0, start_slice:end_slice], skip_special_tokens=True))
+            start_slice = end_slice
+        text_slices.append(tokenizer.decode(input_text_ids[0,start_slice:], skip_special_tokens=True))
+
+        print('Number of slicing:', len(text_slices))
+        print('loading the model...')
+        model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
+        model.eval()
+        model.zero_grad()
+        model.to(DEVICE)
+
+        context_text = text_slices[slice_index]
+
+        context_ids = tokenizer.encode(context_text, truncation=True, max_length=450)
+        context_ids_length = len(context_ids)
+        context_tokens = tokenizer.convert_ids_to_tokens(context_ids[:-1])
+        context = tokenizer.decode(context_ids, skip_special_tokens=True)
+
+        model_input_text = f"question: {question}  context: {context}"
+        # print("model input:", model_input_text)
+        model_input_ids_len = len(tokenizer.encode(model_input_text))
+        # output = model.generate(model_input_text, max_length=500, attribution=['grad_x_input'])
+        # print(output)
+
+        input_features = tokenizer(
+            model_input_text,
+            return_tensors='pt',
+            truncation=True,
+            max_length=490,
+        )
+        decoder_input_ids = torch.tensor([[model.config.decoder_start_token_id]], device=DEVICE)
+        input_ids = input_features['input_ids'].to(DEVICE)
+        attention_mask = input_features['attention_mask'].to(DEVICE)
+        print(f'generating output slice: {slice_index}...')
+        # This works only for T5 models
+        pad_id = model.config.pad_token_id
+        prediction_ids = [pad_id] + tokenizer.encode(answer_text)
+        print(f'generating attribution slice: {slice_index}...')
+
+        attribution_list = generate_attribution(
+            model,
+            input_ids,
+            decoder_input_ids,
+            attention_mask,
+            prediction_ids,
+            model_type
+        )
+
+        input_attribution = []
+        for score_pred_token in attribution_list:
+            input_attribution.append(
+                score_pred_token[:model_input_ids_len][-context_ids_length:-1] # -1 because input ends with </s>
+            )
+        attribution_array = np.array(input_attribution)
+
+        prefix_text = ''.join(text_slices[:slice_index])
+        suffix_text = ''.join(text_slices[(slice_index + 1):])
+        gradient_input = attribution_parser(attribution_array, context_tokens, prefix_text, suffix_text, model_type)
+        gradient_input = gradient_input[0]
+        del model
+        return gradient_input
+    else:
+        return None
+
+def compute_saliency_map_dee(
+    input_text,
+    sentence_text,
+    target_text,
+    model_type,
+    model_name,
+    model_lang,
+    task
+):
+    if model_type == 't5-ner':
+        model_name = 'data/checkpoints/simplet5-epoch-6-train-loss-0.2724-val-loss-0.1477'
+        print('loading tokenizer...')
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
+        print('loading the model...')
+        model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
+        model.eval()
+        model.zero_grad()
+        model.to(DEVICE)
+        
+        context_text = ': '.join(sentence_text.split(': ')[1:])
+
+        context_ids = tokenizer.encode(context_text, truncation=True, max_length=450)
+        context_ids_length = len(context_ids)
+        context_tokens = tokenizer.convert_ids_to_tokens(context_ids[:-1])
+        context = tokenizer.decode(context_ids, skip_special_tokens=True)
+
+        model_input_text = f"medication: {context}"
+        # print("model input:", model_input_text)
+        model_input_ids_len = len(tokenizer.encode(model_input_text))
+
+        input_features = tokenizer(
+            model_input_text,
+            return_tensors='pt'
+        )
+        decoder_input_ids = torch.tensor([[model.config.decoder_start_token_id]], device=DEVICE)
+        input_ids = input_features['input_ids'].to(DEVICE)
+        attention_mask = input_features['attention_mask'].to(DEVICE)
+        # This works only for T5 models
+        pad_id = model.config.pad_token_id
+        prediction_ids = [pad_id] + tokenizer.encode(target_text)
+        print(f'generating attribution for target: {target_text}...')
+
+        attribution_list = generate_attribution(
+            model,
+            input_ids,
+            decoder_input_ids,
+            attention_mask,
+            prediction_ids,
+            model_type
+        )
+
+        input_attribution = []
+        for score_pred_token in attribution_list:
+            input_attribution.append(
+                score_pred_token[:model_input_ids_len][-context_ids_length:-1] # -1 because input ends with </s>
+            )
+        attribution_array = np.array(input_attribution)
+
+        prefix_text = ''
+        suffix_text = ''
+        gradient_input = attribution_parser(attribution_array, context_tokens, prefix_text, suffix_text, model_type)
+        gradient_input = gradient_input[0]
+        del model
+        return gradient_input
+
+    if model_type == 'bert-dee':
+        ctx_cats = {}
+        ctx_cats['Action'] = {'Inzio':0, 'Fine':1, 'Incremento':2, 'Decremento':3, 'Altri cambiamenti':4, 'Unica dose':5, 'Sconociuto':6}
+        ctx_cats['Negation'] = {'Si':0, 'No':1}
+        ctx_cats['Temporality'] = {'Passato':0,'Presente':1,'Futuro':2,'Sconosciuto':3}
+        ctx_cats['Certainty'] = {'Certo':0, 'Ipotetico':1, 'Condizionale':2, 'Sconosciuto':3}
+        ctx_cats['Actor'] = {'Medico':0, 'Paziente':1, 'Sconosciuto':2}
+        ctx_cats['Disposition'] = {'Disposizione':0,'Nessuna Disposizione':1,'Indeterminato':2}
+        print('loading tokenizer...')
+        tokenizer = AutoTokenizer.from_pretrained('bert-base-cased')
+        print('loading the model...')
+        model = AutoModelForSequenceClassification.from_pretrained('data/checkpoints/' + model_name)
+        model.eval()
+        model.zero_grad()
+        model.to(DEVICE)
+        
+        context_text = sentence_text
+
+        context_ids = tokenizer.encode(context_text, truncation=True, max_length=450)
+        context_ids_length = len(context_ids) - 1 # because of the CLS token at the beginning
+        context_tokens = tokenizer.convert_ids_to_tokens(context_ids[1:-1])
+        context = tokenizer.decode(context_ids, skip_special_tokens=True)
+
+        model_input_text = context
+        # print("model input:", model_input_text)
+        model_input_ids_len = len(tokenizer.encode(model_input_text))
+
+        input_features = tokenizer(
+            model_input_text,
+            return_tensors='pt'
+        )
+        decoder_input_ids = None
+        input_ids = input_features['input_ids'].to(DEVICE)
+        attention_mask = input_features['attention_mask'].to(DEVICE)
+        print(f'generating attribution for target: {target_text}...')
+        target = ctx_cats[task[0].upper() + task[1:]][target_text[0].upper() + target_text[1:]]
+        prediction_ids = [target]
+        attribution_list = generate_attribution(
+            model,
+            input_ids,
+            decoder_input_ids,
+            attention_mask,
+            prediction_ids,
+            model_type
+        )
+
+        input_attribution = []
+        for score_pred_token in attribution_list:
+            input_attribution.append(
+                score_pred_token[:model_input_ids_len][-context_ids_length:-1] # -1 because input ends with </s>
+            )
+        attribution_array = np.array(input_attribution)
+
+        prefix_text = ''
+        suffix_text = ''
+        gradient_input = attribution_parser(attribution_array, context_tokens, prefix_text, suffix_text, model_type)
+        gradient_input = gradient_input[0]
+        del model
+        return gradient_input
+
+
 class Predictor:
     def __init__(self) -> None:
-        nlp = spacy.load("en_core_sci_md")
+        self.nlp = spacy.load("en_core_sci_md")
         # self.model = SimpleT5()
         # checkpoint_name = 'simplet5-epoch-6-train-loss-0.2724-val-loss-0.1477'
         # self.model.load_model("t5","data/checkpoints/"+checkpoint_name, use_gpu=True)
@@ -368,13 +650,12 @@ class Predictor:
         self.tokenizer = AutoTokenizer.from_pretrained('t5-large')
 
         input_text = self.translator.translate(input_text, src='it', dest='en').text
-        text = input_text.replace('\t', ' ').replace('\n', ' ')
-        text_filtered = ''
-        for char_index, char in enumerate(text):
-            if char_index < (len(text)-1):
-                if not(text[char_index + 1] == ' ' and char == ' '):
-                    text_filtered += char
-        text_filtered = text_filtered.lower() # uncase the text
+        # eliminate multiple spaces and tabs but can be improved 
+        input_text = re.sub(" +", ' ', input_text)
+        input_text = re.sub("\s*\n\s*(\s*\n\s*)+", '\n\n', input_text)
+        input_text = re.sub("\t+|\t ", ' ', input_text)
+        input_text = re.sub(" +", ' ', input_text)
+        text_filtered = input_text.lower() # uncase the text
         # print(text_filtered)
         attribute = 'medications: '
         # input_text = bos + text_filtered + sep + attribute
@@ -383,7 +664,7 @@ class Predictor:
             return_tensors='pt',
             add_special_tokens=True
         )
-        print('fino a qui tutto bene init')
+        # print('fino a qui tutto bene init')
         # If a text is longer than 900 tokens I create slices to divide it
         text_slices = []
         start_slice = 0
@@ -433,7 +714,7 @@ class Predictor:
                 print(text, '\n', value)
 
         final_results = []
-        doc = nlp(input_text)
+        doc = self.nlp(input_text)
         del self.model
         del self.tokenizer
 

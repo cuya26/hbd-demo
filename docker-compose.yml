@@ -10,7 +10,8 @@ services:
             - ./frontend/:/usr/src/app/
         container_name: hbd-demo-frontend
         ports:
-            - 51118:8080
+            - 51118:51118
+        restart: always
     backend:
         build:
             context: ./backend/
@@ -19,11 +20,11 @@ services:
         container_name: hbd-demo-backend
         volumes:
             - ./backend/:/workspace/
-        command: sh -c "flask run -p 5003 --host=0.0.0.0"
         environment:
             - PYTHONUNBUFFERED=1
         ports:
             - 51119:5003
+        restart: always
         deploy:
             resources:
                 reservations:

@@ -1,6 +1,12 @@
-FROM pytorch/pytorch:1.10.0-cuda11.3-cudnn8-runtime
+FROM johnsnowlabs/sparknlp:sparknlp_for_healthcare_jupyter
 
-USER root
+RUN mkdir -p /workspace/
 WORKDIR /workspace/
-COPY requirements.txt ./
-RUN pip install -r requirements.txt
+COPY spark_jsl.json /workspace/sparknlp_keys.json
+COPY install_jsl.sh /workspace/
+RUN chmod +x install_jsl.sh
+RUN /workspace/install_jsl.sh
+COPY requirements.txt /workspace/
+RUN pip install --no-cache-dir --upgrade -r requirements.txt
+RUN python3 -m spacy download it_core_news_lg
+ENTRYPOINT ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "5003", "--reload"]
