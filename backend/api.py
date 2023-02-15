@@ -1,8 +1,10 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from model import Predictor, question_and_answering_pipeline, compute_saliency_map_qa, compute_saliency_map_dee
 from ita_deidentification import anonymizer
-
+import pdfplumber
+import pdftotext
+from pdfminer.high_level import extract_text
 
 app = FastAPI()
 pred = Predictor()
@@ -115,3 +117,17 @@ async def call_saliency_map_computation(request: Request):
         )
         return { 'saliency_map' : saliency_map }
 
+@app.post('/convert_pdf')
+async def convert_pdf (uploaded_pdf: UploadFile):
+    print("file:", uploaded_pdf.filename)
+    print(uploaded_pdf)
+    print(type(uploaded_pdf))
+    # with pdfplumber.open(uploaded_pdf.file) as pdf:
+    #     pdf_text = ''
+    #     for page in pdf.pages:
+    #         pdf_text += page.extract_text() + '\n'
+
+    pdf = pdftotext.PDF(uploaded_pdf.file)
+    pdf_text = "\n\n".join(pdf)
+
+    return {'pdf_text': pdf_text }

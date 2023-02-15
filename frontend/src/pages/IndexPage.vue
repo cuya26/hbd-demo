@@ -26,34 +26,71 @@
           <q-card class="items-strech" style="height: 680px">
             <div class="col-12 column no-wrap" style="height: 100%">
               <q-card-section class="row justify-between">
-                <div class="col-2"></div>
+                <div class="col-3"></div>
                 <div class="text-h6 text-primary">Input Text</div>
-                <div class="col-2 justify-end row">
-                  <q-btn v-if="!editMode" label="edit" class="text-primary" flat rounded dense @click="editMode=true" />
+                <div class="col-3">
+                  <div class="col-6 justify-end row">
+                    <q-btn v-if="inputMode==='saliency'" label="editor" color="primary" flat rounded dense @click="inputMode='edit'" />
+                  </div>
+                  <!-- <div class="col-6 justify-end row">
+                    <q-btn v-if="inputMode!=='pdf' && dropzoneURL!==''" label="pdf" class="text-primary" flat rounded dense @click="inputMode='pdf'" />
+                  </div> -->
+                  <q-btn-toggle
+                    v-model="inputMode"
+                    style="border: 1px solid #027be3"
+                    no-caps
+                    dense
+                    spread
+                    v-if='dropzoneURL!=="" && inputMode!=="saliency"'
+                    rounded
+                    unelevated
+                    toggle-color="primary"
+                    color="white"
+                    text-color="primary"
+                    :options="[
+                      {label: 'PDF', value: 'pdf'},
+                      {label: 'EDITOR', value: 'edit'}
+                    ]"
+                  />
                 </div>
               </q-card-section>
               <q-card-section style="height: 90%">
-                <div style="overflow: auto; flex-grow: 1;max-height: 100%">
+                <div v-if="!loadingSaliencyMap" style="overflow: auto; flex-grow: 1;max-height: 100%">
                   <q-input
-                  v-if="editMode"
+                  @drop.prevent="this.dropFunction"
+                  @dragover.prevent
+                  @dragenter.prevent="highlightColor = true"
+                  @dragleave="highlightColor = false"
+                  :class="
+                    (highlightColor ? 'bg-light-blue-2' : '') +
+                    ' text-grey-7'
+                  "
+                  v-if="inputMode==='edit'"
                   outlined
-                  placeholder="Insert text or choose a discharge letter"
+                  placeholder="Insert text or drag and drop a pdf of txt file"
                   class="text-grey-7"
                   type="textarea"
                   input-style="min-height: 560px"
                   style="white-space: pre-line;"
                   v-model="inputLetter" 
                   />
+                  <embed
+                    :src="dropzoneURL"
+                    style="min-height: 560px;width: 100%"
+                    class=""
+                    v-if="inputMode==='pdf'"
+                    type="application/pdf"
+                  />
                   <!-- <q-input outlined v-model="text" :dense="dense" /> -->
                   <!-- <div class="text-grey-7" style="white-space: pre-line">{{dischargeLetterName == null ? '' : letterDict[dischargeLetterName]}}</div> -->
                 </div>
 
-                <div style="height: 100%;" v-if="!editMode && loadingSaliencyMap" class="row justify-evenly">
+                <div style="height: 100%;" v-if="loadingSaliencyMap" class="row justify-evenly">
                   <div style="height: 100%;" class="column justify-evenly">
                     <q-spinner color="primary" size="6em" />
                   </div>
                 </div>
-                <div v-if="!editMode && !loadingSaliencyMap" class="text-grey-7" style="overflow: auto; flex-grow: 1;max-height: 100%">
+                <div v-if="inputMode==='saliency'" class="text-grey-7" style="overflow: auto; flex-grow: 1;max-height: 100%">
                   <div style="min-height: 490px; white-space: pre-line">
                   <mark style="white-space: pre-line;" v-for="element in saliencyMap" :key="element" :class="element.color">
                     {{ element.text }}
@@ -384,6 +421,10 @@ export default defineComponent({
   name: 'IndexPage',
   setup () {
     return {
+      inputMode: ref("edit"),
+      dropzoneURL: ref(""),
+      text: ref(""),
+      highlightColor: ref(false),
       visibleColumns,
       loadingSaliencyMap: ref(false),
       deidentified: ref(false),
@@ -724,7 +765,7 @@ export default defineComponent({
         }
       }),
       deidentifiedText: ref(''),
-      editMode: ref(true),
+      // editMode: ref(true),
       showSaliencyMap: ref(false),
       saliencyMap: ref([]),
       inputLetter: ref(null),
@@ -775,7 +816,8 @@ export default defineComponent({
           modelNames: [
           "Translation-based: it->en, t5-base (english)",
           'Extractive: Roberta-large (multilingual)',
-          "Generative: t5-base (multilingual)"
+          "Generative: t5-base (multilingual)",
+          "Extractive: BioBIT Italian"
         ],
         },
         {
@@ -797,7 +839,10 @@ export default defineComponent({
       setupName: ref(null),
       setupNames: ref({
         "pharmacological event extraction" : ['Track1 n2c2 Challenge (en)'],
-        "question answering (extractive)": ['Extractive: Roberta-large (multilingual)'],
+        "question answering (extractive)": [
+          'Extractive: Roberta-large (multilingual)',
+          "Extractive: BioBIT Italian"
+        ],
         "question answering (generative)": [
           "Translation-based: it->en, t5-base (english)",
           "Generative: t5-base (multilingual)"
@@ -868,6 +913,12 @@ export default defineComponent({
             modelType: 'roberta-qa',
             thresold: 0.0
           },
+          "Extractive: BioBIT Italian": {
+            modelName: 'data/checkpoints/medBIT-r3-plus_ft_QA',
+            lang: 'it',
+            modelType: 'roberta-qa',
+            thresold: 0.0
+          },
           "Translation-based: it->en, t5-base (english)": {
             modelName: "valhalla/t5-base-qa-qg-hl",
             lang: "en",
@@ -906,7 +957,6 @@ export default defineComponent({
   methods : {
     loadSaliencyMapQA (sliceIndex, answer, answer_index, question) {
       this.loadingSaliencyMap = true
-      this.editMode=false
       api.post(
         '/compute_saliency_map',
         {
@@ -922,6 +972,7 @@ export default defineComponent({
         { timeout: 360000 }
       ).then ( (response) => {
         this.loadingSaliencyMap = false
+        this.inputMode="saliency"
         console.log(response.data.saliency_map)
         console.log(this.freeQuestionResponse)
         this.saliencyMap = response.data.saliency_map
@@ -934,7 +985,6 @@ export default defineComponent({
     loadSaliencyMapDrugExtraction (sentence, target, colName) {
       
       this.loadingSaliencyMap = true
-      this.editMode=false
       api.post(
         '/compute_saliency_map',
         { 
@@ -950,6 +1000,7 @@ export default defineComponent({
         { timeout: 360000 }
       ).then ( (response) => {
         this.loadingSaliencyMap = false
+        this.inputMode="saliency"
         this.saliencyMap = response.data.saliency_map
       }).catch( (error) =>{
         this.loadingSaliencyMap = false
@@ -974,7 +1025,7 @@ export default defineComponent({
     },
     answerQuestion () {
       this.loading=true
-      this.editMode=true
+      this.inputMode="edit"
       this.freeQuestionResponse = {answers: [], noAnswer: false}
       api.post(
         '/answer_question',
@@ -1015,7 +1066,7 @@ export default defineComponent({
     },
     answerQuestionList () {
       this.loading=true
-      this.editMode=true
+      his.inputMode="edit"
       let modelType = null
       if (this.taskName == "question answering (extractive)") modelType = 'extractive'
       else modelType = 'generative'
@@ -1132,6 +1183,43 @@ export default defineComponent({
     updateTaskName () {
       this.setupName = null
       this.taskName = this.taskName.value
+    },
+    dropFunction(dragEvent) {
+      // TODO add revokeObjectURL
+      const dropzoneFile = dragEvent.dataTransfer.files[0];
+      // TODO add docx
+      if (dropzoneFile.type === "application/pdf") {
+        this.dropzoneURL = URL.createObjectURL(dropzoneFile);
+        // console.log(dropzoneFile);
+        // console.log(dragEvent.dataTransfer);
+        // console.log(this.dropzoneURL);
+        const uploadForm = new FormData();
+        uploadForm.append("uploaded_pdf", dropzoneFile);
+        // uploadForm.append("notes", "this are my notes");
+        api
+          .post("convert_pdf", uploadForm, {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          })
+          .then((response) => {
+            this.inputLetter = response.data["pdf_text"];
+          })
+          .catch((error) => {
+            console.log(error.message);
+          });
+      } else if (dropzoneFile.type === "text/plain") {
+        const reader = new FileReader();
+        reader.onload = (res) => {
+          this.inputLetter = res.target.result;
+        };
+        reader.onerror = (err) => console.log(err);
+        reader.readAsText(dropzoneFile);
+      } else {
+        // TODO add error message
+        console.log("The dropped file haven't a supported extension");
+      }
+      this.highlightColor = false;
     }
   },
   created () {

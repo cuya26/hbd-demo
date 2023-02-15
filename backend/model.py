@@ -453,6 +453,7 @@ def compute_saliency_map_qa(
         context = tokenizer.decode(context_ids, skip_special_tokens=True)
 
         model_input_text = f"question: {question}  context: {context}"
+        
         # print("model input:", model_input_text)
         model_input_ids_len = len(tokenizer.encode(model_input_text))
         # output = model.generate(model_input_text, max_length=500, attribution=['grad_x_input'])

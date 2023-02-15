@@ -11,3 +11,7 @@ captum
 stanza
 datefinder
 protobuf==3.20.*
+pdfplumber==0.7.6
+pdftotext
+pdfminer.six
+python-multipart==0.0.5
