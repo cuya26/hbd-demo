@@ -4,7 +4,7 @@
       <div class="row no-wrap justify-between" style="height: 100%">
         <div class="column no-wrap" style="width: 55%">
           <div class="q-pb-md">
-            <div class="row justify-evenly">
+            <!-- <div class="row justify-evenly">
               <q-select v-if="dischargeLetterLoaded" style="width: 300px" dense outlined v-model="dischargeLetterName" @update:model-value="inputLetter=letterDict[dischargeLetterName]" :options="letterNames" label="Choose the input document" />
               <q-btn
               v-if="!dischargeLetterLoaded"
@@ -21,16 +21,17 @@
                 accept=".json"
                 @update:model-value="loadLetters"
               />
-            </div>
+            </div> -->
+            <div style="height:40px"></div>
           </div>
           <q-card class="items-strech" style="height: 680px">
             <div class="col-12 column no-wrap" style="height: 100%">
               <q-card-section class="row justify-between">
                 <div class="col-3"></div>
-                <div class="text-h6 text-primary">Input Text</div>
+                <div class="text-h6 text-primary">Input</div>
                 <div class="col-3">
                   <div class="col-6 justify-end row">
-                    <q-btn v-if="inputMode==='saliency'" label="editor" color="primary" flat rounded dense @click="inputMode='edit'" />
+                    <q-btn v-if="inputMode==='saliency'" label="text" color="primary" flat rounded dense @click="inputMode='edit'" />
                   </div>
                   <!-- <div class="col-6 justify-end row">
                     <q-btn v-if="inputMode!=='pdf' && dropzoneURL!==''" label="pdf" class="text-primary" flat rounded dense @click="inputMode='pdf'" />
@@ -49,7 +50,7 @@
                     text-color="primary"
                     :options="[
                       {label: 'PDF', value: 'pdf'},
-                      {label: 'EDITOR', value: 'edit'}
+                      {label: 'TEXT', value: 'edit'}
                     ]"
                   />
                 </div>
@@ -70,8 +71,8 @@
                   placeholder="Insert text or drag and drop a pdf of txt file"
                   class="text-grey-7"
                   type="textarea"
-                  input-style="min-height: 560px"
-                  style="white-space: pre-line;"
+                  input-style="min-height: 560px;white-space: nowrap;overflow-x: scroll;font-family: monospace"
+                  style=""
                   v-model="inputLetter" 
                   />
                   <embed
@@ -1190,6 +1191,7 @@ export default defineComponent({
       // TODO add docx
       if (dropzoneFile.type === "application/pdf") {
         this.dropzoneURL = URL.createObjectURL(dropzoneFile);
+        this.inputMode = 'pdf'
         // console.log(dropzoneFile);
         // console.log(dragEvent.dataTransfer);
         // console.log(this.dropzoneURL);

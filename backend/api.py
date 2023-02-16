@@ -125,9 +125,13 @@ async def convert_pdf (uploaded_pdf: UploadFile):
     # with pdfplumber.open(uploaded_pdf.file) as pdf:
     #     pdf_text = ''
     #     for page in pdf.pages:
-    #         pdf_text += page.extract_text() + '\n'
+    #         ## pdf_text += page.extract_text(y_tolerance=1) + '\n'
+    #         pdf_text += page.dedupe_chars().extract_text() + '\n'
 
-    pdf = pdftotext.PDF(uploaded_pdf.file)
+
+    pdf = pdftotext.PDF(uploaded_pdf.file, physical=True)
     pdf_text = "\n\n".join(pdf)
+
+    # pdf_text = extract_text(uploaded_pdf.file)
 
     return {'pdf_text': pdf_text }
