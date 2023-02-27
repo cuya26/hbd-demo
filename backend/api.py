@@ -130,7 +130,7 @@ async def convert_pdf (uploaded_pdf: UploadFile):
 
 
     pdf = pdftotext.PDF(uploaded_pdf.file, physical=True)
-    pdf_text = "\n\n".join(pdf)
+    pdf_text = "\n\n\n\n\n".join(pdf)
 
     # pdf_text = extract_text(uploaded_pdf.file)
 

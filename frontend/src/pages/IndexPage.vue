@@ -24,8 +24,14 @@
             </div> -->
             <div style="height:40px"></div>
           </div>
-          <q-card class="items-strech" style="height: 680px">
-            <div class="col-12 column no-wrap" style="height: 100%">
+          <q-card
+            class="items-strech"
+            style="height: 680px"
+          >
+            <div
+              class="col-12 column no-wrap"
+              style="height: 100%"
+            >
               <q-card-section class="row justify-between">
                 <div class="col-3"></div>
                 <div class="text-h6 text-primary">Input</div>
@@ -56,7 +62,10 @@
                 </div>
               </q-card-section>
               <q-card-section style="height: 90%">
-                <div v-if="!loadingSaliencyMap" style="overflow: auto; flex-grow: 1;max-height: 100%">
+                <div 
+                  v-if="!loadingSaliencyMap"
+                  style="overflow: auto; flex-grow: 1;max-height: 100%"
+                >
                   <q-input
                   @drop.prevent="this.dropFunction"
                   @dragover.prevent
@@ -71,7 +80,7 @@
                   placeholder="Insert text or drag and drop a pdf of txt file"
                   class="text-grey-7"
                   type="textarea"
-                  input-style="min-height: 560px;white-space: nowrap;overflow-x: scroll;font-family: monospace"
+                  input-style="min-height: 560px;white-space: nowrap;overflow-x: scroll;font-family: monospace;font-size: small"
                   style=""
                   v-model="inputLetter" 
                   />
@@ -447,7 +456,7 @@ export default defineComponent({
             show: true,
             color: 'red-4',
             options: [
-                'regex', 'john'
+                'regex'
               ],
             value: 'regex',
             default: 'regex',
@@ -457,7 +466,7 @@ export default defineComponent({
             show: true,
             color: 'indigo-5',
           options: [
-              'regex', 'john'
+              'regex'
             ],
             value: 'regex',
             default: 'regex',
@@ -467,7 +476,7 @@ export default defineComponent({
             show: true,
             color: 'yellow-5',
           options: [
-              'regex', 'john'
+              'regex'
             ],
             value: 'regex',
             default: 'regex',
@@ -478,7 +487,7 @@ export default defineComponent({
             show: true,
             color: 'brown-5',
             options: [
-                'regex', 'john'
+                'regex'
               ],
             value: 'regex',
             default: 'regex',
@@ -493,6 +502,16 @@ export default defineComponent({
             value: 'regex',
             default: 'regex',
             name: 'Date'
+          },
+          'age': {
+            show: true,
+            color: 'purple-5',
+          options: [
+              'john', 'regex'
+            ],
+            value: 'regex',
+            default: 'regex',
+            name: 'Age'
           },
         },
         'spaCy (open-source)': {
@@ -559,85 +578,12 @@ export default defineComponent({
             name: 'Organization',
           }
         },
-        'John Snow Labs (commercial)': {
-          'person': {
-            show: true,
-            color: 'pink-5',
-            options: [
-              'john', 'spacy', 'stanza'
-            ],
-            value: 'john',
-            default: 'stanza',
-            name: 'Person Name'
-          },
-          'fiscal_code': {
-            show: true,
-            color: 'red-4',
-          options: [
-              'regex', 'john'
-            ],
-            value: 'john',
-            default: 'regex',
-            name: ' Fiscal Code'
-          },
-          'telephone': {
-            show: true,
-            color: 'yellow-5',
-          options: [
-              'regex', 'john'
-            ],
-            value: 'john',
-            default: 'regex',
-            name: 'Telephone'
-
-          },
-          'address': {
-            show: true,
-            color: 'orange-5',
-          options: [
-              'john', 'spacy', 'stanza'
-            ],
-            value: 'john',
-            default: 'stanza',
-            name: 'Address'
-          },
-          'zipcode': {
-            show: true,
-            color: 'brown-5',
-          options: [
-              'regex', 'john'
-            ],
-            value: 'john',
-            default: 'regex',
-            name: 'Zip Code'
-          },
-          'age': {
-            show: true,
-            color: 'purple-5',
-          options: [
-              'john'
-            ],
-            value: 'john',
-            default: 'john',
-            name: 'Age'
-          },
-          'organization': {
-            show: true,
-            color: 'teal-5',
-          options: [
-              'john', 'spacy', 'stanza'
-            ],
-            value: 'john',
-            default: 'stanza',
-            name: 'Organization',
-          },
-        },
         'custom': {
           'person': {
             show: true,
             color: 'pink-5',
             options: [
-              'john', 'spacy', 'stanza'
+              'spacy', 'stanza'
             ],
             value: 'stanza',
             default: 'stanza',
@@ -647,7 +593,7 @@ export default defineComponent({
             show: true,
             color: 'red-4',
           options: [
-              'regex', 'john'
+              'regex'
             ],
             value: 'regex',
             default: 'regex',
@@ -657,7 +603,7 @@ export default defineComponent({
             show: true,
             color: 'indigo-5',
           options: [
-              'regex', 'john'
+              'regex'
             ],
             value: 'regex',
             default: 'regex',
@@ -667,7 +613,7 @@ export default defineComponent({
             show: true,
             color: 'yellow-5',
           options: [
-              'regex', 'john'
+              'regex'
             ],
             value: 'regex',
             default: 'regex',
@@ -677,7 +623,7 @@ export default defineComponent({
             show: true,
             color: 'orange-5',
           options: [
-              'john', 'spacy', 'stanza'
+              'spacy', 'stanza'
             ],
             value: 'stanza',
             default: 'stanza',
@@ -687,7 +633,7 @@ export default defineComponent({
             show: true,
             color: 'brown-5',
           options: [
-              'regex', 'john'
+              'regex'
             ],
             value: 'regex',
             default: 'regex',
@@ -697,17 +643,17 @@ export default defineComponent({
             show: true,
             color: 'purple-5',
           options: [
-              'john'
+              'regex'
             ],
-            value: 'john',
-            default: 'john',
+            value: 'regex',
+            default: 'regex',
             name: 'Age'
           },
           'organization': {
             show: true,
             color: 'teal-5',
           options: [
-              'john', 'spacy', 'stanza'
+              'spacy', 'stanza'
             ],
             value: 'stanza',
             default: 'stanza',
@@ -744,15 +690,15 @@ export default defineComponent({
           'organization': "spacy",
           'address': "spacy"
         },
-        'John Snow Labs (commercial)': {
-          'person': "john",
-          'organization': "john",
-          'telephone': "john",
-          'age': "john",
-          'zipcode': "john",
-          'address': "john",
-          'fiscal_code': "john"
-        },
+        // 'John Snow Labs (commercial)': {
+        //   'person': "john",
+        //   'organization': "john",
+        //   'telephone': "john",
+        //   'age': "john",
+        //   'zipcode': "john",
+        //   'address': "john",
+        //   'fiscal_code': "john"
+        // },
         'custom': {
           'person': "john",
           'organization': "john",
@@ -798,7 +744,7 @@ export default defineComponent({
             'regex',
             'spaCy (open-source)',
             'Stanza (open-source)',
-            'John Snow Labs (commercial)',
+            // 'John Snow Labs (commercial)',
             'custom'
           ]
         },
@@ -852,7 +798,6 @@ export default defineComponent({
           'regex',
           'spaCy (open-source)',
           'Stanza (open-source)',
-          'John Snow Labs (commercial)',
           'custom'
         ],
         "patient cohort search TODO": ["We are still working on it"]
@@ -915,7 +860,7 @@ export default defineComponent({
             thresold: 0.0
           },
           "Extractive: BioBIT Italian": {
-            modelName: 'data/checkpoints/medBIT-r3-plus_ft_QA',
+            modelName: 'data/checkpoints/medBIT-r3-plus_75',
             lang: 'it',
             modelType: 'roberta-qa',
             thresold: 0.0

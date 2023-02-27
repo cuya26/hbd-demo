@@ -12,7 +12,7 @@ import json
 import os
 
 import sparknlp
-import sparknlp_jsl #i
+import sparknlp_jsl
 from sparknlp.annotator import *
 from sparknlp_jsl.annotator import *
 from sparknlp.base import *
@@ -306,9 +306,6 @@ class anonymizer:
     #   return self.Find_with_John(inputText, concat)
     if self.models['organization']=='':
       return empty_db()
-    else:
-      print('WARNING: Unsupported model for organization anonymization')
-      return empty_db()
 
   def FindAddress(self, inputText, concat=False):
     # if self.models['address']=='stanza':
@@ -325,12 +322,24 @@ class anonymizer:
 
   def FindAge(self, inputText, concat=False):
     # if self.models['age']=='john':
-    #   return self.Find_with_John(inputText, concat)
+    #    return self.Find_with_John(inputText, concat)
     if self.models['age']=='':
       return empty_db()
-    # else:
-    #   print('WARNING: Unsupported model for age anonymization')
-    #   return empty_db()
+    if self.models['age'] == 'regex':
+      matches = re.finditer(
+        r'(?:(?:(\d+)\s*anni)|(?:anni\s*(\d+)))',
+        inputText.lower())
+      span_list = [(match.span()[0], match.span()[1], match.group(), 'regex') for match in matches]
+      db = pd.DataFrame(span_list, columns=['start', 'end', 'text', 'model'])
+      db[
+        'entity_type'] = 'ETÀ'
+      self.tracker.loc[self.tracker['entity_type'] == 'age', 'status'] = True
+      if concat: self.dbs = pd.concat((self.dbs, db))
+      return db
+    else:
+      if self.models['age'] != 'john':
+       print('WARNING: Unsupported model for age anonymization')
+      return empty_db()
 
   def FindDate(self, inputText, concat=False):
     if self.date_level not in ['hide','year','month']:
