@@ -5,12 +5,11 @@ services:
         build:
             context: ./frontend/
             dockerfile: Dockerfile
-        command: sh -c "npm install && quasar dev"
         volumes:
             - ./frontend/:/usr/src/app/
         container_name: hbd-demo-frontend
         ports:
-            - 51118:51118
+            - 8080:8080
         restart: always
     backend:
         build:
@@ -23,12 +22,5 @@ services:
         environment:
             - PYTHONUNBUFFERED=1
         ports:
-            - 51119:5003
+            - 5003:5003
         restart: always
-        deploy:
-            resources:
-                reservations:
-                    devices:
-                        - driver: nvidia
-                          device_ids: ['1']
-                          capabilities: [gpu]

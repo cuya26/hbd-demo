@@ -1,7 +1,7 @@
 __pycache__/
 venv/
 *.ckpt
-*.json
+spark_jsl*
 data/checkpoints/*/
 *.zip
 *.tar.gz
