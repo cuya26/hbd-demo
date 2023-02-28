@@ -13,6 +13,7 @@ deid = anonymizer('./config.json')
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        "http://localhost:51118",
         "http://localhost:8080",
         "http:\/\/131\.175\.120\.138:61111\/hbd-demo\/*"
     ],
