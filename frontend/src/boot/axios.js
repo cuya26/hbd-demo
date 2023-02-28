@@ -3,7 +3,7 @@ import axios from 'axios'
 
 // to work in local use instead this ip
 // const api = axios.create({ baseURL: 'http://131.175.15.22:61111/hbd-demo-api/' })
-const api = axios.create({ baseURL: 'http://localhost:5003/' })
+const api = axios.create({ baseURL: 'http://backend:5003/' })
 
 export default boot(({ app }) => {
   // for use inside Vue files (Options API) through this.$axios and this.$api
