@@ -4,7 +4,7 @@
         "zipcode": "regex",
         "email": "regex",
         "fiscal_code": "regex",
-        "person": "stanza",
+        "person": "spacy",
         "organization": "stanza",
         "address": "stanza",
         "date": "regex"

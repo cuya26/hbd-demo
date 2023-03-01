@@ -11,12 +11,12 @@ from functools import reduce
 import json
 import os
 
-import sparknlp
-import sparknlp_jsl
-from sparknlp.annotator import *
-from sparknlp_jsl.annotator import *
-from sparknlp.base import *
-from sparknlp.util import *
+# import sparknlp
+# import sparknlp_jsl
+# from sparknlp.annotator import *
+# from sparknlp_jsl.annotator import *
+# from sparknlp.base import *
+# from sparknlp.util import *
 # nota: verificare se servono tutti questi import per jhonsnowlab o bastano quelli con #i
 
 import re
