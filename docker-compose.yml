@@ -1,11 +1,11 @@
 version: '3.1'
 services:
-    reverse-proxy:
-        image: nginx
-        ports:
-        - "8080:80"
-        volumes:
-        - ./my-server.conf:/etc/nginx/conf.d/default.conf
+    # reverse-proxy:
+    #     image: nginx
+    #     ports:
+    #     - "8080:80"
+    #     volumes:
+    #     - ./my-server.conf:/etc/nginx/conf.d/default.conf
     frontend:
         image: hbd-demo-frontend:latest
         build:
@@ -16,7 +16,7 @@ services:
         # npm install
         container_name: hbd-demo-frontend
         ports:
-            - 5004:8080
+            - 8080:8080
         restart: always
     backend:
         build:
