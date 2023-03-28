@@ -16,3 +16,4 @@ pdftotext
 pdfminer.six
 seaborn
 python-multipart==0.0.5
+pymupdf

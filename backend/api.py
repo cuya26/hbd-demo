@@ -5,6 +5,8 @@ from ita_deidentification import anonymizer
 import pdfplumber
 import pdftotext
 from pdfminer.high_level import extract_text
+import fitz
+from io import BytesIO
 
 app = FastAPI()
 pred = Predictor()
@@ -117,21 +119,85 @@ async def call_saliency_map_computation(request: Request):
         )
         return { 'saliency_map' : saliency_map }
 
+def IntersecOfSets(array):
+    s1 = set(array.pop(0))
+    s2 = set(array.pop(0))
+    result = s1.intersection(s2)
+    if len(array) > 2:
+      for element in array:
+        result = result.intersection(element)
+
+    # Converts resulting set to list
+    final_list = list(result)
+    return final_list
+
 @app.post('/convert_pdf')
-async def convert_pdf (uploaded_pdf: UploadFile):
-    print("file:", uploaded_pdf.filename)
-    print(uploaded_pdf)
-    print(type(uploaded_pdf))
-    # with pdfplumber.open(uploaded_pdf.file) as pdf:
-    #     pdf_text = ''
-    #     for page in pdf.pages:
-    #         ## pdf_text += page.extract_text(y_tolerance=1) + '\n'
-    #         pdf_text += page.dedupe_chars().extract_text() + '\n'
+async def convert_pdf(uploaded_pdf: UploadFile):
+    print("FILE: ", uploaded_pdf.filename)
+    with fitz.open(stream=BytesIO(uploaded_pdf.file.read())) as document:
+        if len(document) > 2:
+            # ----- FIND DUPLICATES ----- #
+            all_elements = []
+            for page in document:
+                elements = []
+                for area in page.get_text('blocks'):
+                    box = fitz.Rect(area[:4])
+                    if not box.is_empty:
+                        elements.append(area[4])
+                all_elements.append(elements)
+        duplicates = IntersecOfSets(all_elements) if len(document) > 2 else [] # all the elements that are in common within all pages
 
+        # ----- REMOVE DUPLICATES AND CLEAN TEXT ----- #
+        dirty_text = []                                             # collect the "dirty" to compare the line with the previous one
+        clean_text = ''                                             # put the clean text
+        header_text = ''                                            # put the header text
+        header_missing = True                                       # when False because we are at page 2 and collected everything
+        for page in document:
+            all_linetext = []                                       # use to remove duplicate lines
+            for element in page.get_text('blocks'):
+                header = False                                      # True when text is part of the header 
+                box = fitz.Rect(element[:4])
+                if not box.is_empty:
+                    if element[4] in duplicates:                     # check if normal text or header text
+                        header = True
+                    linetext = page.get_textpage(box).extractWORDS() # get all the single words (inside the box) and their positioning 
+                    if linetext not in all_linetext:
+                        all_linetext.append(linetext)
+                        if linetext != []:
+                            dirty_text.append(linetext[0])
+                            if header_missing and header: 
+                                header_text += linetext[0][4] + ' '
+                            elif not header:
+                                clean_text += linetext[0][4] + ' '
+                        for line in linetext[1:]: 
+                            x1 = abs(dirty_text[-1][0] - line[0])
+                            x2 = abs(dirty_text[-1][1] - line[1])
+                            x3 = abs(dirty_text[-1][2] - line[2])
+                            x4 = abs(dirty_text[-1][3] - line[3])
+                            if (x1+x2+x3+x4 > 4):                      # compare the position of each word to remove duplicates
+                                #check if we are on the same line, in terms of coordinates or text recognition 
+                                if(dirty_text[-1][1] == line[1] and dirty_text[-1][3] == line[3]) or (dirty_text[-1][6] == line[6]):
+                                    if header_missing and header: 
+                                        header_text += line[4] + ' '
+                                    elif not header: 
+                                        clean_text += line[4] + ' '
+                                else:
+                                    if header_missing and header: 
+                                        header_text += '\n' + line[4] + ' '
+                                    elif not header:
+                                        clean_text += '\n' + line[4] + ' '
 
-    pdf = pdftotext.PDF(uploaded_pdf.file, physical=True)
-    pdf_text = "\n\n\n\n\n".join(pdf)
+                                dirty_text.append(line)
+                       
+                        if header_missing and header: 
+                            header_text += '\n\n' 
+                        elif not header:
+                            clean_text += '\n\n'
+            header_missing = False   
 
-    # pdf_text = extract_text(uploaded_pdf.file)
+        # ----- ADD DUPLICATES AT THE END AND RETURN TEXT ----- #
+        clean_text += '\n\n ---------- HEADERS --------- \n'
+        clean_text += header_text
+    return {'pdf_text': clean_text }
+    
 
-    return {'pdf_text': pdf_text }
