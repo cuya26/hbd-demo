@@ -1,4 +1,5 @@
-from fastapi import FastAPI, Request, UploadFile
+from fastapi import FastAPI, Request, UploadFile, Response
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from model import Predictor, question_and_answering_pipeline, compute_saliency_map_qa, compute_saliency_map_dee
 from ita_deidentification import anonymizer
@@ -7,6 +8,7 @@ import pdftotext
 from pdfminer.high_level import extract_text
 import fitz
 from io import BytesIO
+import os
 
 app = FastAPI()
 pred = Predictor()
@@ -143,8 +145,10 @@ async def convert_pdf(uploaded_pdf: UploadFile):
                 for area in page.get_text('blocks'):
                     box = fitz.Rect(area[:4])
                     if not box.is_empty:
+                        page.add_rect_annot(box)
                         elements.append(area[4])
                 all_elements.append(elements)
+            document.save('pymupdf.pdf')
         duplicates = IntersecOfSets(all_elements) if len(document) > 2 else [] # all the elements that are in common within all pages
 
         # ----- REMOVE DUPLICATES AND CLEAN TEXT ----- #
@@ -183,21 +187,32 @@ async def convert_pdf(uploaded_pdf: UploadFile):
                                         clean_text += line[4] + ' '
                                 else:
                                     if header_missing and header: 
-                                        header_text += '\n' + line[4] + ' '
+                                        header_text += '\n\n' + line[4] + ' '
                                     elif not header:
-                                        clean_text += '\n' + line[4] + ' '
+                                        clean_text += '\n\n' + line[4] + ' '
 
                                 dirty_text.append(line)
                        
                         if header_missing and header: 
-                            header_text += '\n\n' 
+                            header_text += '\n\n\n' 
                         elif not header:
-                            clean_text += '\n\n'
+                            clean_text += '\n\n\n'
             header_missing = False   
 
         # ----- ADD DUPLICATES AT THE END AND RETURN TEXT ----- #
         clean_text += '\n\n ---------- HEADERS --------- \n'
         clean_text += header_text
-    return {'pdf_text': clean_text }
+        
+        headers = {'Content-Disposition': 'attachment; filename="pymupdf.pdf"'}
+
+        return {'pdf_text': clean_text, 
+                'file1': FileResponse('pymupdf.pdf', filename='pymupdf', headers=headers)
+                }
     
+@app.post('/return_pdf')
+async def convert_pdf():
+    print('return pdf')
+    headers = {'Content-Disposition': 'attachment; filename="pymupdf.pdf"'}
+    FileResponse('pymupdf.pdf', filename='pymupdf', headers=headers)
+
 

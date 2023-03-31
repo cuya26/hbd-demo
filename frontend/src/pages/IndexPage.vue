@@ -56,6 +56,7 @@
                     text-color="primary"
                     :options="[
                       {label: 'PDF', value: 'pdf'},
+                      {label: 'REGIONS', value: 'regions'},
                       {label: 'TEXT', value: 'edit'}
                     ]"
                   />
@@ -1142,6 +1143,7 @@ export default defineComponent({
         // console.log(this.dropzoneURL);
         const uploadForm = new FormData();
         uploadForm.append("uploaded_pdf", dropzoneFile);
+        console.log(dropzoneFile)
         // uploadForm.append("notes", "this are my notes");
         api
           .post("convert_pdf", uploadForm, {
@@ -1151,10 +1153,27 @@ export default defineComponent({
           })
           .then((response) => {
             this.inputLetter = response.data["pdf_text"];
+            console.log(response)
           })
           .catch((error) => {
             console.log(error.message);
           });
+
+          api
+          .post("return_pdf", {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          })
+          .then((response) => {
+            console.log(response)
+            console.log(response.data);
+
+          })
+          .catch((error) => {
+            console.log(error.message);
+          });
+
       } else if (dropzoneFile.type === "text/plain") {
         const reader = new FileReader();
         reader.onload = (res) => {
