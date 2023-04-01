@@ -1160,14 +1160,13 @@ export default defineComponent({
           });
 
           api
-          .post("return_pdf", {
+          .post("return_pdf", uploadForm, {
             headers: {
               "Content-Type": "multipart/form-data",
             },
           })
           .then((response) => {
             console.log(response)
-            console.log(response.data);
 
           })
           .catch((error) => {

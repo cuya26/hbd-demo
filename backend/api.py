@@ -8,7 +8,6 @@ import pdftotext
 from pdfminer.high_level import extract_text
 import fitz
 from io import BytesIO
-import os
 
 app = FastAPI()
 pred = Predictor()
@@ -145,10 +144,8 @@ async def convert_pdf(uploaded_pdf: UploadFile):
                 for area in page.get_text('blocks'):
                     box = fitz.Rect(area[:4])
                     if not box.is_empty:
-                        page.add_rect_annot(box)
                         elements.append(area[4])
                 all_elements.append(elements)
-            document.save('pymupdf.pdf')
         duplicates = IntersecOfSets(all_elements) if len(document) > 2 else [] # all the elements that are in common within all pages
 
         # ----- REMOVE DUPLICATES AND CLEAN TEXT ----- #
@@ -202,17 +199,30 @@ async def convert_pdf(uploaded_pdf: UploadFile):
         # ----- ADD DUPLICATES AT THE END AND RETURN TEXT ----- #
         clean_text += '\n\n ---------- HEADERS --------- \n'
         clean_text += header_text
+
+        print('original type:', type(uploaded_pdf.file.read()))
+              
         
         headers = {'Content-Disposition': 'attachment; filename="pymupdf.pdf"'}
 
         return {'pdf_text': clean_text, 
-                'file1': FileResponse('pymupdf.pdf', filename='pymupdf', headers=headers)
+                'original_file': uploaded_pdf,
                 }
     
 @app.post('/return_pdf')
-async def convert_pdf():
-    print('return pdf')
-    headers = {'Content-Disposition': 'attachment; filename="pymupdf.pdf"'}
-    FileResponse('pymupdf.pdf', filename='pymupdf', headers=headers)
+async def return_pdf(uploaded_pdf: UploadFile):
+    out_pdf = './pymupdf.pdf'
+    document =  fitz.open(stream=BytesIO(uploaded_pdf.file.read()), filetype='pdf')
+    for page in document:
+        for area in page.get_text('blocks'):
+            box = fitz.Rect(area[:4])
+            if not box.is_empty:
+                page.add_rect_annot(box)
+    
+    output_pdf = BytesIO()
+    document.save(out_pdf)
+    output_pdf.seek(0)
+    return FileResponse(out_pdf, filename='pymupdf.pdf')
+        
 
 
