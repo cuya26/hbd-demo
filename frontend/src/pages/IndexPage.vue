@@ -92,6 +92,13 @@
                     v-if="inputMode==='pdf'"
                     type="application/pdf"
                   />
+                  <embed
+                    :src="dropzoneURL"
+                    style="min-height: 560px;width: 100%"
+                    class=""
+                    v-if="inputMode === 'regions'"
+                    type="application/pdf"
+                  />
                   <!-- <q-input outlined v-model="text" :dense="dense" /> -->
                   <!-- <div class="text-grey-7" style="white-space: pre-line">{{dischargeLetterName == null ? '' : letterDict[dischargeLetterName]}}</div> -->
                 </div>
@@ -1153,26 +1160,23 @@ export default defineComponent({
           })
           .then((response) => {
             this.inputLetter = response.data["pdf_text"];
-            console.log(response)
+            api.post("return_pdf", uploadForm, {
+              headers: {
+                "Content-Type": "multipart/form-data",
+              },
+            })
+              .then((response) => {
+                this.inputMode = 'regions'
+                console.log(response)
+
+              })
+              .catch((error) => {
+                console.log(error.message);
+              });
           })
           .catch((error) => {
             console.log(error.message);
           });
-
-          api
-          .post("return_pdf", uploadForm, {
-            headers: {
-              "Content-Type": "multipart/form-data",
-            },
-          })
-          .then((response) => {
-            console.log(response)
-
-          })
-          .catch((error) => {
-            console.log(error.message);
-          });
-
       } else if (dropzoneFile.type === "text/plain") {
         const reader = new FileReader();
         reader.onload = (res) => {
