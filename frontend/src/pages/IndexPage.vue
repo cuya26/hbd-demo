@@ -93,7 +93,7 @@
                     type="application/pdf"
                   />
                   <embed
-                    :src="dropzoneURL"
+                    :src="dropzoneURL2"
                     style="min-height: 560px;width: 100%"
                     class=""
                     v-if="inputMode === 'regions'"
@@ -441,6 +441,7 @@ export default defineComponent({
     return {
       inputMode: ref("edit"),
       dropzoneURL: ref(""),
+      dropzoneURL2: ref(""),
       text: ref(""),
       highlightColor: ref(false),
       visibleColumns,
@@ -1166,9 +1167,15 @@ export default defineComponent({
               },
             })
               .then((response) => {
-                this.inputMode = 'regions'
                 console.log(response)
-
+                this.inputMode = 'regions'
+                try {
+                  this.dropzoneURL2 = URL.createObjectURL(response.data)
+                }
+                catch(err) {
+                  console.log(error)
+                  this.dropzoneURL2 = URL.createObjectURL(dropzoneFile)
+                }
               })
               .catch((error) => {
                 console.log(error.message);
