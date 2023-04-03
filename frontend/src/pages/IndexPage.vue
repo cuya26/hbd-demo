@@ -1163,19 +1163,18 @@ export default defineComponent({
             this.inputLetter = response.data["pdf_text"];
             api.post("return_pdf", uploadForm, {
               headers: {
-                "Content-Type": "multipart/form-data",
+                "Accept": "application/pdf",
               },
+              responseType: 'blob'
             })
               .then((response) => {
                 console.log(response)
                 this.inputMode = 'regions'
-                try {
-                  this.dropzoneURL2 = URL.createObjectURL(response.data)
-                }
-                catch(err) {
-                  console.log(error)
-                  this.dropzoneURL2 = URL.createObjectURL(dropzoneFile)
-                }
+                  var blob = new Blob([response.data], {
+                    type: 'application/pdf'
+                  });
+                  
+                  this.dropzoneURL2 = URL.createObjectURL(blob)
               })
               .catch((error) => {
                 console.log(error.message);
