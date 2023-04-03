@@ -1151,7 +1151,6 @@ export default defineComponent({
         // console.log(this.dropzoneURL);
         const uploadForm = new FormData();
         uploadForm.append("uploaded_pdf", dropzoneFile);
-        console.log(dropzoneFile)
         // uploadForm.append("notes", "this are my notes");
         api
           .post("convert_pdf", uploadForm, {
@@ -1168,12 +1167,10 @@ export default defineComponent({
               responseType: 'blob'
             })
               .then((response) => {
-                console.log(response)
                 this.inputMode = 'regions'
                   var blob = new Blob([response.data], {
                     type: 'application/pdf'
                   });
-                  
                   this.dropzoneURL2 = URL.createObjectURL(blob)
               })
               .catch((error) => {
