@@ -200,18 +200,11 @@ async def convert_pdf(uploaded_pdf: UploadFile):
         clean_text += '\n\n ---------- HEADERS --------- \n'
         clean_text += header_text
 
-        print('original type:', type(uploaded_pdf.file.read()))
-              
-        
-        headers = {'Content-Disposition': 'attachment; filename="pymupdf.pdf"'}
-
-        return {'pdf_text': clean_text, 
-                'original_file': uploaded_pdf,
-                }
+        return {'pdf_text': clean_text}
     
 @app.post('/return_pdf')
 async def return_pdf(uploaded_pdf: UploadFile):
-    out_pdf = './pymupdf.pdf'
+    filename = './pymupdf.pdf'
     document =  fitz.open(stream=BytesIO(uploaded_pdf.file.read()), filetype='pdf')
     for page in document:
         for area in page.get_text('blocks'):
@@ -219,10 +212,10 @@ async def return_pdf(uploaded_pdf: UploadFile):
             if not box.is_empty:
                 page.add_rect_annot(box)
     
-    output_pdf = BytesIO()
-    document.save(out_pdf)
-    output_pdf.seek(0)
-    return FileResponse(out_pdf, filename='pymupdf.pdf')
+    output_pdf = BytesIO()                          
+    document.save(filename)                         
+    output_pdf.seek(0)                             
+    return FileResponse(filename, filename='pymupdf.pdf')
         
 
 
