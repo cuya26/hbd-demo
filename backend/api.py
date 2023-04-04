@@ -162,7 +162,7 @@ async def convert_pdf(uploaded_pdf: UploadFile):
                     if element[4] in duplicates:                     # check if normal text or header text
                         header = True
                     linetext = page.get_textpage(box).extractWORDS() # get all the single words (inside the box) and their positioning 
-                    if linetext not in all_linetext:
+                    if linetext not in all_linetext and linetext[0][4] != "Etichetta paziente":
                         all_linetext.append(linetext)
                         if linetext != []:
                             dirty_text.append(linetext[0])
@@ -183,17 +183,17 @@ async def convert_pdf(uploaded_pdf: UploadFile):
                                     elif not header: 
                                         clean_text += line[4] + ' '
                                 else:
-                                    if header_missing and header: 
-                                        header_text += '\n\n' + line[4] + ' '
+                                    line_break = line[6] - dirty_text[-1][6]
+                                    if header_missing and header:
+                                        header_text += min(2, line_break)*'\n' + line[4] + ' '
                                     elif not header:
-                                        clean_text += '\n\n' + line[4] + ' '
-
+                                        clean_text += line_break*'\n' + line[4] + ' '
                                 dirty_text.append(line)
-                       
+
                         if header_missing and header: 
-                            header_text += '\n\n\n' 
+                            header_text += '\n\n' 
                         elif not header:
-                            clean_text += '\n\n\n'
+                            clean_text += '\n\n'
             header_missing = False   
 
         # ----- ADD DUPLICATES AT THE END AND RETURN TEXT ----- #
