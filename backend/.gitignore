@@ -1,5 +1,6 @@
 __pycache__/
 venv/
+*.pdf
 *.ckpt
 spark_jsl*
 data/checkpoints/*/

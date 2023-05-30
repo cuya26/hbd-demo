@@ -17,3 +17,4 @@ pdfminer.six
 seaborn
 python-multipart==0.0.5
 pymupdf
+llama-cpp-python
