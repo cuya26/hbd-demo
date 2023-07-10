@@ -1,6 +1,6 @@
 <template>
   <q-page padding class="row items-strech">
-    <div class="col-12 column no-wrap">
+    <div class="col-12 column no-wrap" >
       <div class="row no-wrap justify-between" style="height: 100%">
         <div class="column no-wrap" style="width: 55%">
           <div class="q-pb-md">
@@ -381,6 +381,144 @@
                 ""
               </div>
             </q-card-section>
+            <q-card-section v-if="setupNames['ChatBot'].includes(setupName)"
+            class="" style="height: 90%"
+            >
+              <div v-if="loadingChatBot" class="column justify-center items-center no-wrap col-12" style="height: 100%">
+                  <q-spinner color="primary" size="6em" />
+              </div>
+              <div v-if="!loadingChatBot" class="column justify-center items-center no-wrap col-12" style="height: 100%">
+                <div class="row justify-start items-center" style="width: 100%">
+                  <!-- <q-toggle
+                    v-model="attached"
+                    icon="attach_file"
+                    label="Attach Document"
+                    @update:model-value="attachDocument"
+                  /> -->
+                  
+                </div>
+                <div
+                  style="
+                    height: 100%;
+                    width: 100%;
+                    border-radius: 4px;
+                    border: 1.5px solid #bdc3c7;
+                  "
+                  class="overflow-auto q-pa-md"
+                  ref="chatWindow"
+                >
+                  <div class="q-px-sm row justify-center" style="height: 100%">
+                    <div class="col-12">
+                      <div
+                        v-for="chatLine in chatHistory"
+                        :key="chatLine"
+                        :class="
+                          'row justify-' +
+                          chatConfig['chatLinePosition'][chatLine.role] +
+                          ' q-py-sm'
+                        "
+                      >
+                        <div
+                          :class="
+                            'bg-' +
+                            chatConfig['chatLineColor'][chatLine.role] +
+                            ' q-pa-sm'
+                          "
+                          style="border-radius: 12px; width: fit-content; max-width: 60%; white-space: pre-line;"
+                        >
+                          {{ chatLine.content }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="q-pa-sm"></div>
+                <div class="row justify-center no-wrap" style="width: 100%">
+                  <q-input
+                    style="width: 100%"
+                    rounded
+                    outlined
+                    dense
+                    v-model="inputText"
+                    placeholder="Write a message"
+                    @keyup.enter="loadingChatResponse ? true : sendMessage(inputText) "
+                  />
+                  <div class="q-px-sm"></div>
+                  <q-btn
+                  icon="cleaning_services"
+                  @click="loadingChatResponse ? true : resetChatHistory()"
+                  rounded
+                  color="warning"
+                  dense
+                  />
+                  <div class="q-px-sm"></div>
+                  <q-btn
+                  icon="attach_file"
+                  @click="loadingChatResponse ? true : attachDocument()"
+                  rounded
+                  color="secondary"
+                  dense
+                  />
+                  <div class="q-px-sm"></div>
+                  <q-btn
+                    :loading="loadingChatResponse"
+                    round
+                    color="primary"
+                    icon="send"
+                    @click="sendMessage(inputText)"
+                  />
+                </div>
+              </div>
+            </q-card-section>
+            <q-card-section v-if="setupNames['patient cohort selection'].includes(setupName)"
+            class="" style="height: 90%"
+            >
+            <div style="width: 100%;" class="q-pa-sm">
+              <div class="row no-wrap" style="width: 100%;">
+                <q-input
+                  style="width: 100%"
+                  rounded
+                  outlined
+                  dense
+                  v-model="patientSearchText"
+                  placeholder="Write a condition"
+                  @keyup.enter="searchPatient"
+                />
+                <div class="q-px-sm"></div>
+                <q-btn
+                  :loading="loadingPatientSearch"
+                  round
+                  color="primary"
+                  icon="search"
+                  @click="searchPatient"
+                />
+              </div>
+              <div class="q-pt-md">
+                <q-table
+                  class="my-sticky-virtscroll-table"
+                  :rows-per-page-options="[0]"
+                  table-header-style="text-align: left"
+                  table-header-class="align-left text-primary text-bold"
+                  wrap-cells
+                  dense
+                  separator="cell"
+                  :visible-columns="visiblePatientColumns"
+                  :columns="patientColumns"
+                  :rows="patientResults"
+                  :loading="loadingPatientSearch"
+                >
+                  <template v-slot:loading>
+                    <q-inner-loading showing color="primary" />
+                  </template>
+                  <template v-slot:body-cell="props">
+                    <q-td :props="props">
+                        <span style="cursor: pointer" @click="showRetrievedDocument(props.row.text)">{{ props.value }}</span>
+                    </q-td>
+                  </template>
+                </q-table>
+              </div>
+            </div>
+          </q-card-section>
           </q-card>
         </div>
       </div>
@@ -411,7 +549,7 @@
 
 <script>
 import { defineComponent, ref } from 'vue'
-import { api } from 'boot/axios'
+import { api, patientSearchApi } from 'boot/axios'
 
 
 const columns = [
@@ -425,6 +563,18 @@ const columns = [
   { name: 'certainty', label: 'Certezza', field: 'Certainty', required: true, sortable: true, align: 'left' }
 ]
 
+const patientColumns = [
+{ name: 'document_id', label: 'id', field: 'document_id', required: true, sortable: false, align: 'left'},
+{ name: 'context', label: 'context', field: 'context', required: true, sortable: false, align: 'left'},
+{ name: 'text', label: 'text', field: 'text', required: false, sortable: false, align: 'left'}
+]
+
+const visiblePatientColumns = [
+  'document_id',
+  'context'
+]
+
+
 const visibleColumns = [
 'drug',
 'disposition',
@@ -435,10 +585,110 @@ const visibleColumns = [
 'certainty',
 ]
 
+const chatConfig = {
+  chatLineColor: {
+    assistant: "purple-4",
+    user: "teal-4",
+  },
+  chatLinePosition: {
+    assistant: "begin",
+    user: "end",
+  },
+};
+
+const chatPrompts = {
+  assistente: [
+    { 
+      role: 'system',
+      content: "Questa è una conversazione tra un utente umano e un assistente artificiale esperto di medicina. L'assistente è empatico ed educato. L'assistente è qui per rispondere alle domande, fornire consigli e aiutare l'utente a prendere decisioni. L'assistente è tenuto a rispondere a domande o task riguardanti i testi clinici al meglio delle sue possibilità.  Le risposte sono coincise ed esaustive."
+    }
+  ],
+  practitioner: [
+  { content: `name: "OnlineGP" context: "This is a conversation with your online general practitioner. The general practitioner is empathic and polite. The general practitioner is here to diagnose you, answer questions, provide recommendations and help with decision-making. The general practitioner will ask questions to diagnose you as best as he can and give you accurate and relevant information. Answers are usually short, concise and exhaustive.
+Here are some example questions, Only ask them when appropriate!:
+
+Asking what:
+{{char}}: What can I do for you?
+{{char}}: What brought you here today?
+{{char}}: What seems to be the problem?
+
+Asking how long:
+{{char}}: How long has it been bothering you?
+{{char}}: How long has it been that way?
+{{char}}: How long have you had it?
+{{char}}: How long does the pain last?
+
+Asking how / where:
+{{char}}: When did it start?
+{{char}}: Where is it?
+{{char}}: Where does it hurt?
+{{char}}: Which part of your body?
+{{char}}: Could you explain me where?
+{{char}}: Does it stay in one place or does it go any where else?
+
+Ask describing the problem / pain:
+{{char}}: What's the pain like?
+{{char}}: What kind of pain is it?
+{{char}}: Can you describe it?
+{{char}}: Does it wake you up at night?
+{{char}}: Does it come and go?
+{{char}}: What caused it?
+{{char}}: What brought it on?
+{{char}}: Does it come on in certain circumstances?
+{{char}}: Does it come on at any particular time?
+{{char}}: Is there anything that makes it better/worse?
+{{char}}: Do you have any problem with ...?
+{{char}}: Do you have any problem with your ...?
+
+Ask about medication:
+{{char}}: Have you taken anything for it?
+{{char}}: Did it help?`, role: "system" },
+    { content: "Hello, Practitioner", role: "user" },
+  ]
+}
+
+const initChatHistory = {
+  default: [
+    { content: "Ciao sono il tuo assistente Vicuna come posso aiutarti?", role: "assistant" }
+  ],
+  assistente: [
+    { content: "Ciao sono il tuo Assistente come posso aiutarti?", role: "assistant" }
+  ],
+  practitioner: [
+    { content: "Hi, I'm the Practitioner how can I help you?", role: "assistant" }
+  ],
+  deidentification: [
+    { content: "Ciao sono il tuo assistente Vicuna come posso aiutarti?", role: "assistant" },
+    { content: 'Perpiacere sostituisci tutte le informazioni seguenti con il termine "[redatto]": Sostituisci qualsiasi stringa che possa essere un nome o un acronimo o le iniziali, i nomi dei pazienti, i nomi dei medici, i nomi dei dottori o delle dottoresse, elimina i nomi dei cercapersone, i nomi del personale medico, elimina qualsiasi stringa che possa essere una località o un indirizzo, come "3970 Longview Drive", elimina qualsiasi stringa che assomigli a "qualcosa di anni" o "età 37", elimina le date e gli ID e le date di registrazione, eliminare i nomi delle cliniche e degli ospedali, elimina le professioni come "manager" ed elimina i contatti personali:', role: "user" },
+    { content: "Ti darò un esempio perpiacere anonimizzalo", role: "user"},
+    { content: "Certo, riportami pure il testo che vuoi anonimizzare", role: "assistant"}
+  ],
+  deidentificationEng: [
+    { content: "Hi, I'm Vicuna an assistant how can I help you?", role: "assistant" },
+    { content: 'Please anonymize the following clinical note.Replace all the following information with the term “[redacted]”: Redact any strings that might be aname or acronym or initials, patients’ names, doctors’ names, the names of the M.D.or Dr.,redact any pager names, medical staff names, redact any strings that might be a location or address, such as “3970 Longview Drive”, redact any strings that look like “something years old” or “age 37”,redact any dates and IDs and record dates, redact clinic and hospital names, redact professions such as “manager”, redact any contact information:', role: "user" },
+    { content: "I will give you a sample, please anonymize it", role: "user"},
+    { content: "Sure, please provide the sentence you would like me to anonymize.", role: "assistant"}
+  ]
+}
+
 export default defineComponent({
   name: 'IndexPage',
   setup () {
     return {
+      visiblePatientColumns,
+      patientColumns,
+      patientResults: ref([]),
+      patientSearchText: ref(''),
+      loadingPatientSearch: ref(false),
+      attached: ref(false),
+      attachedDocument: ref(''),
+      chatPrompts,
+      initChatHistory,
+      loadingChatBot: ref(false),
+      loadingChatResponse: ref(false),
+      inputText: ref(""),
+      chatConfig,
+      chatHistory: ref(initChatHistory['default']),
       inputMode: ref("edit"),
       dropzoneURL: ref(""),
       dropzoneURL2: ref(""),
@@ -777,13 +1027,23 @@ export default defineComponent({
         ],
         },
         {
+          label: 'ChatBot',
+          value: 'ChatBot',
+          modelNames: [
+            "Wizard-Vicuna-13B-Uncensored",
+            // "gpt4-x-vicuna-13B",
+            // "vic13b-uncensored",
+            // "medalpaca-13b"
+          ]
+        },
+        {
           group: 'Search',
           disable: true
         },
         {
-          label: 'Patient Cohort Selection (TODO)',
-          value: 'patient cohort search TODO',
-          modelNames: ["We are still working on it"]
+          label: 'Patient Cohort Selection',
+          value: 'patient cohort selection',
+          modelNames: ["Patient Search Engine"]
         }
       ],
       upload: ref(null),
@@ -809,7 +1069,13 @@ export default defineComponent({
           'Stanza (open-source)',
           'custom'
         ],
-        "patient cohort search TODO": ["We are still working on it"]
+        "patient cohort selection": ["Patient Search Engine"],
+        "ChatBot": [
+          "Wizard-Vicuna-13B-Uncensored",
+          "gpt4-x-vicuna-13B",
+          "vic13b-uncensored",
+          "medalpaca-13b"
+        ]
       }),
       columns,
       loading: ref(false),
@@ -885,8 +1151,20 @@ export default defineComponent({
             lang: "it",
             modelType: 't5-qa',
             thresold: 0.6
+          },
+          "Wizard-Vicuna-13B-Uncensored": {
+            modelName: "Wizard-Vicuna-13B-Uncensored.ggmlv3.q4_1.bin"
+          },
+          "gpt4-x-vicuna-13B": {
+            modelName: "gpt4-x-vicuna-13B.ggmlv3.q5_1.bin",
+          },
+          "vic13b-uncensored": {
+            modelName: "ggml-vic13b-uncensored-q4_1.bin"
+          },
+          "medalpaca-13b": {
+            modelName: "medalpaca-13B.ggmlv3.q4_0.bin"
           }
-
+          
         }
       ),
       defaultQuestionsAnswers: ref(
@@ -1119,6 +1397,10 @@ export default defineComponent({
       reader.readAsText(upload)
     },
     whenChangeSetupModel () {
+      // Load the chatbot model
+      if ( this.taskName.includes('ChatBot') ){
+        this.loadChatBot()
+      }  
       // reset answer question ansqwering model
       if ( this.taskName.includes('question') ){
         this.freeQuestionResponse = {answers: [], noAnswer: false}
@@ -1167,7 +1449,7 @@ export default defineComponent({
               responseType: 'blob'
             })
               .then((response) => {
-                this.inputMode = 'regions'
+                // this.inputMode = 'regions'
                   var blob = new Blob([response.data], {
                     type: 'application/pdf'
                   });
@@ -1192,6 +1474,196 @@ export default defineComponent({
         console.log("The dropped file haven't a supported extension");
       }
       this.highlightColor = false;
+    },
+    async sendMessage(myText) {
+      // let currentChat = null
+      // if (this.attached){
+      //   currentChat = [
+      //     { content: 'Questo è il testo clinico allegato. TESTO ALLEGATO: ```' + this.attachedDocument + '```' , role: "user" },
+      //     { content: myText, role: "user" }
+      //   ]
+      // } else {
+      //   currentChat = [{ content: myText, role: "user" }]
+      // }
+      // console.log(currentChat)
+      let currentChat = [{ content: myText, role: "user" }]
+      api.post('/llama_tokenizer', {chat: this.chatPrompts['assistente'].concat(this.chatHistory).concat(currentChat)}
+      ).then( (response) => {
+        console.log(response.data)
+        this.loadingChatResponse = true
+        this.$refs.chatWindow.scrollTop = this.$refs.chatWindow.scrollHeight;
+        if (myText === "") return;
+        this.chatHistory = this.chatHistory.concat(currentChat);
+        this.inputText = "";
+        this.chatHistory.push({
+          content: '...',
+          role: "assistant",
+        });
+        this.$nextTick(() => {
+            this.$refs.chatWindow.scrollTop =
+            this.$refs.chatWindow.scrollHeight;
+        });
+        // this.chatHistory.slice(-1)[0]['content'] = ''
+        // fetch('http://131.175.15.22:61111/llama-server/v1/chat/completions', {
+        fetch('http://localhost:51124/v1/chat/completions', {
+          method: 'POST',
+          body: JSON.stringify({
+            messages: this.chatPrompts['assistente'].concat(this.chatHistory),
+            stream: true,
+            temperature: 0,
+            max_tokens: 500,
+            top_p: 0,
+            top_k: 0,
+            mirostat_tau: 3.0,
+            repeat_penalty: 1.1
+
+          }),
+          headers: {
+            'Content-Type': 'application/json',
+            timeout: 36000
+          }
+        })
+          .then(response => {
+            if (!response.ok) {
+              throw new Error('Errore nella chiamata POST');
+            }
+            return response.body;
+          })
+          .then(body => {
+            const reader = body.getReader();
+            const processStream = ({ done, value }) => {
+              if (done) {
+                console.log('Stream di eventi completato');
+                this.loadingChatResponse = false
+                return;
+              }
+              let chunkRaw = new TextDecoder().decode(value);
+              const chunkArray = chunkRaw.split('data:').slice(1)
+              for (let chunk of chunkArray) {
+                try {
+                  chunk = JSON.parse(chunk.split(': ping -')[0])
+                }
+                catch {
+                  console.log('il parsing non è andato a buon fine')
+                  console.log(chunk)
+                }
+                if (Object.keys(chunk).includes('choices')) {
+                  if (Object.keys(chunk['choices'][0]['delta']).includes('role')) {
+                    this.chatHistory.slice(-1)[0]['role'] = chunk['choices'][0]['delta']['role']
+                    this.chatHistory.slice(-1)[0]['content'] = ''
+                  } else {
+                  this.chatHistory.slice(-1)[0]['content'] += chunk['choices'][0]['delta']['content']
+                  // Gestisci il chunk di evento ricevuto dallo stream
+                  this.$nextTick(() => {
+                      this.$refs.chatWindow.scrollTop =
+                      this.$refs.chatWindow.scrollHeight;
+                  });
+                  }
+                }
+              }
+              return reader.read().then(processStream);
+            };
+
+            reader.read().then(processStream);
+          })
+          .catch(error => {
+            this.chatHistory.slice(-1)[0]['content'] = 'Si è verificato un errore controlla che il testo non sia troppo lungo'
+            console.error('Si è verificato un errore durante la chiamata POST:', error);
+            this.loadingChatResponse = false
+          });
+      })
+
+    },
+    loadChatBot () {
+      this.resetChatHistory()
+      // this.loadingChatBot = true
+      
+      // const modelName = this.modelConfig[this.setupName].modelName
+      // api.get('/get_chatbot_name').then( (response) => {
+      //   if (response.data.model_name !== modelName) {
+      //     api.post('/set_chatbot_model', {model_name: modelName}).then((response)=> {
+      //       this.loadingChatBot = false
+      //     })
+      //   }else{
+      //     this.loadingChatBot = false
+      //   }
+
+      // }).catch( (error) => {
+      //   error.message
+      //   this.loadingChatBot = false
+      // })
+    },
+    resetChatHistory () {
+      this.chatHistory = JSON.parse(JSON.stringify(this.initChatHistory['assistente']))
+    },
+    attachDocument () {
+      if (this.inputLetter != null && this.inputLetter != '')
+      api.post('/llama_tokenizer_filter', { text: this.inputLetter}).then( (response) => {
+        this.attachedDocument = response.data.text
+        this.chatHistory.push({ content: 'Rispondi alle domande relative al seguente Testo Clinico: ```' + this.attachedDocument + '```' , role: "user" })
+        this.loadingChatResponse = true
+        fetch('http://131.175.15.22:61111/llama-server/v1/chat/completions', {
+          // fetch('http://131.175.15.22:61111/hbd-demo-api/send_message/', {
+          method: 'POST',
+          body: JSON.stringify({
+            messages: this.chatPrompts['assistente'].concat(this.chatHistory),
+            stream: true,
+            temperature: 0,
+            max_tokens: 1,
+            top_p: 0,
+            top_k: 0,
+            mirostat_tau: 0,
+            repeat_penalty: 1.1
+
+          }),
+          headers: {
+            'Content-Type': 'application/json',
+            timeout: 36000
+          }
+        })
+          .then(response => {
+            if (!response.ok) {
+              throw new Error('Errore nella chiamata POST');
+            }
+            return response.body;
+          })
+          .then(body => {
+            const reader = body.getReader();
+            const processStream = ({ done, value }) => {
+              if (done) {
+                console.log('Caricamento allegato completato');
+                this.loadingChatResponse = false
+                return;
+              }
+              return reader.read().then(processStream);
+            }
+            reader.read().then(processStream);
+          })
+      }).catch (error => {
+        error.message
+        console.log('errore caricamento allegato')
+      })
+    },
+    searchPatient () {
+      this.loadingPatientSearch = true
+      patientSearchApi.post(
+        '/patient_search',
+        { query: this.patientSearchText}
+      ).then( (response) => {
+        console.log(response.data)
+        this.loadingPatientSearch = false
+        this.patientResults = response.data.output
+      }).catch( (error) => {
+        error.message
+        print('error with patient search call')
+        this.loadingPatientSearch = false
+      })
+    },
+    showRetrievedDocument (text) {
+      this.showSaliencyMap = false
+      this.inputLetter = text
+      this.inputMode = 'edit'
+      this.dropzoneURL = ''
     }
   },
   created () {

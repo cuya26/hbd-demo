@@ -3,16 +3,26 @@ from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from model import Predictor, question_and_answering_pipeline, compute_saliency_map_qa, compute_saliency_map_dee
 from ita_deidentification import anonymizer
-import pdfplumber
-import pdftotext
-from pdfminer.high_level import extract_text
 import fitz
 from io import BytesIO
-from llama_cpp import Llama
-import os
+from llama_cpp import Llama, Llama
+import llama_cpp
+import time
+import copy
+from sse_starlette import EventSourceResponse
+import json
+
 
 # print(os.listdir('./models'))
-llm = Llama("./models/gpt4-x-vicuna-13B.ggmlv3.q5_1.bin")
+global_model_name = "Wizard-Vicuna-13B-Uncensored.ggmlv3.q4_1.bin"
+params = {
+    'n_ctx': 2048, 
+    # 'use_mlock': False,
+    'use_mmap': True,
+    'n_threads': 29,
+    # 'n_batch':1000
+}
+llm = Llama(f"/models/{global_model_name}", **params)
 
 app = FastAPI()
 pred = Predictor()
@@ -217,8 +227,8 @@ async def convert_pdf(uploaded_pdf: UploadFile):
             header_missing = False   
 
         # ----- ADD DUPLICATES AT THE END AND RETURN TEXT ----- #
-        clean_text += '\n\n ---------- HEADERS --------- \n'
-        clean_text += header_text
+        # clean_text += '\n\n ---------- HEADERS --------- \n'
+        # clean_text += header_text
 
         return {'pdf_text': clean_text}
     
@@ -240,7 +250,84 @@ async def return_pdf(uploaded_pdf: UploadFile):
 @app.post('/send_message')
 async def send_message(request: Request):
     request_data = await request.json()
-    message = request_data['message']
-    output = llm(f"Q: {message} A: ", max_tokens=60, stop=["Q:", "\n"], echo=True)
-    answer = output["choices"][0]['text'].split(' A: ')[1]
-    return {'answer': answer}
+    chat_history = request_data['messages']
+    temperature = request_data['temperature']
+    max_tokens = request_data['max_tokens']
+    top_p = request_data['top_p']
+    top_k = request_data['top_k']
+    mirostat_tau = request_data['mirostat_tau']
+    repeat_penalty = request_data['repeat_penalty']
+    stream = llm.create_chat_completion(
+        messages=chat_history,
+        stream=True,
+        temperature=temperature,
+        max_tokens=max_tokens,
+        top_p=top_p,
+        top_k=top_k,
+        mirostat_tau=mirostat_tau,
+        repeat_penalty=repeat_penalty
+    )
+    async def async_generator():
+        for item in stream:
+            yield item
+    
+    async def server_sent_events():
+        async for item in async_generator():
+            if await request.is_disconnected():
+                break
+
+            result = copy.deepcopy(item)
+            # if 'role' in result['choices'][0]['delta']:
+            #     text = ''
+            # else:
+            #     text = result['choices'][0]['delta']['content']
+
+            # text = result["choices"][0]["text"]
+
+            yield json.dumps(result)
+
+    return EventSourceResponse(server_sent_events())
+
+@app.get('/get_chatbot_name')
+async def get_chatbot_name():
+    global global_model_name
+    return {'model_name': global_model_name}
+
+@app.post('/set_chatbot_model')
+async def send_message(request: Request):
+    global global_model_name
+    global llm
+    global params
+    request_data = await request.json()
+    model_name = request_data['model_name']
+    if model_name != global_model_name:
+        global_model_name = model_name
+        llm = Llama(model_path=f"./data/models/{global_model_name}", **params)
+        # time.sleep(10)
+    return {'status': 'complete'}
+
+@app.post('/llama_tokenizer')
+async def llama_tokenizer(request: Request):
+    request_data = await request.json()
+    chat = request_data['chat']
+    chat_string = ''
+    for element in chat:
+        chat_string += f"###{element['role']}: {element['content']} \n"
+    chat_ids = llm.tokenize(
+        chat_string.encode("utf-8", errors="ignore"), add_bos=True
+    )
+    return {'chat_n_tokens': len(chat_ids)}
+
+@app.post('/llama_tokenizer_filter')
+async def llama_tokenizer(request: Request):
+    request_data = await request.json()
+    text = request_data['text']
+    max_tokens = 500
+    text_ids = llm.tokenize(
+        text.encode("utf-8", errors="ignore"), add_bos=True
+    )
+    text_ids_truncated = text_ids[:max_tokens]
+    text_truncated = llm.detokenize(text_ids_truncated).decode("utf-8", errors="ignore")
+    # print(text_truncated)
+    return { 'text': text_truncated}
+

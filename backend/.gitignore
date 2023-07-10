@@ -8,3 +8,4 @@ data/checkpoints/*/
 *.tar.gz
 # Folders
 .vscode
+*.bin

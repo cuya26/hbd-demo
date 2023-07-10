@@ -17,4 +17,5 @@ pdfminer.six
 seaborn
 python-multipart==0.0.5
 pymupdf
+sse-starlette
 llama-cpp-python

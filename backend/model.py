@@ -14,7 +14,7 @@ from tqdm import tqdm
 import time
 
 
-DEVICE = torch.device('cpu')
+DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 MAX_LENGHT = 301
 
 def _get_embeddings(input_ids, model, model_type) -> torch.FloatTensor:
@@ -207,7 +207,7 @@ def attribution_parser(attribution_array, context_tokens, prefix_text, suffix_te
     gradient_input = word_list
     for i, input_list in enumerate(gradient_input):
         for k, value in enumerate(input_list):
-            opacity = np.int(np.ceil(value[1]*5))
+            opacity = np.int32(np.ceil(value[1]*5))
             bg_colors = f'bg-blue-{opacity}' if (
                 opacity) > 1 else 'bg-white'
             gradient_input[i][k][1] = bg_colors
@@ -261,7 +261,7 @@ def question_and_answering_pipeline(
         for end_slice in range(max_lenght, input_text_ids.shape[1], max_lenght):
             text_slices.append(tokenizer.decode(input_text_ids[0, start_slice:end_slice], skip_special_tokens=True))
             start_slice = end_slice
-        text_slices.append(tokenizer.decode(input_text_ids[0,start_slice:], skip_special_tokens=True))
+        text_slices.append(tokenizer.decode(input_text_ids[0,start_slice:], skip_special_tokens=True)) if tokenizer.decode(input_text_ids[0,start_slice:], skip_special_tokens=True) != '' else print('empty slice')
         print('Number of slicing:', len(text_slices))
         print('loading the model...')
         model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
@@ -370,7 +370,7 @@ def question_and_answering_pipeline(
         for end_slice in range(max_lenght, input_text_ids.shape[1], max_lenght):
             text_slices.append(tokenizer.decode(input_text_ids[0, start_slice:end_slice], skip_special_tokens=True))
             start_slice = end_slice
-        text_slices.append(tokenizer.decode(input_text_ids[0,start_slice:], skip_special_tokens=True))
+        text_slices.append(tokenizer.decode(input_text_ids[0,start_slice:], skip_special_tokens=True)) if tokenizer.decode(input_text_ids[0,start_slice:], skip_special_tokens=True) != '' else print('empty slice')
         print('Number of slicing:', len(text_slices))
 
         answer_list = []
@@ -436,7 +436,7 @@ def compute_saliency_map_qa(
         for end_slice in range(max_lenght, input_text_ids.shape[1], max_lenght):
             text_slices.append(tokenizer.decode(input_text_ids[0, start_slice:end_slice], skip_special_tokens=True))
             start_slice = end_slice
-        text_slices.append(tokenizer.decode(input_text_ids[0,start_slice:], skip_special_tokens=True))
+        text_slices.append(tokenizer.decode(input_text_ids[0,start_slice:], skip_special_tokens=True)) if tokenizer.decode(input_text_ids[0,start_slice:], skip_special_tokens=True) != '' else print('empty slice')
 
         print('Number of slicing:', len(text_slices))
         print('loading the model...')
@@ -723,7 +723,7 @@ class Predictor:
         self.tokenizer = AutoTokenizer.from_pretrained('emilyalsentzer/Bio_ClinicalBERT')
         
         self.model.eval()
-        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.model.to(device)
         inv_map = {v: k for k, v in self.ctx_cats['disposition-type'].items()}
         generator = pipeline(task="text-classification", model=self.model, tokenizer=self.tokenizer, device=0) #device=0 per gpu, -1 per cpu

@@ -2,8 +2,12 @@ import { boot } from 'quasar/wrappers'
 import axios from 'axios'
 
 // to work in local use instead this ip
-const api = axios.create({ baseURL: 'http://localhost:5003' })
+const api = axios.create({ baseURL: 'http://localhost:51119' })
+const patientSearchApi = axios.create({ baseURL: 'http://localhost:51125' })
 
+
+// const api = axios.create({ baseURL: 'http://131.175.15.22:61111/hbd-demo-api/' })
+// const patientSearchApi = axios.create({baseURL: 'http://131.175.15.22:61111/patient-search-server/'})
 export default boot(({ app }) => {
   // for use inside Vue files (Options API) through this.$axios and this.$api
 
@@ -12,7 +16,8 @@ export default boot(({ app }) => {
   //       so you won't necessarily have to import axios in each vue file
 
   app.config.globalProperties.$api = api
+  app.config.globalProperties.$api = patientSearchApi
 
 })
 
-export { axios, api}
+export { axios, api, patientSearchApi}
