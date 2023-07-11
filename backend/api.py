@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, UploadFile, Response
+from fastapi import FastAPI, Request, UploadFile
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from model import Predictor, question_and_answering_pipeline, compute_saliency_map_qa, compute_saliency_map_dee
@@ -11,18 +11,22 @@ import time
 import copy
 from sse_starlette import EventSourceResponse
 import json
+import transformers
+
+
 
 
 # print(os.listdir('./models'))
-global_model_name = "Wizard-Vicuna-13B-Uncensored.ggmlv3.q4_1.bin"
-params = {
-    'n_ctx': 2048, 
-    # 'use_mlock': False,
-    'use_mmap': True,
-    'n_threads': 29,
-    # 'n_batch':1000
-}
-llm = Llama(f"/models/{global_model_name}", **params)
+# global_model_name = "Wizard-Vicuna-13B-Uncensored.ggmlv3.q4_1.bin"
+tokenizer = transformers.AutoTokenizer.from_pretrained('gpt2-large')
+# params = {
+#     'n_ctx': 2048, 
+#     # 'use_mlock': False,
+#     'use_mmap': True,
+#     'n_threads': 29,
+#     # 'n_batch':1000
+# }
+# llm = Llama(f"/models/{global_model_name}", **params)
 
 app = FastAPI()
 pred = Predictor()
@@ -313,9 +317,7 @@ async def llama_tokenizer(request: Request):
     chat_string = ''
     for element in chat:
         chat_string += f"###{element['role']}: {element['content']} \n"
-    chat_ids = llm.tokenize(
-        chat_string.encode("utf-8", errors="ignore"), add_bos=True
-    )
+    chat_ids = tokenizer.encode(chat_string)
     return {'chat_n_tokens': len(chat_ids)}
 
 @app.post('/llama_tokenizer_filter')
@@ -323,11 +325,9 @@ async def llama_tokenizer(request: Request):
     request_data = await request.json()
     text = request_data['text']
     max_tokens = 500
-    text_ids = llm.tokenize(
-        text.encode("utf-8", errors="ignore"), add_bos=True
-    )
+    text_ids = tokenizer.encode(text)
     text_ids_truncated = text_ids[:max_tokens]
-    text_truncated = llm.detokenize(text_ids_truncated).decode("utf-8", errors="ignore")
+    text_truncated = tokenizer.decode(text_ids_truncated, skip_special_tokens=True)
     # print(text_truncated)
     return { 'text': text_truncated}
 
