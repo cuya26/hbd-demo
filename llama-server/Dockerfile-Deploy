@@ -1,0 +1,10 @@
+FROM python:3.10
+
+RUN mkdir -p /workspace/
+WORKDIR /workspace/
+ENV TZ=Europe/Rome
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+RUN pip install llama-cpp-python[server]
+RUN mkdir /models
+RUN wget -O /models/Wizard-Vicuna-7B-Uncensored.ggmlv3.q4_0.bin https://huggingface.co/TheBloke/Wizard-Vicuna-7B-Uncensored-GGML/resolve/main/Wizard-Vicuna-17B-Uncensored.ggmlv3.q4_0.bin
+RUN pip install pydantic==1.10.11

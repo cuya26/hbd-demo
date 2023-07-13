@@ -1,0 +1,59 @@
+version: '3.1'
+services:
+    # patient-search:
+    #     build:
+    #         context: ./patient-search/
+    #         dockerfile: Dockerfile
+    #     image: hbd-demo-patient-search:latest
+    #     container_name: hbd-demo-patient-search
+    #     volumes:
+    #         - ./patient-search/:/workspace/
+    #         - ./backend/data/checkpoints/:/models/
+    #     environment:
+    #         - PYTHONUNBUFFERED=1
+    #     ports:
+    #         - 51125:5003
+    #     extra_hosts:
+    #         - "host.docker.internal:host-gateway"
+    #     restart: always
+    llamacpp:
+        container_name: llama-server
+        image: llama-cpp-python:latest
+        build:
+            context: ./llama-server/
+            dockerfile: Dockerfile-Deploy
+        ports:
+            - 51124:8000
+        command: sh -c "python -m llama_cpp.server --model /models/Wizard-Vicuna-13B-Uncensored.ggmlv3.q4_1.bin"
+        environment:
+            - HOST=0.0.0.0
+    frontend:
+        image: hbd-demo-frontend:latest
+        build:
+            context: ./frontend/
+            dockerfile: Dockerfile
+        volumes:
+            - ./frontend/:/usr/src/app/
+        # npm install
+        container_name: hbd-demo-frontend
+        ports:
+            - 51118:8080
+        restart: always
+        command: sh -c "npm install && quasar dev"
+    backend:
+        # build:
+        #     context: ./backend/
+        #     dockerfile: Dockerfile
+        image: 2603931630/hbd-demo-backend
+        container_name: hbd-demo-backend
+        volumes:
+            - ./backend/:/workspace/
+            - ~/models/:/models/
+        environment:
+            - PYTHONUNBUFFERED=1
+        ports:
+            - 51119:5003
+        extra_hosts:
+            - "host.docker.internal:host-gateway"
+        restart: always
+
