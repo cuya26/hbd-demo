@@ -32,8 +32,8 @@ services:
         # build:
         #     context: ./frontend/
         #     dockerfile: Dockerfile
-        volumes:
-            - ./frontend/:/usr/src/app/
+        # volumes:
+        #     - ./frontend/:/usr/src/app/
         # npm install
         container_name: hbd-demo-frontend
         ports:
