@@ -28,10 +28,10 @@ services:
         environment:
             - HOST=0.0.0.0
     frontend:
-        image: hbd-demo-frontend:latest
-        build:
-            context: ./frontend/
-            dockerfile: Dockerfile
+        image: 2603931630/hbd-demo-frontend
+        # build:
+        #     context: ./frontend/
+        #     dockerfile: Dockerfile
         volumes:
             - ./frontend/:/usr/src/app/
         # npm install
@@ -39,7 +39,7 @@ services:
         ports:
             - 51118:8080
         restart: always
-        command: sh -c "npm install && quasar dev"
+        command: sh -c "quasar dev"
     backend:
         # build:
         #     context: ./backend/
