@@ -18,7 +18,7 @@ services:
     #     restart: always
     llamacpp:
         container_name: llama-server
-        image: 2603931630/hbd-demo-backend
+        image: 2603931630/llama-cpp-python
         # build:
         #     context: ./llama-server/
         #     dockerfile: Dockerfile-Deploy
