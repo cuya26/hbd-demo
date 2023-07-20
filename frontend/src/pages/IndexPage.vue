@@ -549,7 +549,7 @@
 
 <script>
 import { defineComponent, ref } from 'vue'
-import { api, patientSearchApi } from 'boot/axios'
+import { api, patientSearchApi, llamaHost } from 'boot/axios'
 
 
 const columns = [
@@ -1504,8 +1504,8 @@ export default defineComponent({
             this.$refs.chatWindow.scrollHeight;
         });
         // this.chatHistory.slice(-1)[0]['content'] = ''
-        // fetch('http://131.175.15.22:61111/llama-server/v1/chat/completions', {
-        fetch('http://localhost:51124/v1/chat/completions', {
+        fetch(llamaHost + '/llama-server/v1/chat/completions', {
+        // fetch('http://localhost:51124/v1/chat/completions', {
           method: 'POST',
           body: JSON.stringify({
             messages: this.chatPrompts['assistente'].concat(this.chatHistory),
@@ -1538,10 +1538,13 @@ export default defineComponent({
                 return;
               }
               let chunkRaw = new TextDecoder().decode(value);
+              // console.log(chunkRaw)
               const chunkArray = chunkRaw.split('data:').slice(1)
+              
               for (let chunk of chunkArray) {
                 try {
                   chunk = JSON.parse(chunk.split(': ping -')[0])
+                  // console.log(chunk)
                 }
                 catch {
                   console.log('il parsing non è andato a buon fine')
@@ -1552,7 +1555,7 @@ export default defineComponent({
                     this.chatHistory.slice(-1)[0]['role'] = chunk['choices'][0]['delta']['role']
                     this.chatHistory.slice(-1)[0]['content'] = ''
                   } else {
-                  this.chatHistory.slice(-1)[0]['content'] += chunk['choices'][0]['delta']['content']
+                  this.chatHistory.slice(-1)[0]['content'] += chunk['choices'][0]['delta']['content'] ? chunk['choices'][0]['delta']['content'] : ''
                   // Gestisci il chunk di evento ricevuto dallo stream
                   this.$nextTick(() => {
                       this.$refs.chatWindow.scrollTop =
@@ -1598,11 +1601,11 @@ export default defineComponent({
     },
     attachDocument () {
       if (this.inputLetter != null && this.inputLetter != '')
-      api.post('/llama_tokenizer_filter', { text: this.inputLetter}).then( (response) => {
+      api.post('/llama_tokenizer_filter', { text: this.inputLetter, max_length: 7000}).then( (response) => {
         this.attachedDocument = response.data.text
         this.chatHistory.push({ content: 'Rispondi alle domande relative al seguente Testo Clinico: ```' + this.attachedDocument + '```' , role: "user" })
         this.loadingChatResponse = true
-        fetch('http://131.175.15.22:61111/llama-server/v1/chat/completions', {
+        fetch(llamaHost + '/llama-server/v1/chat/completions', {
           // fetch('http://131.175.15.22:61111/hbd-demo-api/send_message/', {
           method: 'POST',
           body: JSON.stringify({
