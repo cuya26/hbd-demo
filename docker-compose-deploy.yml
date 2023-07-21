@@ -56,4 +56,11 @@ services:
         extra_hosts:
             - "host.docker.internal:host-gateway"
         restart: always
+        # deploy:
+        #     resources:
+        #         reservations:
+        #             devices:
+        #                 - driver: nvidia
+        #                   count: 1
+        #                   capabilities: [gpu]
 
