@@ -34,6 +34,7 @@ services:
         #     dockerfile: Dockerfile
         volumes:
             - ./axios.js:/usr/src/app/src/boot/axios.js
+            - ./frontend/src/pages/IndexPage.vue:/usr/src/app/src/pages/IndexPage.vue
         # npm install
         container_name: hbd-demo-frontend
         ports:

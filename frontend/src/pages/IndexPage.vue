@@ -9,7 +9,7 @@
               <q-btn
               v-if="!dischargeLetterLoaded"
               style="height: 40px"
-              rounded 
+              rounded
               color="primary"
               label="Upload Letters"
               @click="this.$refs.filePicker.$el.click()"
@@ -63,7 +63,7 @@
                 </div>
               </q-card-section>
               <q-card-section style="height: 90%">
-                <div 
+                <div
                   v-if="!loadingSaliencyMap"
                   style="overflow: auto; flex-grow: 1;max-height: 100%"
                 >
@@ -83,7 +83,7 @@
                   type="textarea"
                   input-style="min-height: 560px;white-space: nowrap;overflow-x: scroll;font-family: monospace;font-size: small"
                   style=""
-                  v-model="inputLetter" 
+                  v-model="inputLetter"
                   />
                   <embed
                     :src="dropzoneURL"
@@ -144,8 +144,8 @@
                 <template v-slot:option="scope">
                   <q-item v-if="!scope.opt.group"
                     v-bind="scope.itemProps"
-                  >              
-                    
+                  >
+
                     <q-item-section>
                       <q-item-label class="q-pl-md">{{ scope.opt.label }}</q-item-label>
                     </q-item-section>
@@ -248,7 +248,7 @@
                       <div v-if="answer.score.toFixed(2) > answerScoreThreshold" class="row justify-between">
                         <div class="q-px-sm q-py-md col-10 text-grey-9"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 55px">
                           <div style="">
-                            {{answer.text}} 
+                            {{answer.text}}
                           </div>
                         </div>
                         <div class="q-px-sm q-py-md text-grey-9 row justify-evenly"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 55px; width: 60px">
@@ -279,7 +279,7 @@
                 <div class="text-primary">Some default questions (click to load):</div>
                 <div v-for="element in defaultQuestionsAnswers[modelConfig[setupName].lang]" :key="element">
                     <div
-                      :style="inputLetter===null?'cursor: not-allowed':'cursor: pointer'" 
+                      :style="inputLetter===null?'cursor: not-allowed':'cursor: pointer'"
                       @click="inputLetter===null?null:(question=element['question'],answerQuestion())"
                       class="q-pl-xl q-py-sm text-grey-8 disable"
                     >
@@ -310,7 +310,7 @@
                     <div v-if="answer.score.toFixed(3) > modelConfig[setupName].thresold" class="q-py-sm row justify-between">
                       <div @click="loadSaliencyMapQA(answer.slice_index, answer.text , answer_index, answer.question)" class="q-px-sm q-py-md col-10 text-grey-9"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 55px">
                         <div style="">
-                          {{answer.text}} 
+                          {{answer.text}}
                         </div>
                       </div>
                       <div class="q-px-sm q-py-md text-grey-9 row justify-evenly"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 55px; width: 60px">
@@ -353,7 +353,7 @@
                     :label="deidentificationConf[setupName][entityType].name"
                     @update:model-value="value => resetDeidModel(value, entityType)"
                     />
-                    
+
                     <q-select
                     v-if="deidentificationConf[setupName][entityType].show && setupName==='custom'"
                     v-model="deidentificationConf[setupName][entityType].value"
@@ -365,7 +365,7 @@
                   </div>
                   <!-- <q-checkbox v-model="deidentificationDict['Codice Fiscale']" false-value="" true-value="select model" color="red-6" label="Codice Fiscale" /> -->
                 </div>
-                
+
                 <div class="q-pl-md" v-if="deidentificationConf[setupName].date?deidentificationConf[setupName]['date'].show:false">
                   <q-select
                   v-model="dateAnonymLevel"
@@ -395,7 +395,7 @@
                     label="Attach Document"
                     @update:model-value="attachDocument"
                   /> -->
-                  
+
                 </div>
                 <div
                   style="
@@ -598,7 +598,7 @@ const chatConfig = {
 
 const chatPrompts = {
   assistente: [
-    { 
+    {
       role: 'system',
       content: "Questa è una conversazione tra un utente umano e un assistente artificiale esperto di medicina. L'assistente è empatico ed educato. L'assistente è qui per rispondere alle domande, fornire consigli e aiutare l'utente a prendere decisioni. L'assistente è tenuto a rispondere a domande o task riguardanti i testi clinici al meglio delle sue possibilità.  Le risposte sono coincise ed esaustive."
     }
@@ -1164,7 +1164,7 @@ export default defineComponent({
           "medalpaca-13b": {
             modelName: "medalpaca-13B.ggmlv3.q4_0.bin"
           }
-          
+
         }
       ),
       defaultQuestionsAnswers: ref(
@@ -1216,11 +1216,11 @@ export default defineComponent({
       })
     },
     loadSaliencyMapDrugExtraction (sentence, target, colName) {
-      
+
       this.loadingSaliencyMap = true
       api.post(
         '/compute_saliency_map',
-        { 
+        {
           task_type: 'drug_event_extraction',
           task: colName,
           input_text: this.inputLetter,
@@ -1327,7 +1327,7 @@ export default defineComponent({
     },
     deidentify () {
       this.loading = true
-      
+
       let deidentificationModelDict = {}
       for ( const [entityType, entityTypeDict] of Object.entries(this.deidentificationConf['custom'])) {
         if ( this.deidentificationConf[this.setupName][entityType] ) {
@@ -1362,9 +1362,9 @@ export default defineComponent({
       })
     },
     highlight (text) {
-      
+
       text = text.replace(/</g, '&lt').replace(/>/g, '&gt')
-      
+
       text = text.replace(/&ltTELEFONO&gt/g, '<span class="bg-yellow-3">&ltTELEFONO&gt</span>')
       text = text.replace(/&ltCAP&gt/g, '<span class="bg-brown-3">&ltCAP&gt</span>')
       text = text.replace(/&ltE-MAIL&gt/g, '<span class="bg-indigo-3">&ltE-MAIL&gt</span>')
@@ -1400,7 +1400,7 @@ export default defineComponent({
       // Load the chatbot model
       if ( this.taskName.includes('ChatBot') ){
         this.loadChatBot()
-      }  
+      }
       // reset answer question ansqwering model
       if ( this.taskName.includes('question') ){
         this.freeQuestionResponse = {answers: [], noAnswer: false}
@@ -1410,7 +1410,7 @@ export default defineComponent({
             this.question = null
         }
       }
-      // reset 
+      // reset
       this.deidentified = false
     },
     resetDeidModel(value, entityType) {
@@ -1504,7 +1504,7 @@ export default defineComponent({
             this.$refs.chatWindow.scrollHeight;
         });
         // this.chatHistory.slice(-1)[0]['content'] = ''
-        fetch(llamaHost + '/llama-server/v1/chat/completions', {
+        fetch(llamaHost + '/v1/chat/completions', {
         // fetch('http://localhost:51124/v1/chat/completions', {
           method: 'POST',
           body: JSON.stringify({
@@ -1540,7 +1540,7 @@ export default defineComponent({
               let chunkRaw = new TextDecoder().decode(value);
               // console.log(chunkRaw)
               const chunkArray = chunkRaw.split('data:').slice(1)
-              
+
               for (let chunk of chunkArray) {
                 try {
                   chunk = JSON.parse(chunk.split(': ping -')[0])
@@ -1580,7 +1580,7 @@ export default defineComponent({
     loadChatBot () {
       this.resetChatHistory()
       // this.loadingChatBot = true
-      
+
       // const modelName = this.modelConfig[this.setupName].modelName
       // api.get('/get_chatbot_name').then( (response) => {
       //   if (response.data.model_name !== modelName) {
@@ -1605,7 +1605,7 @@ export default defineComponent({
         this.attachedDocument = response.data.text
         this.chatHistory.push({ content: 'Rispondi alle domande relative al seguente Testo Clinico: ```' + this.attachedDocument + '```' , role: "user" })
         this.loadingChatResponse = true
-        fetch(llamaHost + '/llama-server/v1/chat/completions', {
+        fetch(llamaHost + '/v1/chat/completions', {
           // fetch('http://131.175.15.22:61111/hbd-demo-api/send_message/', {
           method: 'POST',
           body: JSON.stringify({
