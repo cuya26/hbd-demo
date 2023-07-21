@@ -49,7 +49,6 @@ services:
         container_name: hbd-demo-backend
         volumes:
             - ./backend/:/workspace/
-            - ~/models/:/models/
         environment:
             - PYTHONUNBUFFERED=1
         ports:
