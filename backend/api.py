@@ -35,6 +35,7 @@ deid = anonymizer('./config.json')
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        "*"
         "http://*:8080",
         "http://*:51118",
         "http:\/\/131\.175\.120\.138:61111\/hbd-demo\/*"
@@ -325,7 +326,7 @@ async def llama_tokenizer(request: Request):
 async def llama_tokenizer(request: Request):
     request_data = await request.json()
     text = request_data['text']
-    max_tokens = 500
+    max_tokens = request_data['max_length']
     text_ids = tokenizer.encode(text)
     text_ids_truncated = text_ids[:max_tokens]
     text_truncated = tokenizer.decode(text_ids_truncated, skip_special_tokens=True)
