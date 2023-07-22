@@ -24,9 +24,17 @@ services:
         #     dockerfile: Dockerfile-Deploy
         ports:
             - 51124:8000
-        command: sh -c "python -m llama_cpp.server --model /models/Wizard-Vicuna-7B-Uncensored.ggmlv3.q4_0.bin"
+        command: sh -c "python -m llama_cpp.server --model /models/llama-2-7b-chat.ggmlv3.q4_K_S.bin"
         environment:
             - HOST=0.0.0.0
+         restart: always
+        # deploy:
+        #     resources:
+        #         reservations:
+        #             devices:
+        #                 - driver: nvidia
+        #                   device_ids: ['0']
+        #                   capabilities: [gpu]
     frontend:
         image: 2603931630/hbd-demo-frontend
         # build:
@@ -56,12 +64,11 @@ services:
         extra_hosts:
             - "host.docker.internal:host-gateway"
         restart: always
-        # TO USE GPU UNCOMMENT THIS
         # deploy:
         #     resources:
         #         reservations:
         #             devices:
         #                 - driver: nvidia
-        #                   count: 1
+        #                   device_ids: ['0']
         #                   capabilities: [gpu]
 

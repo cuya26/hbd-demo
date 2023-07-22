@@ -1030,7 +1030,7 @@ export default defineComponent({
           label: 'ChatBot',
           value: 'ChatBot',
           modelNames: [
-            "Wizard-Vicuna-13B-Uncensored",
+            "llama-2-13b-chat",
             // "gpt4-x-vicuna-13B",
             // "vic13b-uncensored",
             // "medalpaca-13b"
@@ -1071,7 +1071,7 @@ export default defineComponent({
         ],
         "patient cohort selection": ["Patient Search Engine"],
         "ChatBot": [
-          "Wizard-Vicuna-13B-Uncensored",
+          "llama-2-13b-chat",
           "gpt4-x-vicuna-13B",
           "vic13b-uncensored",
           "medalpaca-13b"
@@ -1152,8 +1152,8 @@ export default defineComponent({
             modelType: 't5-qa',
             thresold: 0.6
           },
-          "Wizard-Vicuna-13B-Uncensored": {
-            modelName: "Wizard-Vicuna-13B-Uncensored.ggmlv3.q4_1.bin"
+          "llama-2-13b-chat": {
+            modelName: "llama-2-13b-chat.ggmlv3.q4_1.bin"
           },
           "gpt4-x-vicuna-13B": {
             modelName: "gpt4-x-vicuna-13B.ggmlv3.q5_1.bin",
