@@ -55,8 +55,8 @@ services:
         #     dockerfile: Dockerfile
         image: 2603931630/hbd-demo-backend
         container_name: hbd-demo-backend
-        volumes:
-            - ./backend/:/workspace/
+        # volumes:
+            # - ./backend/:/workspace/
         environment:
             - PYTHONUNBUFFERED=1
         ports:
