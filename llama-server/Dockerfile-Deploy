@@ -9,7 +9,6 @@ RUN yes | apt-get install libopenblas-dev cmake
 RUN CMAKE_ARGS="-DLLAMA_BLAS=ON -DLLAMA_BLAS_VENDOR=OpenBLAS" FORCE_CMAKE=1 pip install llama-cpp-python[server]
 RUN mkdir /models
 RUN wget -O /models/llama-2-7b-chat.ggmlv3.q4_K_S.bin https://huggingface.co/TheBloke/Llama-2-7B-Chat-GGML/resolve/main/llama-2-7b-chat.ggmlv3.q4_K_S.bin
-RUN pip install pydantic==1.10.11
 
 
 # FROM nvidia/cuda:11.4.3-devel-ubuntu20.04

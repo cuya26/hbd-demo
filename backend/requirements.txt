@@ -1,4 +1,4 @@
-fastapi
+fastapi==0.99.1
 uvicorn
 python-dotenv==0.19.1
 simplet5
