@@ -4,11 +4,24 @@ RUN mkdir -p /workspace/
 WORKDIR /workspace/
 ENV TZ=Europe/Rome
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-RUN apt-get update
-RUN yes | apt-get install libopenblas-dev cmake
-RUN CMAKE_ARGS="-DLLAMA_BLAS=ON -DLLAMA_BLAS_VENDOR=OpenBLAS" FORCE_CMAKE=1 pip install llama-cpp-python[server]
 RUN mkdir /models
 RUN wget -O /models/llama-2-7b-chat.ggmlv3.q4_K_S.bin https://huggingface.co/TheBloke/Llama-2-7B-Chat-GGML/resolve/main/llama-2-7b-chat.ggmlv3.q4_K_S.bin
+RUN apt-get update
+RUN yes | apt-get install cmake
+RUN FORCE_CMAKE=1 pip install llama-cpp-python[server]
+
+
+# FROM python:3.10
+
+# RUN mkdir -p /workspace/
+# WORKDIR /workspace/
+# ENV TZ=Europe/Rome
+# RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+# RUN mkdir /models
+# RUN wget -O /models/llama-2-7b-chat.ggmlv3.q4_K_S.bin https://huggingface.co/TheBloke/Llama-2-7B-Chat-GGML/resolve/main/llama-2-7b-chat.ggmlv3.q4_K_S.bin
+# RUN apt-get update
+# RUN yes | apt-get install libopenblas-dev cmake
+# RUN CMAKE_ARGS="-DLLAMA_BLAS=ON -DLLAMA_BLAS_VENDOR=OpenBLAS" FORCE_CMAKE=1 pip install llama-cpp-python[server]
 
 
 # FROM nvidia/cuda:11.4.3-devel-ubuntu20.04
