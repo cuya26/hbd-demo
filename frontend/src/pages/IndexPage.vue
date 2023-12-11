@@ -1,3 +1,5 @@
+/* prettier-ignore */
+/* @formatter:off */
 <template>
   <q-page padding class="row items-strech">
     <div class="col-12 column no-wrap" >
@@ -519,15 +521,15 @@
               </div>
             </div>
           </q-card-section>
-          <q-card-section
-            class="" style="height: 100%"
-            v-if="setupNames['Medical Information Extraction'].includes(setupName)">
-          <medical-information-extraction
-            ref="medicalInformationExtractionComponent"
-          @request-text="requestText()"
-          ></medical-information-extraction>
+            <q-card-section
+              class="" style="height: 100%"
+              v-if="setupNames['Medical Information Extraction'].includes(setupName)">
+            <medical-information-extraction
+              ref="medicalInformationExtractionComponent"
+            @request-text="requestText()"
+            ></medical-information-extraction>
 
-          </q-card-section>
+            </q-card-section>
           </q-card>
         </div>
       </div>
@@ -535,6 +537,8 @@
   </q-page>
 </template>
 
+/* prettier-ignore */
+/* @formatter:off */
 <style lang="sass">
 .my-sticky-virtscroll-table
   /* height or max-height is important */
@@ -557,6 +561,8 @@
 </style>
 
 <script>
+/* @formatter:on*/
+
 import { defineComponent, ref } from 'vue'
 import { api, patientSearchApi, llamaHost } from 'boot/axios'
 import MedicalInformationExtraction from "components/MedicalInformationExtraction.vue";
@@ -1022,7 +1028,7 @@ export default defineComponent({
           modelNames: ["Patient Search Engine"]
           // modelNames: ['Not ready yet...']
         }
-        
+
       ],
       upload: ref(null),
       dischargeLetterLoaded: ref(false),
