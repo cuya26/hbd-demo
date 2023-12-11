@@ -1,3 +1,5 @@
+/* prettier-ignore */
+/* @formatter:off */
 <template>
   <q-page padding class="row items-strech">
     <div class="col-12 column no-wrap" >
@@ -519,6 +521,15 @@
               </div>
             </div>
           </q-card-section>
+            <q-card-section
+              class="" style="height: 100%"
+              v-if="setupNames['Medical Information Extraction'].includes(setupName)">
+            <medical-information-extraction
+              ref="medicalInformationExtractionComponent"
+            @request-text="requestText()"
+            ></medical-information-extraction>
+
+            </q-card-section>
           </q-card>
         </div>
       </div>
@@ -526,6 +537,8 @@
   </q-page>
 </template>
 
+/* prettier-ignore */
+/* @formatter:off */
 <style lang="sass">
 .my-sticky-virtscroll-table
   /* height or max-height is important */
@@ -548,8 +561,11 @@
 </style>
 
 <script>
+/* @formatter:on*/
+
 import { defineComponent, ref } from 'vue'
 import { api, patientSearchApi, llamaHost } from 'boot/axios'
+import MedicalInformationExtraction from "components/MedicalInformationExtraction.vue";
 
 
 const columns = [
@@ -673,6 +689,8 @@ const initChatHistory = {
 
 export default defineComponent({
   name: 'IndexPage',
+  components: {MedicalInformationExtraction},
+
   setup () {
     return {
       visiblePatientColumns,
@@ -981,7 +999,8 @@ export default defineComponent({
         "pharmacological event extraction",
         "question answering (extractive)",
         "question answering (generative)",
-        "patient cohort search TODO"
+        "patient cohort search TODO",
+        "Medical Information Extraction"
       ]),
       // Add hierarchy to the Tasks:
       // - Privacy
@@ -1025,6 +1044,11 @@ export default defineComponent({
           "Generative: t5-base (multilingual)",
           "Extractive: BioBIT Italian"
         ],
+        },
+        {
+          label: 'Medical Information Extraction',
+          value: 'Medical Information Extraction',
+          modelNames: ["Mistral"]
         },
         {
           label: 'ChatBot',
@@ -1075,7 +1099,8 @@ export default defineComponent({
           "gpt4-x-vicuna-13B",
           "vic13b-uncensored",
           "medalpaca-13b"
-        ]
+        ],
+        "Medical Information Extraction": ["Mistral"]
       }),
       columns,
       loading: ref(false),
@@ -1474,6 +1499,9 @@ export default defineComponent({
         console.log("The dropped file haven't a supported extension");
       }
       this.highlightColor = false;
+    },
+    requestText(){
+      this.$refs.medicalInformationExtractionComponent.attach('Text', this.inputLetter)
     },
     async sendMessage(myText) {
       // let currentChat = null
