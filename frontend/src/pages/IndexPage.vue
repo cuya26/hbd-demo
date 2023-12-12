@@ -600,7 +600,7 @@ const chatPrompts = {
   assistente: [
     {
       role: 'system',
-      content: "Questa è una conversazione tra un utente umano e un assistente artificiale esperto di medicina. L'assistente è empatico ed educato. L'assistente è qui per rispondere alle domande, fornire consigli e aiutare l'utente a prendere decisioni. L'assistente è tenuto a rispondere a domande o task riguardanti i testi clinici al meglio delle sue possibilità.  Le risposte sono coincise ed esaustive."
+      content: "Questa è una conversazione tra un utente umano e un assistente artificiale esperto di medicina. L'assistente è empatico ed educato. L'assistente parla in italiano e risponde alle domande in italiano. L'assistente è qui per rispondere alle domande, fornire consigli e aiutare l'utente a prendere decisioni. L'assistente è tenuto a rispondere a domande o task riguardanti i testi clinici al meglio delle sue possibilità.  Le risposte sono coincise ed esaustive."
     }
   ],
   practitioner: [
@@ -1015,12 +1015,13 @@ export default defineComponent({
           label: 'Pharmaceutical Event Extraction',
           value: 'pharmacological event extraction',
           modelNames: ['Track1 n2c2 Challenge (en)']
+          // modelNames: ['Not ready yet...']
         },
         {
           label: 'Question Answering',
           value: 'question answering',
           modelNames: [
-          "Translation-based: it->en, t5-base (english)",
+          // "Translation-based: it->en, t5-base (english)",
           'Extractive: Roberta-large (multilingual)',
           "Generative: t5-base (multilingual)",
           "Extractive: BioBIT Italian"
@@ -1030,7 +1031,7 @@ export default defineComponent({
           label: 'ChatBot',
           value: 'ChatBot',
           modelNames: [
-            "llama-2-13b-chat",
+            "mistral-7b-openorca-q5",
             // "gpt4-x-vicuna-13B",
             // "vic13b-uncensored",
             // "medalpaca-13b"
@@ -1044,6 +1045,7 @@ export default defineComponent({
           label: 'Patient Cohort Selection',
           value: 'patient cohort selection',
           modelNames: ["Patient Search Engine"]
+          // modelNames: ['Not ready yet...']
         }
       ],
       upload: ref(null),
@@ -1071,7 +1073,7 @@ export default defineComponent({
         ],
         "patient cohort selection": ["Patient Search Engine"],
         "ChatBot": [
-          "llama-2-13b-chat",
+          "mistral-7b-openorca-q5",
           "gpt4-x-vicuna-13B",
           "vic13b-uncensored",
           "medalpaca-13b"
@@ -1152,8 +1154,8 @@ export default defineComponent({
             modelType: 't5-qa',
             thresold: 0.6
           },
-          "llama-2-13b-chat": {
-            modelName: "llama-2-13b-chat.ggmlv3.q4_1.bin"
+          "mistral-7b-openorca-q5": {
+            modelName: "mistral-7b-openorca-q5.ggmlv3.q4_1.bin"
           },
           "gpt4-x-vicuna-13B": {
             modelName: "gpt4-x-vicuna-13B.ggmlv3.q5_1.bin",
@@ -1512,10 +1514,10 @@ export default defineComponent({
             stream: true,
             temperature: 0,
             max_tokens: 500,
-            top_p: 0,
-            top_k: 0,
-            mirostat_tau: 3.0,
-            repeat_penalty: 1.1
+          //  top_p: 0,
+          //  top_k: 0,
+          //  mirostat_tau: 3.0,
+          //  repeat_penalty: 1.1
 
           }),
           headers: {
@@ -1601,7 +1603,7 @@ export default defineComponent({
     },
     attachDocument () {
       if (this.inputLetter != null && this.inputLetter != '')
-      api.post('/llama_tokenizer_filter', { text: this.inputLetter, max_length: 7000}).then( (response) => {
+      api.post('/llama_tokenizer_filter', { text: this.inputLetter, max_length: 5500}).then( (response) => {
         this.attachedDocument = response.data.text
         this.chatHistory.push({ content: 'Rispondi alle domande relative al seguente Testo Clinico: ```' + this.attachedDocument + '```' , role: "user" })
         this.loadingChatResponse = true
@@ -1613,10 +1615,10 @@ export default defineComponent({
             stream: true,
             temperature: 0,
             max_tokens: 1,
-            top_p: 0,
-            top_k: 0,
-            mirostat_tau: 0,
-            repeat_penalty: 1.1
+            // top_p: 0,
+            // top_k: 0,
+            // mirostat_tau: 0,
+            // repeat_penalty: 1.1
 
           }),
           headers: {
@@ -1658,7 +1660,7 @@ export default defineComponent({
         this.patientResults = response.data.output
       }).catch( (error) => {
         error.message
-        print('error with patient search call')
+        console.log('error with patient search call')
         this.loadingPatientSearch = false
       })
     },

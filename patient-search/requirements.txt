@@ -1,4 +1,4 @@
 fastapi
 uvicorn
 python-dotenv==0.19.1
-farm-haystack[preprocessing,elasticsearch]
+farm-haystack[preprocessing,elasticsearch,inference]

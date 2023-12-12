@@ -719,7 +719,7 @@ class Predictor:
         del self.model
         del self.tokenizer
 
-        self.model = BertForSequenceClassification.from_pretrained('data/checkpoints/model_trained_disposition-type/')
+        self.model = BertForSequenceClassification.from_pretrained('data/checkpoints/Bio_ClinicalBERT_model_trained_disposition-type/')
         self.tokenizer = AutoTokenizer.from_pretrained('emilyalsentzer/Bio_ClinicalBERT')
         
         self.model.eval()

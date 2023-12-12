@@ -26,9 +26,18 @@ services:
             - ~/models/:/models/
         ports:
             - 51124:8000
-        command: sh -c "python -m llama_cpp.server --model /models/Wizard-Vicuna-13B-Uncensored.ggmlv3.q5_1.bin"
+        command: sh -c "python3 -m llama_cpp.server --model /models/mistral-7b-openorca.Q5_K_M.gguf --n_ctx 8000 --chat_format chatml --n_threads 25 --n_gpu_layers 43 --n_batch 200"
         environment:
             - HOST=0.0.0.0
+        deploy:
+            resources:
+                limits:
+                    memory: 32GB
+                reservations:
+                    devices:
+                        - driver: nvidia
+                          device_ids: ['1']
+                          capabilities: [gpu]
     frontend:
         image: hbd-demo-frontend:latest
         build:
@@ -65,5 +74,5 @@ services:
                 reservations:
                     devices:
                         - driver: nvidia
-                          device_ids: ['1']
+                          device_ids: ['0']
                           capabilities: [gpu]
