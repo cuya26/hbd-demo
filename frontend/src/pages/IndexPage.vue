@@ -519,6 +519,15 @@
               </div>
             </div>
           </q-card-section>
+          <q-card-section
+            class="" style="height: 100%"
+            v-if="setupNames['Medical Information Extraction'].includes(setupName)">
+          <medical-information-extraction
+            ref="medicalInformationExtractionComponent"
+          @request-text="requestText()"
+          ></medical-information-extraction>
+
+          </q-card-section>
           </q-card>
         </div>
       </div>
@@ -550,6 +559,7 @@
 <script>
 import { defineComponent, ref } from 'vue'
 import { api, patientSearchApi, llamaHost } from 'boot/axios'
+import MedicalInformationExtraction from "components/MedicalInformationExtraction.vue";
 
 
 const columns = [
@@ -602,54 +612,12 @@ const chatPrompts = {
       role: 'system',
       content: "Questa è una conversazione tra un utente umano e un assistente artificiale esperto di medicina. L'assistente è empatico ed educato. L'assistente parla in italiano e risponde alle domande in italiano. L'assistente è qui per rispondere alle domande, fornire consigli e aiutare l'utente a prendere decisioni. L'assistente è tenuto a rispondere a domande o task riguardanti i testi clinici al meglio delle sue possibilità.  Le risposte sono coincise ed esaustive."
     }
-  ],
-  practitioner: [
-  { content: `name: "OnlineGP" context: "This is a conversation with your online general practitioner. The general practitioner is empathic and polite. The general practitioner is here to diagnose you, answer questions, provide recommendations and help with decision-making. The general practitioner will ask questions to diagnose you as best as he can and give you accurate and relevant information. Answers are usually short, concise and exhaustive.
-Here are some example questions, Only ask them when appropriate!:
-
-Asking what:
-{{char}}: What can I do for you?
-{{char}}: What brought you here today?
-{{char}}: What seems to be the problem?
-
-Asking how long:
-{{char}}: How long has it been bothering you?
-{{char}}: How long has it been that way?
-{{char}}: How long have you had it?
-{{char}}: How long does the pain last?
-
-Asking how / where:
-{{char}}: When did it start?
-{{char}}: Where is it?
-{{char}}: Where does it hurt?
-{{char}}: Which part of your body?
-{{char}}: Could you explain me where?
-{{char}}: Does it stay in one place or does it go any where else?
-
-Ask describing the problem / pain:
-{{char}}: What's the pain like?
-{{char}}: What kind of pain is it?
-{{char}}: Can you describe it?
-{{char}}: Does it wake you up at night?
-{{char}}: Does it come and go?
-{{char}}: What caused it?
-{{char}}: What brought it on?
-{{char}}: Does it come on in certain circumstances?
-{{char}}: Does it come on at any particular time?
-{{char}}: Is there anything that makes it better/worse?
-{{char}}: Do you have any problem with ...?
-{{char}}: Do you have any problem with your ...?
-
-Ask about medication:
-{{char}}: Have you taken anything for it?
-{{char}}: Did it help?`, role: "system" },
-    { content: "Hello, Practitioner", role: "user" },
   ]
 }
 
 const initChatHistory = {
   default: [
-    { content: "Ciao sono il tuo assistente Vicuna come posso aiutarti?", role: "assistant" }
+    { content: "Ciao sono il tuo assistente come posso aiutarti?", role: "assistant" }
   ],
   assistente: [
     { content: "Ciao sono il tuo Assistente come posso aiutarti?", role: "assistant" }
@@ -673,6 +641,7 @@ const initChatHistory = {
 
 export default defineComponent({
   name: 'IndexPage',
+  components: {MedicalInformationExtraction},
   setup () {
     return {
       visiblePatientColumns,
@@ -981,7 +950,8 @@ export default defineComponent({
         "pharmacological event extraction",
         "question answering (extractive)",
         "question answering (generative)",
-        "patient cohort search TODO"
+        "patient cohort search TODO",
+        "Medical Information Extraction"
       ]),
       // Add hierarchy to the Tasks:
       // - Privacy
@@ -1018,6 +988,11 @@ export default defineComponent({
           // modelNames: ['Not ready yet...']
         },
         {
+          label: 'Medical Information Extraction',
+          value: 'Medical Information Extraction',
+          modelNames: ["Mistral"]
+        },
+        {
           label: 'Question Answering',
           value: 'question answering',
           modelNames: [
@@ -1047,6 +1022,7 @@ export default defineComponent({
           modelNames: ["Patient Search Engine"]
           // modelNames: ['Not ready yet...']
         }
+        
       ],
       upload: ref(null),
       dischargeLetterLoaded: ref(false),
@@ -1077,7 +1053,8 @@ export default defineComponent({
           "gpt4-x-vicuna-13B",
           "vic13b-uncensored",
           "medalpaca-13b"
-        ]
+        ],
+        "Medical Information Extraction": ["Mistral"]
       }),
       columns,
       loading: ref(false),
@@ -1669,7 +1646,10 @@ export default defineComponent({
       this.inputLetter = text
       this.inputMode = 'edit'
       this.dropzoneURL = ''
-    }
+    },
+    requestText(){
+      this.$refs.medicalInformationExtractionComponent.attach('Text', this.inputLetter)
+    },
   },
   created () {
     // api.get(
