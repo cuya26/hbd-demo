@@ -550,6 +550,7 @@
 /* prettier-ignore */
 /* @formatter:off */
 <style lang="sass">
+
 .my-sticky-virtscroll-table
   /* height or max-height is important */
   height: 500px
@@ -626,14 +627,56 @@ const chatPrompts = {
   assistente: [
     {
       role: 'system',
-      content: "Questa è una conversazione tra un utente umano e un assistente artificiale esperto di medicina. L'assistente è empatico ed educato. L'assistente parla in italiano e risponde alle domande in italiano. L'assistente è qui per rispondere alle domande, fornire consigli e aiutare l'utente a prendere decisioni. L'assistente è tenuto a rispondere a domande o task riguardanti i testi clinici al meglio delle sue possibilità.  Le risposte sono coincise ed esaustive."
+      content: "Questa è una conversazione tra un utente umano e un assistente artificiale esperto di medicina. L'assistente è empatico ed educato. L'assistente è qui per rispondere alle domande, fornire consigli e aiutare l'utente a prendere decisioni. L'assistente è tenuto a rispondere a domande o task riguardanti i testi clinici al meglio delle sue possibilità.  Le risposte sono coincise ed esaustive."
     }
+  ],
+  practitioner: [
+  { content: `name: "OnlineGP" context: "This is a conversation with your online general practitioner. The general practitioner is empathic and polite. The general practitioner is here to diagnose you, answer questions, provide recommendations and help with decision-making. The general practitioner will ask questions to diagnose you as best as he can and give you accurate and relevant information. Answers are usually short, concise and exhaustive.
+Here are some example questions, Only ask them when appropriate!:
+
+Asking what:
+{{char}}: What can I do for you?
+{{char}}: What brought you here today?
+{{char}}: What seems to be the problem?
+
+Asking how long:
+{{char}}: How long has it been bothering you?
+{{char}}: How long has it been that way?
+{{char}}: How long have you had it?
+{{char}}: How long does the pain last?
+
+Asking how / where:
+{{char}}: When did it start?
+{{char}}: Where is it?
+{{char}}: Where does it hurt?
+{{char}}: Which part of your body?
+{{char}}: Could you explain me where?
+{{char}}: Does it stay in one place or does it go any where else?
+
+Ask describing the problem / pain:
+{{char}}: What's the pain like?
+{{char}}: What kind of pain is it?
+{{char}}: Can you describe it?
+{{char}}: Does it wake you up at night?
+{{char}}: Does it come and go?
+{{char}}: What caused it?
+{{char}}: What brought it on?
+{{char}}: Does it come on in certain circumstances?
+{{char}}: Does it come on at any particular time?
+{{char}}: Is there anything that makes it better/worse?
+{{char}}: Do you have any problem with ...?
+{{char}}: Do you have any problem with your ...?
+
+Ask about medication:
+{{char}}: Have you taken anything for it?
+{{char}}: Did it help?`, role: "system" },
+    { content: "Hello, Practitioner", role: "user" },
   ]
 }
 
 const initChatHistory = {
   default: [
-    { content: "Ciao sono il tuo assistente come posso aiutarti?", role: "assistant" }
+    { content: "Ciao sono il tuo assistente Vicuna come posso aiutarti?", role: "assistant" }
   ],
   assistente: [
     { content: "Ciao sono il tuo Assistente come posso aiutarti?", role: "assistant" }
@@ -658,6 +701,7 @@ const initChatHistory = {
 export default defineComponent({
   name: 'IndexPage',
   components: {MedicalInformationExtraction},
+
   setup () {
     return {
       resizableWidth: ref(30),
@@ -961,8 +1005,9 @@ export default defineComponent({
       // editMode: ref(true),
       showSaliencyMap: ref(false),
       saliencyMap: ref([]),
-      inputLetter: ref(null),
-      taskName: ref(null),
+
+      inputLetter: ref(``),
+      taskName: ref(''),
       taskNames: ref([
         "deidentification",
         "pharmacological event extraction",
@@ -1003,7 +1048,16 @@ export default defineComponent({
           label: 'Pharmaceutical Event Extraction',
           value: 'pharmacological event extraction',
           modelNames: ['Track1 n2c2 Challenge (en)']
-          // modelNames: ['Not ready yet...']
+        },
+        {
+          label: 'Question Answering',
+          value: 'question answering',
+          modelNames: [
+          "Translation-based: it->en, t5-base (english)",
+          'Extractive: Roberta-large (multilingual)',
+          "Generative: t5-base (multilingual)",
+          "Extractive: BioBIT Italian"
+        ],
         },
         {
           label: 'Medical Information Extraction',
@@ -1011,20 +1065,10 @@ export default defineComponent({
           modelNames: ["Mistral"]
         },
         {
-          label: 'Question Answering',
-          value: 'question answering',
-          modelNames: [
-          // "Translation-based: it->en, t5-base (english)",
-          'Extractive: Roberta-large (multilingual)',
-          "Generative: t5-base (multilingual)",
-          "Extractive: BioBIT Italian"
-        ],
-        },
-        {
           label: 'ChatBot',
           value: 'ChatBot',
           modelNames: [
-            "mistral-7b-openorca-q5",
+            "llama-2-13b-chat",
             // "gpt4-x-vicuna-13B",
             // "vic13b-uncensored",
             // "medalpaca-13b"
@@ -1038,9 +1082,7 @@ export default defineComponent({
           label: 'Patient Cohort Selection',
           value: 'patient cohort selection',
           modelNames: ["Patient Search Engine"]
-          // modelNames: ['Not ready yet...']
         }
-
       ],
       upload: ref(null),
       dischargeLetterLoaded: ref(false),
@@ -1048,7 +1090,7 @@ export default defineComponent({
       letterNames: ref([]),
       medicationList: ref([]),
       letterDict: ref({}),
-      setupName: ref(null),
+      setupName: ref(''),
       setupNames: ref({
         "pharmacological event extraction" : ['Track1 n2c2 Challenge (en)'],
         "question answering (extractive)": [
@@ -1067,7 +1109,7 @@ export default defineComponent({
         ],
         "patient cohort selection": ["Patient Search Engine"],
         "ChatBot": [
-          "mistral-7b-openorca-q5",
+          "llama-2-13b-chat",
           "gpt4-x-vicuna-13B",
           "vic13b-uncensored",
           "medalpaca-13b"
@@ -1149,8 +1191,8 @@ export default defineComponent({
             modelType: 't5-qa',
             thresold: 0.6
           },
-          "mistral-7b-openorca-q5": {
-            modelName: "mistral-7b-openorca-q5.ggmlv3.q4_1.bin"
+          "llama-2-13b-chat": {
+            modelName: "llama-2-13b-chat.ggmlv3.q4_1.bin"
           },
           "gpt4-x-vicuna-13B": {
             modelName: "gpt4-x-vicuna-13B.ggmlv3.q5_1.bin",
@@ -1491,6 +1533,9 @@ export default defineComponent({
       }
       this.highlightColor = false;
     },
+    requestDocument(callback){
+      callback(this.inputLetter)
+    },
     async sendMessage(myText) {
       // let currentChat = null
       // if (this.attached){
@@ -1528,10 +1573,10 @@ export default defineComponent({
             stream: true,
             temperature: 0,
             max_tokens: 500,
-          //  top_p: 0,
-          //  top_k: 0,
-          //  mirostat_tau: 3.0,
-          //  repeat_penalty: 1.1
+            top_p: 0,
+            top_k: 0,
+            mirostat_tau: 3.0,
+            repeat_penalty: 1.1
 
           }),
           headers: {
@@ -1617,7 +1662,7 @@ export default defineComponent({
     },
     attachDocument () {
       if (this.inputLetter != null && this.inputLetter != '')
-      api.post('/llama_tokenizer_filter', { text: this.inputLetter, max_length: 5500}).then( (response) => {
+      api.post('/llama_tokenizer_filter', { text: this.inputLetter, max_length: 7000}).then( (response) => {
         this.attachedDocument = response.data.text
         this.chatHistory.push({ content: 'Rispondi alle domande relative al seguente Testo Clinico: ```' + this.attachedDocument + '```' , role: "user" })
         this.loadingChatResponse = true
@@ -1629,10 +1674,10 @@ export default defineComponent({
             stream: true,
             temperature: 0,
             max_tokens: 1,
-            // top_p: 0,
-            // top_k: 0,
-            // mirostat_tau: 0,
-            // repeat_penalty: 1.1
+            top_p: 0,
+            top_k: 0,
+            mirostat_tau: 0,
+            repeat_penalty: 1.1
 
           }),
           headers: {
@@ -1674,7 +1719,7 @@ export default defineComponent({
         this.patientResults = response.data.output
       }).catch( (error) => {
         error.message
-        console.log('error with patient search call')
+        print('error with patient search call')
         this.loadingPatientSearch = false
       })
     },
@@ -1683,10 +1728,7 @@ export default defineComponent({
       this.inputLetter = text
       this.inputMode = 'edit'
       this.dropzoneURL = ''
-    },
-    requestDocument(callback){
-      callback(this.inputLetter)
-    },
+    }
   },
   created () {
     // api.get(
