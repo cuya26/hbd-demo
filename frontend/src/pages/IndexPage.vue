@@ -1,539 +1,549 @@
 /* prettier-ignore */
 /* @formatter:off */
 <template>
-  <q-page padding class="row items-strech">
-    <div class="col-12 column no-wrap" >
-      <div class="row no-wrap justify-between" style="height: 100%">
-        <div class="column no-wrap" style="width: 55%">
-          <div class="q-pb-md">
-            <!-- <div class="row justify-evenly">
-              <q-select v-if="dischargeLetterLoaded" style="width: 300px" dense outlined v-model="dischargeLetterName" @update:model-value="inputLetter=letterDict[dischargeLetterName]" :options="letterNames" label="Choose the input document" />
-              <q-btn
-              v-if="!dischargeLetterLoaded"
-              style="height: 40px"
-              rounded
-              color="primary"
-              label="Upload Letters"
-              @click="this.$refs.filePicker.$el.click()"
-              />
-              <q-file
-                v-model="upload"
-                v-show="false"
-                ref="filePicker"
-                accept=".json"
-                @update:model-value="loadLetters"
-              />
-            </div> -->
-            <div style="height:40px"></div>
-          </div>
-          <q-card
-            class="items-strech"
-            style="height: 680px"
+  <q-page padding style="height: 100%" class="row items-stretch">
+    <div class="col-12 column no-wrap">
+
+      <div class="q-pb-md flex justify-end">
+        <div class="row justify-end "
+             style="gap: 10px; width: 600px"
+        >
+          <!-- <q-select
+          style="width: 48%"
+          dense
+          outlined
+          v-model="taskName"
+          :options="taskNames"
+          label="Choose a Task"
+          @update:model-value="setupName=null"
+          /> -->
+          <q-select
+            style="width: 48%"
+            outlined
+            v-model="taskName"
+            :options="taskOptionGroups"
+            dense
+            label="Choose a Task"
+            @update:model-value="updateTaskName"
           >
-            <div
-              class="col-12 column no-wrap"
+            <template v-slot:option="scope">
+              <q-item v-if="!scope.opt.group"
+                      v-bind="scope.itemProps"
+              >
+
+                <q-item-section>
+                  <q-item-label class="q-pl-md">{{ scope.opt.label }}</q-item-label>
+                </q-item-section>
+              </q-item>
+              <q-item v-if="scope.opt.group"
+              >
+                <q-item-section>
+                  <q-item-label class="text-bold text-primary">{{ scope.opt.group + ':' }}</q-item-label>
+                </q-item-section>
+              </q-item>
+            </template>
+          </q-select>
+          <q-select
+            style="width: 48%"
+            dense
+            outlined
+            v-model="setupName"
+            :options="taskName?taskOptionGroups.filter(optionTask => optionTask.value === taskName)[0]['modelNames']:[]"
+            label="Choose a Model"
+            @update:model-value="whenChangeSetupModel"
+          />
+        </div>
+      </div>
+      <div ref="resizableBlock"  class="" style="height: 95%">
+        <div class="row no-wrap justify-between" style="height: 90%">
+          <div style="max-height: 85%"  class="column no-wrap q-pt-sm" :style="{ width: this.resizableWidth+'%'}">
+            <!--<div class="q-pb-md">
+               <div class="row justify-evenly">
+                <q-select v-if="dischargeLetterLoaded" style="width: 300px" dense outlined v-model="dischargeLetterName" @update:model-value="inputLetter=letterDict[dischargeLetterName]" :options="letterNames" label="Choose the input document" />
+                <q-btn
+                v-if="!dischargeLetterLoaded"
+                style="height: 40px"
+                rounded
+                color="primary"
+                label="Upload Letters"
+                @click="this.$refs.filePicker.$el.click()"
+                />
+                <q-file
+                  v-model="upload"
+                  v-show="false"
+                  ref="filePicker"
+                  accept=".json"
+                  @update:model-value="loadLetters"
+                />
+              </div>
+              <div style="height:40px"></div>
+            </div>-->
+            <q-card
+              class="items-strech col-12 column no-wrap"
               style="height: 100%"
             >
-              <q-card-section class="row justify-between">
-                <div class="col-3"></div>
-                <div class="text-h6 text-primary">Input</div>
-                <div class="col-3">
-                  <div class="col-6 justify-end row">
-                    <q-btn v-if="inputMode==='saliency'" label="text" color="primary" flat rounded dense @click="inputMode='edit'" />
-                  </div>
-                  <!-- <div class="col-6 justify-end row">
-                    <q-btn v-if="inputMode!=='pdf' && dropzoneURL!==''" label="pdf" class="text-primary" flat rounded dense @click="inputMode='pdf'" />
-                  </div> -->
-                  <q-btn-toggle
-                    v-model="inputMode"
-                    style="border: 1px solid #027be3"
-                    no-caps
-                    dense
-                    spread
-                    v-if='dropzoneURL!=="" && inputMode!=="saliency"'
-                    rounded
-                    unelevated
-                    toggle-color="primary"
-                    color="white"
-                    text-color="primary"
-                    :options="[
-                      {label: 'PDF', value: 'pdf'},
-                      {label: 'REGIONS', value: 'regions'},
-                      {label: 'TEXT', value: 'edit'}
-                    ]"
-                  />
-                </div>
-              </q-card-section>
-              <q-card-section style="height: 90%">
-                <div
-                  v-if="!loadingSaliencyMap"
-                  style="overflow: auto; flex-grow: 1;max-height: 100%"
-                >
-                  <q-input
-                  @drop.prevent="this.dropFunction"
-                  @dragover.prevent
-                  @dragenter.prevent="highlightColor = true"
-                  @dragleave="highlightColor = false"
-                  :class="
-                    (highlightColor ? 'bg-light-blue-2' : '') +
-                    ' text-grey-7'
-                  "
-                  v-if="inputMode==='edit'"
-                  outlined
-                  placeholder="Insert text or drag and drop a pdf of txt file"
-                  class="text-grey-7"
-                  type="textarea"
-                  input-style="min-height: 560px;white-space: nowrap;overflow-x: scroll;font-family: monospace;font-size: small"
-                  style=""
-                  v-model="inputLetter"
-                  />
-                  <embed
-                    :src="dropzoneURL"
-                    style="min-height: 560px;width: 100%"
-                    class=""
-                    v-if="inputMode==='pdf'"
-                    type="application/pdf"
-                  />
-                  <embed
-                    :src="dropzoneURL2"
-                    style="min-height: 560px;width: 100%"
-                    class=""
-                    v-if="inputMode === 'regions'"
-                    type="application/pdf"
-                  />
-                  <!-- <q-input outlined v-model="text" :dense="dense" /> -->
-                  <!-- <div class="text-grey-7" style="white-space: pre-line">{{dischargeLetterName == null ? '' : letterDict[dischargeLetterName]}}</div> -->
-                </div>
-
-                <div style="height: 100%;" v-if="loadingSaliencyMap" class="row justify-evenly">
-                  <div style="height: 100%;" class="column justify-evenly">
-                    <q-spinner color="primary" size="6em" />
-                  </div>
-                </div>
-                <div v-if="inputMode==='saliency'" class="text-grey-7" style="overflow: auto; flex-grow: 1;max-height: 100%">
-                  <div style="min-height: 490px; white-space: pre-line">
-                  <mark style="white-space: pre-line;" v-for="element in saliencyMap" :key="element" :class="element.color">
-                    {{ element.text }}
-                  </mark>
-                  </div>
-                </div>
-              </q-card-section>
-            </div>
-          </q-card>
-        </div>
-
-        <div class="column no-wrap" style="width: 42%">
-          <div class="q-pb-md">
-            <div class="row justify-evenly">
-              <!-- <q-select
-              style="width: 48%"
-              dense
-              outlined
-              v-model="taskName"
-              :options="taskNames"
-              label="Choose a Task"
-              @update:model-value="setupName=null"
-              /> -->
-              <q-select
-                outlined
-                v-model="taskName"
-                :options="taskOptionGroups"
-                dense
-                label="Choose a Task"
-                @update:model-value="updateTaskName"
-                style="width: 48%"
+              <div
+                class="col-12 column no-wrap"
+                style="height: 100%"
               >
-                <template v-slot:option="scope">
-                  <q-item v-if="!scope.opt.group"
-                    v-bind="scope.itemProps"
-                  >
-
-                    <q-item-section>
-                      <q-item-label class="q-pl-md">{{ scope.opt.label }}</q-item-label>
-                    </q-item-section>
-                  </q-item>
-                  <q-item v-if="scope.opt.group"
-                  >
-                    <q-item-section>
-                      <q-item-label class="text-bold text-primary">{{ scope.opt.group + ':' }}</q-item-label>
-                    </q-item-section>
-                  </q-item>
-                </template>
-              </q-select>
-              <q-select
-              style="width: 48%"
-              dense
-              outlined
-              v-model="setupName"
-              :options="taskName?taskOptionGroups.filter(optionTask => optionTask.value === taskName)[0]['modelNames']:[]"
-              label="Choose a Model"
-              @update:model-value="whenChangeSetupModel"
-              />
-            </div>
-          </div>
-
-          <!-- Model Output Card -->
-          <q-card class="" style="height: 680px">
-            <q-card-section class=" row justify-between" >
-              <div class="col-2"></div>
-              <div class="text-h6 text-primary">Output</div>
-                <div class="col-2" v-if="!deidentified"></div>
-                <div v-if="deidentified" class="col-2 justify-end row">
-                  <q-btn label="Reset" class="text-primary" flat rounded dense @click="deidentified=false" />
-                </div>
-            </q-card-section>
-            <!-- pharmacological event extraction Section -->
-            <q-card-section v-if="setupNames['pharmacological event extraction'].includes(setupName)" class="q-pa-md">
-              <div class="q-px-md q-pb-md row justify-evenly">
-                <q-btn @click="extractValues" rounded color="primary" label="Compute" :disable="inputLetter===null"/>
-              </div>
-              <q-table
-                class="my-sticky-virtscroll-table"
-                :rows-per-page-options="[0]"
-                table-header-style="text-align: left"
-                table-header-class="align-left text-primary text-bold"
-                wrap-cells
-                hide-bottom
-                dense
-                virtual-scroll
-                :virtual-scroll-item-size="48"
-                :virtual-scroll-sticky-size-start="48"
-                separator="cell"
-                :columns="columns"
-                :visible-columns="visibleColumns"
-                :rows="medicationList"
-                :loading="loading"
-              >
-                <template v-slot:loading>
-                  <q-inner-loading showing color="primary" />
-                </template>
-                <template v-slot:body-cell="props">
-                  <q-td :props="props">
-                      <span style="cursor: pointer" @click="loadSaliencyMapDrugExtraction(props.row.sentence, props.value, props.col.name)">{{ props.value }}</span>
-                  </q-td>
-                </template>
-              </q-table>
-            </q-card-section>
-            <q-card-section v-if="setupNames['question answering (extractive)'].includes(setupName) || setupNames['question answering (generative)'].includes(setupName)"
-            class="q-pa-md" style="height: 85%; overflow:auto"
-            >
-              <!-- <div class="row justify-evenly">
-                <q-radio dense v-model="questionType" val="free" label="Free question" />
-                <q-radio dense v-model="questionType" val="default" label="Default questions" />
-              </div> -->
-              <!-- <div v-if="questionType==='default'">
-                <div class="q-pb-md"></div>
-                  <div class="row justify-evenly">
-                    <q-btn
-                    rounded
-                    @click="answerQuestionList"
-                    color="primary"
-                    dense style="width: 80px"
-                    label="compute"
-                    :disable="inputLetter===null"
-                    :loading="loading"/>
-                  </div>
-                  <div v-for="element in defaultQuestionsAnswers[modelConfig[setupName].lang]" :key="element">
-                    <div class="q-py-sm text-primary">{{element["question"] + ":"}}</div> -->
-                    <!-- <div
-                    class="q-px-sm q-py-sm text-grey-9"
-                    style="overflow: visible;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: fit-content; min-height: 50px;"
-                    >
-                      <div style="">
-                        {{element["answer"]}}
-                      </div>
+                <q-card-section class="row justify-between " >
+                  <div class="col-3"></div>
+                  <div class="text-h6 text-primary">Input</div>
+                  <div class="col-3">
+                    <div class="col-6 justify-end row">
+                      <q-btn v-if="inputMode==='saliency'" label="text" color="primary" flat rounded dense @click="inputMode='edit'" />
+                    </div>
+                    <!-- <div class="col-6 justify-end row">
+                      <q-btn v-if="inputMode!=='pdf' && dropzoneURL!==''" label="pdf" class="text-primary" flat rounded dense @click="inputMode='pdf'" />
                     </div> -->
-                    <!-- <div v-if="freeQuestionResponse['noAnswer'] == true" class="q-px-sm q-py-md col-12 text-grey-9"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 55px">
-                      {{"L'informazione non è presente nel testo"}}
-                    </div>
-                    <div class="q-py-sm" v-for="answer in element.answers" :key="answer">
-                      <div v-if="answer.score.toFixed(2) > answerScoreThreshold" class="row justify-between">
-                        <div class="q-px-sm q-py-md col-10 text-grey-9"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 55px">
-                          <div style="">
-                            {{answer.text}}
-                          </div>
-                        </div>
-                        <div class="q-px-sm q-py-md text-grey-9 row justify-evenly"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 55px; width: 60px">
-                            {{answer.score.toFixed(2)*100+'%'}}
-                        </div>
-                      </div>
-                    </div>
-                </div>
-              </div> -->
-              <!-- <q-dialog v-model="showSaliencyMap">
-                <q-card class="column no-wrap" style="min-width: 100%; height: 95%">
-                  <q-card-section class="row justify-between">
-                    <div class="text-h5">Interpretation</div>
-                    <div class="col-1 justify-end row">
-                      <q-btn class='' icon="close" flat round dense v-close-popup />
-                    </div>
-                  </q-card-section>
-                  <q-card-section>
-                    <div class="" sytle='height:500px'>
-                      <mark v-for="element in saliencyMap" :key="element" :class="element.color">
-                        {{ element.text }}
-                      </mark>
-                    </div>
-                  </q-card-section>
-                </q-card>
-              </q-dialog> -->
-              <div class="q-py-sm">
-                <div class="text-primary">Some default questions (click to load):</div>
-                <div v-for="element in defaultQuestionsAnswers[modelConfig[setupName].lang]" :key="element">
-                    <div
-                      :style="inputLetter===null?'cursor: not-allowed':'cursor: pointer'"
-                      @click="inputLetter===null?null:(question=element['question'],answerQuestion())"
-                      class="q-pl-xl q-py-sm text-grey-8 disable"
-                    >
-                      {{'- ' + element["question"]}}
-                    </div>
-                </div>
-              </div>
-              <div v-if="questionType==='free'">
-                <div class="q-py-sm">
-                  <div class="q-py-sm text-primary">Question:</div>
-                  <q-input
-                  @keyup.enter="answerQuestion()"
-                  outlined
-                  v-model="question"
-                  :disable="inputLetter===null"
-                  placeholder="Write a question and press enter"
-                  :loading="loading"/>
-                </div>
-                <!-- <div class="q-pa-md row justify-evenly">
-                  <q-btn rounded color="primary" label="Compute" :disable="dischargeLetterName===null"/>
-                </div> -->
-                <div>
-                  <div class="q-py-sm text-primary">Answers:</div>
-                  <div v-if="freeQuestionResponse['noAnswer'] == true" class="q-px-sm q-py-md col-12 text-grey-9"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 55px">
-                    {{"L'informazione non è presente nel testo"}}
-                  </div>
-                  <div class="" v-for="(answer, answer_index) in freeQuestionResponse.answers" :key="answer">
-                    <div v-if="answer.score.toFixed(3) > modelConfig[setupName].thresold" class="q-py-sm row justify-between">
-                      <div @click="loadSaliencyMapQA(answer.slice_index, answer.text , answer_index, answer.question)" class="q-px-sm q-py-md col-10 text-grey-9"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 55px">
-                        <div style="">
-                          {{answer.text}}
-                        </div>
-                      </div>
-                      <div class="q-px-sm q-py-md text-grey-9 row justify-evenly"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 55px; width: 60px">
-                          {{(answer.score*100).toFixed() + '%'}}
-                      </div>
-                    </div>
-                  </div>
-                  <!-- <div @click="showSaliencyMap=true" class="q-px-sm q-py-md text-grey-9"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 90px">
-                    <div style="">
-                      {{answer}}
-                    </div>
-                  </div> -->
-                </div>
-              </div>
-            </q-card-section>
-            <q-card-section v-if="setupNames['deidentification'].includes(setupName)"
-            class="" style="height: 90%"
-            >
-              <div v-if="!deidentified" class="q-pl-sm q-pt-sm column justify-begin no-wrap" style="height:100%">
-                <div class=" q-pb-md row justify-evenly">
-                  <q-btn
-                  style="width: 100px"
-                  dense
-                  :disable="inputLetter===null"
-                  label="de-identify"
-                  rounded
-                  :loading="loading"
-                  color="primary"
-                  @click="deidentify()"
-                />
-                </div>
-
-                <div class="q-pl-md q-py-md column">
-                  <div class="">Select the entities that you want to de-identify:</div>
-                  <div class="row justify-start q-pb-sm" v-for="entityType in Object.keys(deidentificationConf[setupName])" :key="entityType">
-                    <q-checkbox
-                    v-model="deidentificationConf[setupName][entityType].show"
-                    style="width: 150px"
-                    :color="deidentificationConf[setupName][entityType].color"
-                    :label="deidentificationConf[setupName][entityType].name"
-                    @update:model-value="value => resetDeidModel(value, entityType)"
-                    />
-
-                    <q-select
-                    v-if="deidentificationConf[setupName][entityType].show && setupName==='custom'"
-                    v-model="deidentificationConf[setupName][entityType].value"
-                    :options="deidentificationConf[setupName][entityType].options"
-                    dense
-                    outlined
-                    style="width: 170px"
+                    <q-btn-toggle
+                      v-model="inputMode"
+                      style="border: 1px solid #027be3"
+                      no-caps
+                      dense
+                      spread
+                      v-if='dropzoneURL!=="" && inputMode!=="saliency"'
+                      rounded
+                      unelevated
+                      toggle-color="primary"
+                      color="white"
+                      text-color="primary"
+                      :options="[
+                        {label: 'PDF', value: 'pdf'},
+                        {label: 'REGIONS', value: 'regions'},
+                        {label: 'TEXT', value: 'edit'}
+                      ]"
                     />
                   </div>
-                  <!-- <q-checkbox v-model="deidentificationDict['Codice Fiscale']" false-value="" true-value="select model" color="red-6" label="Codice Fiscale" /> -->
-                </div>
+                </q-card-section>
+                <q-card-section class="full-height">
+                  <div
+                    v-if="!loadingSaliencyMap"
+                    style="overflow: auto; flex-grow: 1;height: 100%"
+                  >
+                    <q-input
+                    @drop.prevent="this.dropFunction"
+                    @dragover.prevent
+                    @dragenter.prevent="highlightColor = true"
+                    @dragleave="highlightColor = false"
+                    :class="
 
-                <div class="q-pl-md" v-if="deidentificationConf[setupName].date?deidentificationConf[setupName]['date'].show:false">
-                  <q-select
-                  v-model="dateAnonymLevel"
-                  :options="optionsDateAnonymLevel"
-                  dense
-                  outlined
-                  label="Select level of date anonymization"
-                  style="width: 300px"
-                  />
-                </div>
-              </div>
-              <div v-show="deidentified" ref="deidentifiedTextDiv"  class="q-pa-md q-m" style="white-space: pre-line; max-height: 560px; min-height: 560px ;overflow:auto; border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px;">
-                ""
-              </div>
-            </q-card-section>
-            <q-card-section v-if="setupNames['ChatBot'].includes(setupName)"
-            class="" style="height: 90%"
-            >
-              <div v-if="loadingChatBot" class="column justify-center items-center no-wrap col-12" style="height: 100%">
-                  <q-spinner color="primary" size="6em" />
-              </div>
-              <div v-if="!loadingChatBot" class="column justify-center items-center no-wrap col-12" style="height: 100%">
-                <div class="row justify-start items-center" style="width: 100%">
-                  <!-- <q-toggle
-                    v-model="attached"
-                    icon="attach_file"
-                    label="Attach Document"
-                    @update:model-value="attachDocument"
-                  /> -->
+                      (highlightColor ? 'bg-light-blue-2' : '') +
+                      ' text-grey-7'
+                    "
+                    v-if="inputMode==='edit'"
+                    outlined
+                    placeholder="Insert text or drag and drop a pdf of txt file"
+                    class="text-grey-7 full-height"
+                    type="textarea"
+                    input-style="min-height: 560px;white-space: nowrap;overflow-x: scroll;font-family: monospace;font-size: small"
+                    style=""
+                    v-model="inputLetter"
+                    />
+                    <embed
+                      :src="dropzoneURL"
+                      style="min-height: 560px;width: 100%"
+                      class=""
+                      v-if="inputMode==='pdf'"
+                      type="application/pdf"
+                    />
+                    <embed
+                      :src="dropzoneURL2"
+                      style="min-height: 560px;width: 100%"
+                      class=""
+                      v-if="inputMode === 'regions'"
+                      type="application/pdf"
+                    />
+                    <!-- <q-input outlined v-model="text" :dense="dense" /> -->
+                    <!-- <div class="text-grey-7" style="white-space: pre-line">{{dischargeLetterName == null ? '' : letterDict[dischargeLetterName]}}</div> -->
+                  </div>
 
-                </div>
-                <div
-                  style="
-                    height: 100%;
-                    width: 100%;
-                    border-radius: 4px;
-                    border: 1.5px solid #bdc3c7;
-                  "
-                  class="overflow-auto q-pa-md"
-                  ref="chatWindow"
-                >
-                  <div class="q-px-sm row justify-center" style="height: 100%">
-                    <div class="col-12">
-                      <div
-                        v-for="chatLine in chatHistory"
-                        :key="chatLine"
-                        :class="
-                          'row justify-' +
-                          chatConfig['chatLinePosition'][chatLine.role] +
-                          ' q-py-sm'
-                        "
-                      >
-                        <div
-                          :class="
-                            'bg-' +
-                            chatConfig['chatLineColor'][chatLine.role] +
-                            ' q-pa-sm'
-                          "
-                          style="border-radius: 12px; width: fit-content; max-width: 60%; white-space: pre-line;"
-                        >
-                          {{ chatLine.content }}
-                        </div>
-                      </div>
+                  <div style="height: 100%;" v-if="loadingSaliencyMap" class="row justify-evenly">
+                    <div style="height: 100%;" class="column justify-evenly">
+                      <q-spinner color="primary" size="6em" />
                     </div>
                   </div>
-                </div>
-                <div class="q-pa-sm"></div>
-                <div class="row justify-center no-wrap" style="width: 100%">
-                  <q-input
-                    style="width: 100%"
-                    rounded
-                    outlined
-                    dense
-                    v-model="inputText"
-                    placeholder="Write a message"
-                    @keyup.enter="loadingChatResponse ? true : sendMessage(inputText) "
-                  />
-                  <div class="q-px-sm"></div>
-                  <q-btn
-                  icon="cleaning_services"
-                  @click="loadingChatResponse ? true : resetChatHistory()"
-                  rounded
-                  color="warning"
-                  dense
-                  />
-                  <div class="q-px-sm"></div>
-                  <q-btn
-                  icon="attach_file"
-                  @click="loadingChatResponse ? true : attachDocument()"
-                  rounded
-                  color="secondary"
-                  dense
-                  />
-                  <div class="q-px-sm"></div>
-                  <q-btn
-                    :loading="loadingChatResponse"
-                    round
-                    color="primary"
-                    icon="send"
-                    @click="sendMessage(inputText)"
-                  />
-                </div>
+                  <div v-if="inputMode==='saliency'" class="text-grey-7" style="overflow: auto; flex-grow: 1;max-height: 100%">
+                    <div style="min-height: 490px; white-space: pre-line">
+                    <mark style="white-space: pre-line;" v-for="element in saliencyMap" :key="element" :class="element.color">
+                      {{ element.text }}
+                    </mark>
+                    </div>
+                  </div>
+                </q-card-section>
               </div>
-            </q-card-section>
-            <q-card-section v-if="setupNames['patient cohort selection'].includes(setupName)"
-            class="" style="height: 90%"
-            >
-            <div style="width: 100%;" class="q-pa-sm">
-              <div class="row no-wrap" style="width: 100%;">
-                <q-input
-                  style="width: 100%"
-                  rounded
-                  outlined
-                  dense
-                  v-model="patientSearchText"
-                  placeholder="Write a condition"
-                  @keyup.enter="searchPatient"
-                />
-                <div class="q-px-sm"></div>
-                <q-btn
-                  :loading="loadingPatientSearch"
-                  round
-                  color="primary"
-                  icon="search"
-                  @click="searchPatient"
-                />
-              </div>
-              <div class="q-pt-md">
+            </q-card>
+          </div>
+          <div style="cursor: col-resize; width: 6px"
+               @mousedown="startDrag(this.$refs.resizableBlock)"
+          >
+          </div>
+          <div style="max-height: 85%"  class="column no-wrap q-pr-sm q-pt-sm" :style="{ width: 100-this.resizableWidth+'%'}">
+  <!--           Model Output Card-->
+            <q-card class="" style="height: 100%">
+              <q-card-section class=" row justify-between" >
+                <div class="col-2"></div>
+                <div class="text-h6 text-primary">Output</div>
+                  <div class="col-2" v-if="!deidentified"></div>
+                  <div v-if="deidentified" class="col-2 justify-end row">
+                    <q-btn label="Reset" class="text-primary" flat rounded dense @click="deidentified=false" />
+                  </div>
+              </q-card-section>
+              <!-- pharmacological event extraction Section -->
+              <q-card-section v-if="setupNames['pharmacological event extraction'].includes(setupName)" class="q-pa-md">
+                <div class="q-px-md q-pb-md row justify-evenly">
+                  <q-btn @click="extractValues" rounded color="primary" label="Compute" :disable="inputLetter===null"/>
+                </div>
                 <q-table
                   class="my-sticky-virtscroll-table"
                   :rows-per-page-options="[0]"
                   table-header-style="text-align: left"
                   table-header-class="align-left text-primary text-bold"
                   wrap-cells
+                  hide-bottom
                   dense
+                  virtual-scroll
+                  :virtual-scroll-item-size="48"
+                  :virtual-scroll-sticky-size-start="48"
                   separator="cell"
-                  :visible-columns="visiblePatientColumns"
-                  :columns="patientColumns"
-                  :rows="patientResults"
-                  :loading="loadingPatientSearch"
+                  :columns="columns"
+                  :visible-columns="visibleColumns"
+                  :rows="medicationList"
+                  :loading="loading"
                 >
                   <template v-slot:loading>
                     <q-inner-loading showing color="primary" />
                   </template>
                   <template v-slot:body-cell="props">
                     <q-td :props="props">
-                        <span style="cursor: pointer" @click="showRetrievedDocument(props.row.text)">{{ props.value }}</span>
+                        <span style="cursor: pointer" @click="loadSaliencyMapDrugExtraction(props.row.sentence, props.value, props.col.name)">{{ props.value }}</span>
                     </q-td>
                   </template>
                 </q-table>
+              </q-card-section>
+              <q-card-section v-if="setupNames['question answering (extractive)'].includes(setupName) || setupNames['question answering (generative)'].includes(setupName)"
+              class="q-pa-md" style="height: 85%; overflow:auto"
+              >
+                <!-- <div class="row justify-evenly">
+                  <q-radio dense v-model="questionType" val="free" label="Free question" />
+                  <q-radio dense v-model="questionType" val="default" label="Default questions" />
+                </div> -->
+                <!-- <div v-if="questionType==='default'">
+                  <div class="q-pb-md"></div>
+                    <div class="row justify-evenly">
+                      <q-btn
+                      rounded
+                      @click="answerQuestionList"
+                      color="primary"
+                      dense style="width: 80px"
+                      label="compute"
+                      :disable="inputLetter===null"
+                      :loading="loading"/>
+                    </div>
+                    <div v-for="element in defaultQuestionsAnswers[modelConfig[setupName].lang]" :key="element">
+                      <div class="q-py-sm text-primary">{{element["question"] + ":"}}</div> -->
+                      <!-- <div
+                      class="q-px-sm q-py-sm text-grey-9"
+                      style="overflow: visible;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: fit-content; min-height: 50px;"
+                      >
+                        <div style="">
+                          {{element["answer"]}}
+                        </div>
+                      </div> -->
+                      <!-- <div v-if="freeQuestionResponse['noAnswer'] == true" class="q-px-sm q-py-md col-12 text-grey-9"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 55px">
+                        {{"L'informazione non è presente nel testo"}}
+                      </div>
+                      <div class="q-py-sm" v-for="answer in element.answers" :key="answer">
+                        <div v-if="answer.score.toFixed(2) > answerScoreThreshold" class="row justify-between">
+                          <div class="q-px-sm q-py-md col-10 text-grey-9"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 55px">
+                            <div style="">
+                              {{answer.text}}
+                            </div>
+                          </div>
+                          <div class="q-px-sm q-py-md text-grey-9 row justify-evenly"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 55px; width: 60px">
+                              {{answer.score.toFixed(2)*100+'%'}}
+                          </div>
+                        </div>
+                      </div>
+                  </div>
+                </div> -->
+                <!-- <q-dialog v-model="showSaliencyMap">
+                  <q-card class="column no-wrap" style="min-width: 100%; height: 95%">
+                    <q-card-section class="row justify-between">
+                      <div class="text-h5">Interpretation</div>
+                      <div class="col-1 justify-end row">
+                        <q-btn class='' icon="close" flat round dense v-close-popup />
+                      </div>
+                    </q-card-section>
+                    <q-card-section>
+                      <div class="" sytle='height:500px'>
+                        <mark v-for="element in saliencyMap" :key="element" :class="element.color">
+                          {{ element.text }}
+                        </mark>
+                      </div>
+                    </q-card-section>
+                  </q-card>
+                </q-dialog> -->
+                <div class="q-py-sm">
+                  <div class="text-primary">Some default questions (click to load):</div>
+                  <div v-for="element in defaultQuestionsAnswers[modelConfig[setupName].lang]" :key="element">
+                      <div
+                        :style="inputLetter===null?'cursor: not-allowed':'cursor: pointer'"
+                        @click="inputLetter===null?null:(question=element['question'],answerQuestion())"
+                        class="q-pl-xl q-py-sm text-grey-8 disable"
+                      >
+                        {{'- ' + element["question"]}}
+                      </div>
+                  </div>
+                </div>
+                <div v-if="questionType==='free'">
+                  <div class="q-py-sm">
+                    <div class="q-py-sm text-primary">Question:</div>
+                    <q-input
+                    @keyup.enter="answerQuestion()"
+                    outlined
+                    v-model="question"
+                    :disable="inputLetter===null"
+                    placeholder="Write a question and press enter"
+                    :loading="loading"/>
+                  </div>
+                  <!-- <div class="q-pa-md row justify-evenly">
+                    <q-btn rounded color="primary" label="Compute" :disable="dischargeLetterName===null"/>
+                  </div> -->
+                  <div>
+                    <div class="q-py-sm text-primary">Answers:</div>
+                    <div v-if="freeQuestionResponse['noAnswer'] == true" class="q-px-sm q-py-md col-12 text-grey-9"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 55px">
+                      {{"L'informazione non è presente nel testo"}}
+                    </div>
+                    <div class="" v-for="(answer, answer_index) in freeQuestionResponse.answers" :key="answer">
+                      <div v-if="answer.score.toFixed(3) > modelConfig[setupName].thresold" class="q-py-sm row justify-between">
+                        <div @click="loadSaliencyMapQA(answer.slice_index, answer.text , answer_index, answer.question)" class="q-px-sm q-py-md col-10 text-grey-9"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 55px">
+                          <div style="">
+                            {{answer.text}}
+                          </div>
+                        </div>
+                        <div class="q-px-sm q-py-md text-grey-9 row justify-evenly"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 55px; width: 60px">
+                            {{(answer.score*100).toFixed() + '%'}}
+                        </div>
+                      </div>
+                    </div>
+                    <!-- <div @click="showSaliencyMap=true" class="q-px-sm q-py-md text-grey-9"  style="overflow: auto;white-space: pre-line;border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px; height: 90px">
+                      <div style="">
+                        {{answer}}
+                      </div>
+                    </div> -->
+                  </div>
+                </div>
+              </q-card-section>
+              <q-card-section v-if="setupNames['deidentification'].includes(setupName)"
+              class="" style="height: 90%"
+              >
+                <div v-if="!deidentified" class="q-pl-sm q-pt-sm column justify-begin no-wrap" style="height:100%">
+                  <div class=" q-pb-md row justify-evenly">
+                    <q-btn
+                    style="width: 100px"
+                    dense
+                    :disable="inputLetter===null"
+                    label="de-identify"
+                    rounded
+                    :loading="loading"
+                    color="primary"
+                    @click="deidentify()"
+                  />
+                  </div>
+
+                  <div class="q-pl-md q-py-md column">
+                    <div class="">Select the entities that you want to de-identify:</div>
+                    <div class="row justify-start q-pb-sm" v-for="entityType in Object.keys(deidentificationConf[setupName])" :key="entityType">
+                      <q-checkbox
+                      v-model="deidentificationConf[setupName][entityType].show"
+                      style="width: 150px"
+                      :color="deidentificationConf[setupName][entityType].color"
+                      :label="deidentificationConf[setupName][entityType].name"
+                      @update:model-value="value => resetDeidModel(value, entityType)"
+                      />
+
+                      <q-select
+                      v-if="deidentificationConf[setupName][entityType].show && setupName==='custom'"
+                      v-model="deidentificationConf[setupName][entityType].value"
+                      :options="deidentificationConf[setupName][entityType].options"
+                      dense
+                      outlined
+                      style="width: 170px"
+                      />
+                    </div>
+                    <!-- <q-checkbox v-model="deidentificationDict['Codice Fiscale']" false-value="" true-value="select model" color="red-6" label="Codice Fiscale" /> -->
+                  </div>
+
+                  <div class="q-pl-md" v-if="deidentificationConf[setupName].date?deidentificationConf[setupName]['date'].show:false">
+                    <q-select
+                    v-model="dateAnonymLevel"
+                    :options="optionsDateAnonymLevel"
+                    dense
+                    outlined
+                    label="Select level of date anonymization"
+                    style="width: 300px"
+                    />
+                  </div>
+                </div>
+                <div v-show="deidentified" ref="deidentifiedTextDiv"  class="q-pa-md q-m" style="white-space: pre-line; max-height: 560px; min-height: 560px ;overflow:auto; border: 1px solid rgba(0, 0, 0, 0.24);border-radius: 4px;">
+                  ""
+                </div>
+              </q-card-section>
+              <q-card-section v-if="setupNames['ChatBot'].includes(setupName)"
+              class="" style="height: 90%"
+              >
+                <div v-if="loadingChatBot" class="column justify-center items-center no-wrap col-12" style="height: 100%">
+                    <q-spinner color="primary" size="6em" />
+                </div>
+                <div v-if="!loadingChatBot" class="column justify-center items-center no-wrap col-12" style="height: 100%">
+                  <div class="row justify-start items-center" style="width: 100%">
+                    <!-- <q-toggle
+                      v-model="attached"
+                      icon="attach_file"
+                      label="Attach Document"
+                      @update:model-value="attachDocument"
+                    /> -->
+
+                  </div>
+                  <div
+                    style="
+                      height: 100%;
+                      width: 100%;
+                      border-radius: 4px;
+                      border: 1.5px solid #bdc3c7;
+                    "
+                    class="overflow-auto q-pa-md"
+                    ref="chatWindow"
+                  >
+                    <div class="q-px-sm row justify-center" style="height: 100%">
+                      <div class="col-12">
+                        <div
+                          v-for="chatLine in chatHistory"
+                          :key="chatLine"
+                          :class="
+                            'row justify-' +
+                            chatConfig['chatLinePosition'][chatLine.role] +
+                            ' q-py-sm'
+                          "
+                        >
+                          <div
+                            :class="
+                              'bg-' +
+                              chatConfig['chatLineColor'][chatLine.role] +
+                              ' q-pa-sm'
+                            "
+                            style="border-radius: 12px; width: fit-content; max-width: 60%; white-space: pre-line;"
+                          >
+                            {{ chatLine.content }}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="q-pa-sm"></div>
+                  <div class="row justify-center no-wrap" style="width: 100%">
+                    <q-input
+                      style="width: 100%"
+                      rounded
+                      outlined
+                      dense
+                      v-model="inputText"
+                      placeholder="Write a message"
+                      @keyup.enter="loadingChatResponse ? true : sendMessage(inputText) "
+                    />
+                    <div class="q-px-sm"></div>
+                    <q-btn
+                    icon="cleaning_services"
+                    @click="loadingChatResponse ? true : resetChatHistory()"
+                    rounded
+                    color="warning"
+                    dense
+                    />
+                    <div class="q-px-sm"></div>
+                    <q-btn
+                    icon="attach_file"
+                    @click="loadingChatResponse ? true : attachDocument()"
+                    rounded
+                    color="secondary"
+                    dense
+                    />
+                    <div class="q-px-sm"></div>
+                    <q-btn
+                      :loading="loadingChatResponse"
+                      round
+                      color="primary"
+                      icon="send"
+                      @click="sendMessage(inputText)"
+                    />
+                  </div>
+                </div>
+              </q-card-section>
+              <q-card-section v-if="setupNames['patient cohort selection'].includes(setupName)"
+              class="" style="height: 90%"
+              >
+              <div style="width: 100%;" class="q-pa-sm">
+                <div class="row no-wrap" style="width: 100%;">
+                  <q-input
+                    style="width: 100%"
+                    rounded
+                    outlined
+                    dense
+                    v-model="patientSearchText"
+                    placeholder="Write a condition"
+                    @keyup.enter="searchPatient"
+                  />
+                  <div class="q-px-sm"></div>
+                  <q-btn
+                    :loading="loadingPatientSearch"
+                    round
+                    color="primary"
+                    icon="search"
+                    @click="searchPatient"
+                  />
+                </div>
+                <div class="q-pt-md">
+                  <q-table
+                    class="my-sticky-virtscroll-table"
+                    :rows-per-page-options="[0]"
+                    table-header-style="text-align: left"
+                    table-header-class="align-left text-primary text-bold"
+                    wrap-cells
+                    dense
+                    separator="cell"
+                    :visible-columns="visiblePatientColumns"
+                    :columns="patientColumns"
+                    :rows="patientResults"
+                    :loading="loadingPatientSearch"
+                  >
+                    <template v-slot:loading>
+                      <q-inner-loading showing color="primary" />
+                    </template>
+                    <template v-slot:body-cell="props">
+                      <q-td :props="props">
+                          <span style="cursor: pointer" @click="showRetrievedDocument(props.row.text)">{{ props.value }}</span>
+                      </q-td>
+                    </template>
+                  </q-table>
+                </div>
               </div>
-            </div>
-          </q-card-section>
+            </q-card-section>
             <q-card-section
-              class="" style="height: 100%"
+              class="q-pa-none shadow-0" style="height: 100%"
               v-if="setupNames['Medical Information Extraction'].includes(setupName)">
             <medical-information-extraction
+              :doc="inputLetter"
               ref="medicalInformationExtractionComponent"
-            @request-text="requestText()"
+            @request-document="requestDocument"
             ></medical-information-extraction>
 
             </q-card-section>
-          </q-card>
-        </div>
+            </q-card>
+          </div>
       </div>
     </div>
+    </div>
+
   </q-page>
 </template>
 
@@ -650,6 +660,8 @@ export default defineComponent({
   components: {MedicalInformationExtraction},
   setup () {
     return {
+      resizableWidth: ref(30),
+      draggable: false,
       visiblePatientColumns,
       patientColumns,
       patientResults: ref([]),
@@ -1173,6 +1185,25 @@ export default defineComponent({
     }
   },
   methods : {
+    startDrag() {
+      this.draggable = true;
+      this.$refs.resizableBlock.addEventListener("mousemove", this.handleDrag);
+      this.$refs.resizableBlock.addEventListener("mouseup", this.stopDrag);
+    },
+
+    handleDrag(event) {
+      if (this.draggable) {
+        const draggableWidth = event.clientX - this.$refs.resizableBlock.getBoundingClientRect().left;
+        const blockWidth = this.$refs.resizableBlock.offsetWidth;
+        let newResizable1Width = Math.min(Math.max((draggableWidth / blockWidth) * 100, 30), 70)
+        this.resizableWidth = newResizable1Width.toFixed(2);
+      }
+    },
+    stopDrag() {
+      this.draggable = false;
+      this.$refs.resizableBlock.removeEventListener("mousemove", this.handleDrag);
+      this.$refs.resizableBlock.removeEventListener("mouseup", this.stopDrag);
+    },
     loadSaliencyMapQA (sliceIndex, answer, answer_index, question) {
       this.loadingSaliencyMap = true
       api.post(
@@ -1653,8 +1684,8 @@ export default defineComponent({
       this.inputMode = 'edit'
       this.dropzoneURL = ''
     },
-    requestText(){
-      this.$refs.medicalInformationExtractionComponent.attach('Text', this.inputLetter)
+    requestDocument(callback){
+      callback(this.inputLetter)
     },
   },
   created () {
