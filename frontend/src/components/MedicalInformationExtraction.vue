@@ -61,7 +61,9 @@ export default {
           model: ref(1.1),
         }
       },
-      answer: ref(''),
+      editaleTable: ref(false),
+      answer: ref(`
+      \nAdalat 200 mg p.o. b.i.d. || 200 mg || p.o. || b.i.d.\nZantac 150 mg p.o. b.i.d. || 150 mg || p.o. || b.i.d.\nMagnesium Oxide 40 mg t.i.d. || 40 mg || t.i.d. || nm\nUltram 300 mg q.d. || 300 mg || q.d. || nm\nTrazodone 100 mg q.h.s. || 100 mg || q.h.s. || nm\nAzmacort 80 mg p.r.n. || 80 mg || p.r.n. || nm\naspirin 81 mg q.d. || 81 mg || q.d. || nm\nDyazide 25 mg q.d. || 25 mg || q.d. || nm\nnose spray b.i.d. || nm || nm || nm\ncalcium chloride pills q.d. || nm || nm || nm\nColchicine 600 mg q.d. || 600 mg || q.d. || nm\ncyproheptadine hydrochloride 4 mg b.i.d. q.h.s. || 4 mg || b.i.d. || nm\nanticholesterol med. || nm || nm || nm\nAlbuterol nebulizers 250 mg q.4h. || 250 mg || q.4h. || nm\nAllopurinol 300 mg q.d. || 300 mg || q.d. || nm\nColchicine 0.6 mg q.d. || 0.6 mg || q.d. || nm\ncyproheptadine hydrochloride by mouth 400 mg q.d. || 400 mg || q.d. || nm\nDigoxin 0.125 mg q.d. || 0.125 mg || q.d. || nm\nDiltiazem 30 mg t.i.d. || 30 mg || t.i.d. || nm\nLasix 40 mg p.o. q.d. || 40 mg || p.o. || q.d.\nPercocet 1-2 tablets p.o. q.4h. p.r.n. || 1-2 tablets || p.o. || q.4h. p.r.n.\nDilantin 200 mg p.o. b.i.d. || 200 mg || p.o. || b.i.d.\nTrazodone 100 mg p.o. q.h.s. || 100 mg || p.o. || q.h.s.\n[CSV_1_END]`),
       tab: ref('table'),
       loadingResponse: ref(false),
       showTemplate: ref(false),
@@ -129,6 +131,8 @@ Follow a csv format, like this "medication || dosage || mode || frequency".
     },
 
     async extractMedications() {
+      this.parseAnswer(this.answer)
+      return
       this.loadingResponse = true
       fetch(llamaHost + '/v1/completions', {
         method: 'POST',
@@ -175,9 +179,7 @@ Follow a csv format, like this "medication || dosage || mode || frequency".
 
             return reader.read().then(processStream);
           };
-
           reader.read().then(processStream);
-
         })
         .catch(error => {
           console.error(error);
@@ -232,7 +234,16 @@ Follow a csv format, like this "medication || dosage || mode || frequency".
                     @transition=" prepareExtraction()"
       >
         <q-tab-panel name="table" class="column full-height q-ma-none">
+          <div class="flex justify-between">
           <div class="text-h6">Table</div>
+            <q-toggle
+              v-show="table.rows.length > 0"
+              v-model="editaleTable"
+              color="primary"
+              icon="edit"
+              label="Edit table"
+            />
+          </div>
           <q-btn
             class="q-ma-sm" color="primary"
             @click="extractMedications()"
@@ -245,7 +256,38 @@ Follow a csv format, like this "medication || dosage || mode || frequency".
             :columns="table.columns"
             row-key="name"
             :rows-per-page-options="[0, 10, 20, 30]"
-          />
+          >
+            <template v-slot:body="props">
+              <q-tr :props="props">
+                <q-td key="name" :props="props">
+                  {{ props.row.name }}
+                  <q-popup-edit :disable="!editaleTable" v-model="props.row.name" v-slot="scope">
+                    <q-input v-model="scope.value" dense autofocus title="Update Name" @keyup.enter="scope.set" />
+                  </q-popup-edit>
+                </q-td>
+                <q-td key="dose" :props="props">
+                  {{ props.row.dose }}
+                  <q-popup-edit :disable="!editaleTable" v-model="props.row.dose" v-slot="scope" >
+                    <q-input v-model="scope.value" dense autofocus title="Update dosage" @keyup.enter="scope.set" />
+                  </q-popup-edit>
+                </q-td>
+                <q-td key="frequency" :props="props">
+                  {{ props.row.frequency }}
+                  <q-popup-edit :disable="!editaleTable" v-model="props.row.frequency" v-slot="scope">
+                    <q-input v-model="scope.value" dense autofocus title="Update dosage" @keyup.enter="scope.set" />
+
+                  </q-popup-edit>
+                </q-td>
+                <q-td key="route" :props="props">
+                  {{ props.row.route }}
+                  <q-popup-edit :disable="!editaleTable" v-model="props.row.route" v-slot="scope">
+                    <q-input v-model="scope.value" dense autofocus title="Update dosage" @keyup.enter="scope.set" />
+
+                  </q-popup-edit>
+                </q-td>
+              </q-tr>
+            </template>
+          </q-table>
         </q-tab-panel>
         <q-tab-panel class="overflow-hidden full-height q-pa-none" name="prompt"
         >
