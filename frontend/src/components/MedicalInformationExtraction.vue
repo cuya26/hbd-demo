@@ -125,7 +125,7 @@ Example:
 
 
     fetchModel(body) {
-      return fetch(llamaHost + '/v1/completions', {
+      return fetch(llamaHost + '/completions', {
         method: 'POST',
         body: JSON.stringify(body),
         headers:{
