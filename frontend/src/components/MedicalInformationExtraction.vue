@@ -2,24 +2,15 @@
 import {ref} from "vue";
 import {llamaHost} from "boot/axios";
 import PromptComponent from "components/MedicalInformationExtraction/Prompt.vue";
-import TimelineComponent from "components/MedicalInformationExtraction/TimelineComponent.vue";
 /* prettier-ignore */
 /* @formatter:off */
- const columns = [
-   {name: 'name', label: 'Name', field: 'name', align: 'left', sortable: true},
-   {name: 'dose', label: 'Dose', field: 'dose', align: 'left', sortable: true},
-   {name: 'frequency', label: 'Frequency', field: 'frequency', align: 'left', sortable: true},
-   {name: 'route', label: 'Route', field: 'route', align: 'left', sortable: true},
-]
 
-const rows = [
-]
 /* @formatter:on */
 export default {
   name: "MedicationExtraction",
   props: ['doc'],
   emits: ['request-document'],
-  components: {PromptComponent, TimelineComponent},
+  components: {PromptComponent},
   watch: {
     doc(newValue, oldValue) {
     }
@@ -27,7 +18,16 @@ export default {
   data() {
     return {
       medExt: {
-        answer: '',
+        table: ref({
+          columns: [
+            {name: 'name', label: 'Name', field: 'name', align: 'left', sortable: true},
+            {name: 'dose', label: 'Dose', field: 'dose', align: 'left', sortable: true},
+            {name: 'frequency', label: 'Frequency', field: 'frequency', align: 'left', sortable: true},
+            {name: 'route', label: 'Route', field: 'route', align: 'left', sortable: true},
+          ],
+          rows: [],
+        }),
+        answer: `\nAdalat 200 mg p.o. b.i.d. || 200 mg || p.o. || b.i.d.\nZantac 150 mg p.o. b.i.d. || 150 mg || p.o. || b.i.d.\nMagnesium Oxide 40 mg t.i.d. || 40 mg || t.i.d. || nm\nUltram 300 mg q.d. || 300 mg || q.d. || nm\nTrazodone 100 mg q.h.s. || 100 mg || q.h.s. || nm\nAzmacort 80 mg p.r.n. || 80 mg || p.r.n. || nm\naspirin 81 mg q.d. || 81 mg || q.d. || nm\nDyazide 25 mg q.d. || 25 mg || q.d. || nm\nnose spray b.i.d. || nm || nm || nm\ncalcium chloride pills q.d. || nm || nm || nm\nColchicine 600 mg q.d. || 600 mg || q.d. || nm\ncyproheptadine hydrochloride 4 mg b.i.d. q.h.s. || 4 mg || b.i.d. || nm\nanticholesterol med. || nm || nm || nm\nAlbuterol nebulizers 250 mg q.4h. || 250 mg || q.4h. || nm\nAllopurinol 300 mg q.d. || 300 mg || q.d. || nm\nColchicine 0.6 mg q.d. || 0.6 mg || q.d. || nm\ncyproheptadine hydrochloride by mouth 400 mg q.d. || 400 mg || q.d. || nm\nDigoxin 0.125 mg q.d. || 0.125 mg || q.d. || nm\nDiltiazem 30 mg t.i.d. || 30 mg || t.i.d. || nm\nLasix 40 mg p.o. q.d. || 40 mg || p.o. || q.d.\nPercocet 1-2 tablets p.o. q.4h. p.r.n. || 1-2 tablets || p.o. || q.4h. p.r.n.\nDilantin 200 mg p.o. b.i.d. || 200 mg || p.o. || b.i.d.\nTrazodone 100 mg p.o. q.h.s. || 100 mg || p.o. || q.h.s.\n[CSV_1_END]`,
         completionInit: '[CSV_1_START]\n' +
           'medication || dosage || mode || frequency',
         userMessage: `TASK: Named Entity Medical Extraction
@@ -40,7 +40,24 @@ Follow a csv format, like this "medication || dosage || mode || frequency".
 [CLINICAL_DOCUMENT_END]`,
         systemMessage: `Emulate a tool for the specified task. Strictly follow the provided instructions to execute the task accurately. Your role is to adhere solely to the given guidelines and perform the designated actions without deviation.`,
       },
-      timeline:{
+      timeline: {
+        times: [
+          {
+            time: '10/07/1998',
+            headline: 'Admission',
+            events: [
+              'presents with abdominal pain of seven days duration',
+              'admission',
+              'diagnosed with acute pancreatitis']
+          },
+          {
+            time: '11/07/1998',
+            headline: 'Treatment',
+            events: [
+              'treated with intravenous fluids and pain medication',
+              'discharged from the hospital']
+          }
+        ],
         answer: '',
         completionInit: '',
         userMessage: `
@@ -62,14 +79,11 @@ Example:
 `,
         systemMessage: `Emulate a tool for the specified task. Strictly follow the provided instructions to execute the task accurately. Your role is to adhere solely to the given guidelines and perform the designated actions without deviation.`,
       },
-      table: ref({
-        columns: columns,
-        rows: rows,
-      }),
+
       editaleTable: ref(false),
       answer: ref(`
       \nAdalat 200 mg p.o. b.i.d. || 200 mg || p.o. || b.i.d.\nZantac 150 mg p.o. b.i.d. || 150 mg || p.o. || b.i.d.\nMagnesium Oxide 40 mg t.i.d. || 40 mg || t.i.d. || nm\nUltram 300 mg q.d. || 300 mg || q.d. || nm\nTrazodone 100 mg q.h.s. || 100 mg || q.h.s. || nm\nAzmacort 80 mg p.r.n. || 80 mg || p.r.n. || nm\naspirin 81 mg q.d. || 81 mg || q.d. || nm\nDyazide 25 mg q.d. || 25 mg || q.d. || nm\nnose spray b.i.d. || nm || nm || nm\ncalcium chloride pills q.d. || nm || nm || nm\nColchicine 600 mg q.d. || 600 mg || q.d. || nm\ncyproheptadine hydrochloride 4 mg b.i.d. q.h.s. || 4 mg || b.i.d. || nm\nanticholesterol med. || nm || nm || nm\nAlbuterol nebulizers 250 mg q.4h. || 250 mg || q.4h. || nm\nAllopurinol 300 mg q.d. || 300 mg || q.d. || nm\nColchicine 0.6 mg q.d. || 0.6 mg || q.d. || nm\ncyproheptadine hydrochloride by mouth 400 mg q.d. || 400 mg || q.d. || nm\nDigoxin 0.125 mg q.d. || 0.125 mg || q.d. || nm\nDiltiazem 30 mg t.i.d. || 30 mg || t.i.d. || nm\nLasix 40 mg p.o. q.d. || 40 mg || p.o. || q.d.\nPercocet 1-2 tablets p.o. q.4h. p.r.n. || 1-2 tablets || p.o. || q.4h. p.r.n.\nDilantin 200 mg p.o. b.i.d. || 200 mg || p.o. || b.i.d.\nTrazodone 100 mg p.o. q.h.s. || 100 mg || p.o. || q.h.s.\n[CSV_1_END]`),
-      tab: ref('table'),
+      tab: ref('timeline'),
       template: '<|im_start|>system\n{system_message}<|im_end|>\n<|im_start|>user\n{prompt}<|im_end|>\n<|im_start|>assistant\n{completion_init}',
 
       loadingResponse: ref(false),
@@ -85,7 +99,7 @@ Example:
       editableDiv.style.height = editableDiv.scrollHeight + "px";
     },
 
-    parseAnswer(answer) {
+    parseMedicationsAnswer(answer) {
       let table = []
       let lines = answer.split('\n')
       for (let line of lines) {
@@ -105,21 +119,17 @@ Example:
           console.log('line not parsed', line)
         }
       }
-      this.table.rows = table
+      this.medExt.table.rows = table
     },
-    prepareExtraction() {
-      this.adjustHeight()
 
-    },
 
 
     fetchModel(body) {
       return fetch(llamaHost + '/v1/completions', {
         method: 'POST',
         body: JSON.stringify(body),
-        headers: {
-          'Content-Type': 'application/json',
-          timeout: 36000
+        headers:{
+          'Access-Control-Allow-Origin': '*',
         }
       })
     },
@@ -143,9 +153,9 @@ Example:
     },
 
     processMedicationExtraction(reader, {done, value}) {
-      if(done){
+      if (done) {
         this.loadingResponse = false
-        this.parseAnswer(this.medExt.answer)
+        this.parseMedicationsAnswer(this.medExt.answer)
         return;
       }
       let mappedChunk = this.mapChunk(value)
@@ -172,13 +182,55 @@ Example:
           this.loadingResponse = false
           return error.body;
         })
-    }
+    },
+
+    parseTimelineAnswer(answer) {
+      try{
+        this.timeline.times = JSON.parse(answer)
+      }catch (e) {
+        console.log('error parsing timeline answer', e)
+        this.timeline.times = [{time: '', events: [], headline: 'Error during extraction'}]
+      }
+
+    },
+
+
+    processTimelineExtraction(reader, {done, value}) {
+      if (done) {
+        this.loadingResponse = false
+        this.parseTimelineAnswer(this.timeline.answer)
+        return;
+      }
+      let mappedChunk = this.mapChunk(value)
+      this.medExt.answer += mappedChunk
+      return reader.read().then(this.processTimelineExtraction.bind(null, reader));
+    },
+
+    async extractTimeline(data) {
+      this.loadingResponse = true
+      this.timeline.answer = ''
+      this.fetchModel(
+        {
+          prompt: data.prompt.replace('{file}', this.doc),
+          stream: true,
+          stop: ['<|im_end|>'],
+          ...data.parameters
+        }
+      ).then(response => {
+        const reader = response.body.getReader();
+        return reader.read().then(this.processTimelineExtraction.bind(null, reader));
+      })
+        .catch(error => {
+          console.error(error);
+          this.loadingResponse = false
+          return error.body;
+        })
+    },
+
   },
 
 
-  mounted() {
-    this.prepareExtraction();
-  }
+
 }
 </script>
 
@@ -207,18 +259,16 @@ Example:
       >
         <q-tab name="table" label="Table"/>
         <q-tab name="timeline" label="Timeline"/>
-        <q-tab name="prompt" label="Prompt"/>
       </q-tabs>
       <q-separator class="bi-border"/>
       <q-tab-panels v-model="tab" animated class="column no-wrap full-height overflow-hidden "
                     style="height: 100%"
-                    @transition=" prepareExtraction()"
       >
-        <q-tab-panel name="table" class="column full-height q-ma-none">
+        <q-tab-panel name="table" class="column full-height q-ma-none no-wrap">
           <div class="flex justify-between">
             <div class="text-h6">Table</div>
             <q-toggle
-              v-show="table.rows.length > 0"
+              v-show="medExt.table.rows.length > 0"
               v-model="editaleTable"
               color="primary"
               icon="edit"
@@ -233,8 +283,8 @@ Example:
           <q-table
             class="col"
             title="Medications"
-            :rows="table.rows"
-            :columns="table.columns"
+            :rows="medExt.table.rows"
+            :columns="medExt.table.columns"
             row-key="name"
             :rows-per-page-options="[0, 10, 20, 30]"
           >
@@ -269,21 +319,51 @@ Example:
               </q-tr>
             </template>
           </q-table>
+          <div>
+            <prompt-component
+              ref="promptComponent"
+              :accordion="true"
+              :template="template"
+              :answer="medExt.answer"
+              :prompt-completion-init="medExt.completionInit"
+              :prompt-system-message="medExt.systemMessage"
+              :prompt-user-message="medExt.userMessage"
+              @askLLM="extractMedications"
+            ></prompt-component>
+          </div>
         </q-tab-panel>
         <q-tab-panel name="timeline">
-          <timeline-component/>
-        </q-tab-panel>
-        <q-tab-panel class="overflow-hidden full-height q-pa-none" name="prompt"
-        >
-          <prompt-component
-            ref="promptComponent"
-            :template="template"
-            :answer="medExt.answer"
-            :prompt-completion-init="medExt.completionInit"
-            :prompt-system-message="medExt.systemMessage"
-            :prompt-user-message="medExt.userMessage"
-            @askLLM="extractMedications"
-          ></prompt-component>
+          <div class="q-pa-lg">
+
+            <q-timeline layout="comfortable" side="right" color="secondary">
+              <q-timeline-entry heading>Timeline</q-timeline-entry>
+
+              <q-timeline-entry v-for="time in timeline.times" :key="time"
+                                :subtitle="time.time"
+                                :title="time.headline"
+              >
+
+                <ul>
+                  <li v-for="event in time.events" :key="event">
+                    {{ event }}
+                  </li>
+                </ul>
+
+              </q-timeline-entry>
+
+            </q-timeline>
+          </div>
+          <div>
+            <prompt-component
+              ref="promptComponent"
+              :template="template"
+              :answer="timeline.answer"
+              :prompt-completion-init="timeline.completionInit"
+              :prompt-system-message="timeline.systemMessage"
+              :prompt-user-message="timeline.userMessage"
+              @askLLM="extractTimeline"
+            ></prompt-component>
+          </div>
         </q-tab-panel>
 
 

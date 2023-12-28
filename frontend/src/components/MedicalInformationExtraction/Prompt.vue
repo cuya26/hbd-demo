@@ -9,6 +9,7 @@ export default {
     promptSystemMessage: String,
     promptUserMessage: String,
     promptCompletionInit: String,
+    accordion: Boolean,
   },
   exposes: ['run'],
   emits: ['askLLM', 'clearOutput'],
@@ -88,6 +89,7 @@ export default {
         icon="settings"
         label="Model Settings"
         header-class=""
+        :group="accordion ? 'group' : null"
       >
         <q-card class="q-pa-none col">
           <q-card-section class="q-pa-sm flex justify-start">
@@ -110,6 +112,8 @@ export default {
         icon="edit_note"
         label="Prompt"
         header-class=""
+        :group="accordion ? 'group' : null"
+
         default-opened>
         <q-card>
           <div class="bg-grey-3 overflow-scroll column full-height">
@@ -166,6 +170,8 @@ export default {
       <q-expansion-item
         icon="output"
         label="Model Output"
+        :group="accordion ? 'group' : null"
+
       >
         <q-card>
           <q-card-section style="white-space: pre-line">
