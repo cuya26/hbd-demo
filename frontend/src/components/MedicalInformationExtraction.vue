@@ -43,19 +43,7 @@ Follow a csv format, like this "medication || dosage || mode || frequency".
       timeline: {
         times: [
           {
-            time: '10/07/1998',
-            headline: 'Admission',
-            events: [
-              'presents with abdominal pain of seven days duration',
-              'admission',
-              'diagnosed with acute pancreatitis']
-          },
-          {
-            time: '11/07/1998',
-            headline: 'Treatment',
-            events: [
-              'treated with intravenous fluids and pain medication',
-              'discharged from the hospital']
+            headline:"No timeline"
           }
         ],
         answer: '',
@@ -69,7 +57,8 @@ If there is no date (like before admission), put "none"
 Example:
 
 [{
- "date": "10/07/1998",
+ "time": "10/07/1998",
+ "headline": "Admission and Diagnosis",
  "events": ["presents with abdominal pain of seven days duration", "admission", "diagnosed with acute pancreatitis"]
 }, ... ]
 
@@ -119,17 +108,18 @@ Example:
           console.log('line not parsed', line)
         }
       }
-      this.medExt.table.rows = table
+      return table
     },
 
 
 
     fetchModel(body) {
-      return fetch(llamaHost + '/completions', {
+      return fetch(llamaHost + '/v1/completions', {
         method: 'POST',
         body: JSON.stringify(body),
         headers:{
-          'Access-Control-Allow-Origin': '*',
+          'Content-Type': 'application/json',
+          timeout: 36000
         }
       })
     },
@@ -155,7 +145,7 @@ Example:
     processMedicationExtraction(reader, {done, value}) {
       if (done) {
         this.loadingResponse = false
-        this.parseMedicationsAnswer(this.medExt.answer)
+        this.medExt.table.rows = this.parseMedicationsAnswer(this.medExt.answer)
         return;
       }
       let mappedChunk = this.mapChunk(value)
@@ -163,6 +153,14 @@ Example:
       return reader.read().then(this.processMedicationExtraction.bind(null, reader));
     },
 
+    checkNExtractMeds(){
+      if(this.medExt.table.rows == this.parseTimelineAnswer(this.medExt.answer)){
+        this.extractMedications()
+      }
+      else{
+        this.medExt.table.rows = this.parseMedicationsAnswer(this.medExt.answer)
+      }
+    },
     async extractMedications(data) {
       this.loadingResponse = true
       this.medExt.answer = ''
@@ -184,25 +182,38 @@ Example:
         })
     },
 
-    parseTimelineAnswer(answer) {
-      try{
-        this.timeline.times = JSON.parse(answer)
-      }catch (e) {
-        console.log('error parsing timeline answer', e)
-        this.timeline.times = [{time: '', events: [], headline: 'Error during extraction'}]
+    checkNExtractTimeline(){
+      console.log(JSON.parse(JSON.stringify(this.timeline.times)), JSON.parse(JSON.stringify(this.parseTimelineAnswer(this.timeline.answer))))
+      if(this.timeline.times == this.parseTimelineAnswer(this.timeline.answer)){
+        this.extractTimeline()
+        console.log('same')
       }
+      else{
+        this.timeline.times = this.parseTimelineAnswer(this.timeline.answer)
+        console.log('different')
+      }
+    },
 
+    parseTimelineAnswer(answer) {
+      let res = []
+      try{
+        res = JSON.parse(answer)
+      }catch (e) {
+        console.log('error parsing timeline answer')
+        res = [{time: '', events: [], headline: 'Error during extraction'}]
+      }
+      return res
     },
 
 
     processTimelineExtraction(reader, {done, value}) {
       if (done) {
         this.loadingResponse = false
-        this.parseTimelineAnswer(this.timeline.answer)
+        this.timeline.times = this.parseTimelineAnswer(this.timeline.answer)
         return;
       }
       let mappedChunk = this.mapChunk(value)
-      this.medExt.answer += mappedChunk
+      this.timeline.answer += mappedChunk
       return reader.read().then(this.processTimelineExtraction.bind(null, reader));
     },
 
@@ -277,7 +288,7 @@ Example:
           </div>
           <q-btn
             class="q-ma-sm" color="primary"
-            @click="extractMedications()"
+            @click="checkNExtractMeds()"
           >Extract medications
           </q-btn>
           <q-table
@@ -329,12 +340,17 @@ Example:
               :prompt-system-message="medExt.systemMessage"
               :prompt-user-message="medExt.userMessage"
               @askLLM="extractMedications"
+              @clear-output="medExt.answer = ''"
             ></prompt-component>
           </div>
         </q-tab-panel>
         <q-tab-panel name="timeline">
           <div class="q-pa-lg">
-
+            <q-btn
+              class="q-ma-sm" color="primary"
+              @click="checkNExtractTimeline()"
+            >Extract timeline
+            </q-btn>
             <q-timeline layout="comfortable" side="right" color="secondary">
               <q-timeline-entry heading>Timeline</q-timeline-entry>
 
@@ -362,6 +378,8 @@ Example:
               :prompt-system-message="timeline.systemMessage"
               :prompt-user-message="timeline.userMessage"
               @askLLM="extractTimeline"
+              @clear-output="timeline.answer = ''"
+
             ></prompt-component>
           </div>
         </q-tab-panel>
