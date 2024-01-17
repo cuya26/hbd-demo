@@ -1,0 +1,6 @@
+
+__pycache__/
+models
+processed
+raw
+*/documents/*.txt

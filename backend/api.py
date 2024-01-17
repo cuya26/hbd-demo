@@ -5,8 +5,6 @@ from model import Predictor, question_and_answering_pipeline, compute_saliency_m
 from ita_deidentification import anonymizer
 import fitz
 from io import BytesIO
-from llama_cpp import Llama, Llama
-import llama_cpp
 import time
 import copy
 from sse_starlette import EventSourceResponse
@@ -300,18 +298,6 @@ async def get_chatbot_name():
     global global_model_name
     return {'model_name': global_model_name}
 
-@app.post('/set_chatbot_model')
-async def send_message(request: Request):
-    global global_model_name
-    global llm
-    global params
-    request_data = await request.json()
-    model_name = request_data['model_name']
-    if model_name != global_model_name:
-        global_model_name = model_name
-        llm = Llama(model_path=f"./data/models/{global_model_name}", **params)
-        # time.sleep(10)
-    return {'status': 'complete'}
 
 @app.post('/llama_tokenizer')
 async def llama_tokenizer(request: Request):
