@@ -41,11 +41,37 @@ Follow a csv format, like this "medication || dosage || mode || frequency".
         systemMessage: `Emulate a tool for the specified task. Strictly follow the provided instructions to execute the task accurately. Your role is to adhere solely to the given guidelines and perform the designated actions without deviation.`,
       },
       timeline: {
-        times: [
+        times:  [
           {
-            headline:"No timeline"
+            "time": "10/17/95",
+            "events": ["admission"]
+          },
+          {
+            "time": "none",
+            "events": ["This is a 73-year-old man with squamous cell carcinoma of the lung, status post lobectomy and resection of left cervical recurrence, admitted here with fever and neutropenia.", "Recently he had been receiving a combination of outpatient chemotherapy with the CAMP Program.", "Other medical problems include hypothyroidism, hypercholesterolemia, hypertension and neuropathy from Taxol."]
+          },
+          {
+            "time": "none",
+            "events": ["He was started on Neupogen, 400 mcg. subq. q.d.", "He was initially treated with antibiotic therapy.", "Chest x-ray showed questionable nodule in the right lower lobe, reasonably stable."]
+          },
+          {
+            "time": "10/19",
+            "events": ["WBC rose to 1.7"]
+          },
+          {
+            "time": "none",
+            "events": ["The patient had some diarrhea.", "There was no diarrhea on 10/20."]
+          },
+          {
+            "time": "none",
+            "events": ["He was feeling well and afebrile.", "The neutropenia resolved"]
+          },
+          {
+            "time": "10/20",
+            "events": ["He was discharged home on Neupogen.", "The patient felt to be in satisfactory condition on discharge."]
           }
-        ],
+        ]
+        ,
         answer: '',
         completionInit: '',
         userMessage: `
@@ -184,14 +210,14 @@ Example:
 
     checkNExtractTimeline(){
       console.log(JSON.parse(JSON.stringify(this.timeline.times)), JSON.parse(JSON.stringify(this.parseTimelineAnswer(this.timeline.answer))))
-      if(this.timeline.times == this.parseTimelineAnswer(this.timeline.answer)){
+      // if(this.timeline.times == this.parseTimelineAnswer(this.timeline.answer)){
         this.extractTimeline()
-        console.log('same')
-      }
-      else{
-        this.timeline.times = this.parseTimelineAnswer(this.timeline.answer)
-        console.log('different')
-      }
+      //   console.log('same')
+      // }
+      // else{
+      //   this.timeline.times = this.parseTimelineAnswer(this.timeline.answer)
+      //   console.log('different')
+      // }
     },
 
     parseTimelineAnswer(answer) {
@@ -200,6 +226,7 @@ Example:
         res = JSON.parse(answer)
       }catch (e) {
         console.log('error parsing timeline answer')
+        console.log(answer)
         res = [{time: '', events: [], headline: 'Error during extraction'}]
       }
       return res
