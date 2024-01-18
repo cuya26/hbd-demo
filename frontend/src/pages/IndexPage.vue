@@ -1,8 +1,8 @@
 <template>
   <q-page padding class="row items-strech">
     <div class="col-12 column no-wrap" >
-      <div class="row no-wrap justify-between" style="height: 100%">
-        <div class="column no-wrap" style="width: 55%">
+      <div ref="resizableBlock" class="row no-wrap justify-between" style="height: 100%">
+        <div class="column no-wrap" :style="{ width: this.resizableWidth+'%'}">
           <div class="q-pb-md">
             <div style="height:40px"></div>
           </div>
@@ -101,8 +101,10 @@
             </div>
           </q-card>
         </div>
-
-        <div class="column no-wrap" style="width: 42%">
+        <div style="cursor: col-resize; width: 6px"
+             @mousedown="startDrag(this.$refs.resizableBlock)"
+        ></div>
+        <div class="column no-wrap" :style="{ width: 100-this.resizableWidth+'%'}">
           <div class="q-pb-md">
             <div class="row justify-evenly">
               <!-- <q-select
@@ -240,6 +242,8 @@ export default defineComponent({
   },
   setup () {
     return {
+      resizableWidth: ref(30),
+      draggable: false,
       inputMode: ref("edit"),
       dropzoneURL: ref(""),
       dropzoneURL2: ref(""),
@@ -390,6 +394,25 @@ export default defineComponent({
     }
   },
   methods : {
+    startDrag() {
+      this.draggable = true;
+      this.$refs.resizableBlock.addEventListener("mousemove", this.handleDrag);
+      this.$refs.resizableBlock.addEventListener("mouseup", this.stopDrag);
+    },
+
+    handleDrag(event) {
+      if (this.draggable) {
+        const draggableWidth = event.clientX - this.$refs.resizableBlock.getBoundingClientRect().left;
+        const blockWidth = this.$refs.resizableBlock.offsetWidth;
+        let newResizable1Width = Math.min(Math.max((draggableWidth / blockWidth) * 100, 30), 70)
+        this.resizableWidth = newResizable1Width.toFixed(2);
+      }
+    },
+    stopDrag() {
+      this.draggable = false;
+      this.$refs.resizableBlock.removeEventListener("mousemove", this.handleDrag);
+      this.$refs.resizableBlock.removeEventListener("mouseup", this.stopDrag);
+    },
     dropFunction(dragEvent) {
       // TODO add revokeObjectURL
       const dropzoneFile = dragEvent.dataTransfer.files[0];
