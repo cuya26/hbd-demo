@@ -1,5 +1,5 @@
 <template>
-  <q-page padding class="row items-strech">
+  <q-page padding class="row items-stretch" style="height: 100%">
     <div class="col-12 column no-wrap" >
       <div ref="resizableBlock" class="row no-wrap justify-between" style="height: 100%">
         <div class="column no-wrap" :style="{ width: this.resizableWidth+'%'}">
@@ -8,7 +8,7 @@
           </div>
           <q-card
             class="items-strech"
-            style="height: 680px"
+            style="height: 90%"
           >
             <div
               class="col-12 column no-wrap"
@@ -104,7 +104,7 @@
         <div style="cursor: col-resize; width: 6px"
              @mousedown="startDrag(this.$refs.resizableBlock)"
         ></div>
-        <div class="column no-wrap" :style="{ width: 100-this.resizableWidth+'%'}">
+        <div class="column no-wrap full-height" :style="{ width: 100-this.resizableWidth+'%'}">
           <div class="q-pb-md">
             <div class="row justify-evenly">
               <!-- <q-select
@@ -154,12 +154,12 @@
             </div>
           </div>
           <DeidentificationClassic
-          style="height: 680px"
+          style="height: 90%"
           :inputLetter="inputLetter"
           v-if="setupName==='Classic'"
           />
           <PharmacologicalEventExtraction
-          style="height: 680px"
+          style="height: 90%"
           :inputLetter="inputLetter"
           :modelConfig="modelConfig['Track1 n2c2 Challenge (en)']"
           v-model:inputMode="inputMode"
@@ -168,13 +168,13 @@
           v-if="setupName==='Track1 n2c2 Challenge (en)'"
           />
           <ChatBot
-          style="height: 680px"
+          style="height: 90%"
           :inputLetter="inputLetter"
           v-if="setupName==='mistral-7b-openorca-q5'"
           />
           <QuestionAnswering
           v-if="taskName==='question answering' && setupName!== null"
-          style="height: 680px"
+          style="height: 90%"
           :inputLetter="inputLetter"
           :modelConfig="modelConfig[setupName]"
           v-model:inputMode="inputMode"
@@ -183,11 +183,11 @@
           />
           <PatientSearch
           v-if="setupName==='Patient Search Engine'"
-          style="height: 680px"
+          style="height: 90%"
           v-model:inputLetter="inputLetter"
           v-model:inputMode="inputMode"
           />
-          <q-card class="" style="height: 680px" v-if="setupName==='Medical Information Extraction with LLM'">
+          <q-card class="" style="height: 90%" v-if="setupName==='Medical Information Extraction with LLM'">
             <q-card-section class=" row justify-between" >
               <div class="col-2"></div>
               <div class="text-h6 text-primary">Output</div>
@@ -204,7 +204,7 @@
 
           </q-card-section>
           </q-card>
-          <q-card class="" style="height: 680px" v-if="setupName===null">
+          <q-card class="" style="height: 90%" v-if="setupName===null">
             <q-card-section class=" row justify-between" >
               <div class="col-2"></div>
               <div class="text-h6 text-primary">Output</div>
