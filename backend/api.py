@@ -226,10 +226,11 @@ async def convert_pdf(uploaded_pdf: UploadFile):
                         if header_missing and header: 
                             header_text += '\n\n' 
                         elif not header:
-                            if clean_text[-1] == '.':
-                                clean_text += '\n\n'
-                            else:
-                                clean_text += '\n'
+                            if len(clean_text) > 1:
+                                if clean_text[-1] == '.':
+                                    clean_text += '\n\n'
+                                else:
+                                    clean_text += '\n'
             header_missing = False   
 
         # ----- ADD DUPLICATES AT THE END AND RETURN TEXT ----- #

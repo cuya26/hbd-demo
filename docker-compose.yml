@@ -36,8 +36,8 @@ services:
                 reservations:
                     devices:
                         - driver: nvidia
-                          device_ids: ['1']
-                          capabilities: [gpu]
+                          device_ids: [ '1' ]
+                          capabilities: [ gpu ]
     frontend:
         image: hbd-demo-frontend:latest
         build:
@@ -50,7 +50,7 @@ services:
         ports:
             - 51118:8080
         restart: always
-        command: sh -c "npm install && quasar dev"
+        command: sh -c "npm install && npm audit fix --force && quasar dev"
     backend:
         build:
             context: ./backend/
@@ -74,5 +74,5 @@ services:
                 reservations:
                     devices:
                         - driver: nvidia
-                          device_ids: ['0']
-                          capabilities: [gpu]
+                          device_ids: [ '0' ]
+                          capabilities: [ gpu ]
