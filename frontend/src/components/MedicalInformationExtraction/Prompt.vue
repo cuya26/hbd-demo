@@ -1,6 +1,7 @@
 <script>
 import {ref} from "vue";
 
+
 export default {
   name: "PromptComponent",
   props: {
@@ -11,8 +12,17 @@ export default {
     promptCompletionInit: String,
     accordion: Boolean,
   },
-  exposes: ['run'],
-  emits: ['askLLM', 'clearOutput'],
+  watch: {
+    answer: function (newVal, oldVal) {
+      this.internalAnswer = newVal;
+      setTimeout(() => {
+        this.adjustHeight(this.$refs.answer);
+      }, 0);
+
+    },
+  },
+  exposes: ['prepareDate'],
+  emits: ['askLLM', 'clearOutput', 'answerChanged'],
 
   methods: {
     adjustHeight(element) {
@@ -26,57 +36,76 @@ export default {
         .replace('{system_message}', this.systemMessage)
         .replace('{prompt}', this.userMessage)
         .replace('{completion_init}', this.completionInit);
-      const parameters = Object.fromEntries(Object.entries(this.modelParameters).map(([key, value]) => [key, value.model]));
-      this.$emit('askLLM', {prompt: prompt, parameters: parameters});
+      const parameters = Object.fromEntries(Object.entries(this.modelParameters)
+        .filter(([key, value]) => value.enabled)
+        .map(([key, value]) => [key, value.model]));
+      return {prompt: prompt, parameters: parameters};
     },
+    askLLM() {
+      let data = this.prepareData()
+      this.$emit('askLLM', data);
+    },
+    updateAnswer(text) {
+      console.log('update answer')
+      this.internalAnswer = text;
+      this.$emit('answerChanged', text);
+    }
 
   },
-  data(){
-
-    return{
+  data() {
+    return {
       modelParameters: {
         max_tokens: {
           placeholder: "Max tokens",
           type: "number",
           model: ref(2048),
+          enabled: ref(true)
         },
         temperature: {
           placeholder: "Temperature",
           type: "float",
-          model: ref(0.5),
+          model: ref(0),
+          enabled: ref(true)
         },
-        // top_p: {
-        //   placeholder: "Top_p",
-        //   type: "float",
-        //   model: ref(0),
-        // },
-        // top_k: {
-        //   placeholder: "Top_k",
-        //   type: "number",
-        //   model: ref(0),
-        // },
+        top_p: {
+          placeholder: "Top_p",
+          type: "float",
+          model: ref(0),
+          enabled: ref(false)
+        },
+        top_k: {
+          placeholder: "Top_k",
+          type: "number",
+          model: ref(0),
+          enabled: ref(false)
+        },
         mirostat_tau: {
           placeholder: "Mirostat_tau",
           type: "float",
-          model: ref(8.0),
+          model: ref(3.0),
+          enabled: ref(true)
+
         },
         repeat_penalty: {
           placeholder: "Repeat penalty",
           type: "float",
           model: ref(1.1),
+          enabled: ref(false)
         }
       },
 
       completionInit: ref(this.promptCompletionInit),
       userMessage: ref(this.promptUserMessage),
       systemMessage: ref(this.promptSystemMessage),
-
+      internalAnswer: ref(this.answer),
     }
   },
   mounted() {
     this.adjustHeight(this.$refs.systemMessage);
     this.adjustHeight(this.$refs.prompt);
     this.adjustHeight(this.$refs.completionInit);
+    this.adjustHeight(this.$refs.answer);
+
   },
 
 }
@@ -92,16 +121,21 @@ export default {
         :group="accordion ? 'group' : null"
       >
         <q-card class="q-pa-none col">
-          <q-card-section class="q-pa-sm flex justify-start">
-            <q-input
-              v-for="param in modelParameters" :key="param"
-              v-model="param.model"
-              :type="param.type === 'float' ? 'number' : param.type"
-              :step="param.type === 'float' ? '0.01' : ''"
-              :label="param.placeholder"
-              style="width: 48%"
-              class="q-pa-none"
-            />
+          <q-card-section class="q-pa-sm" style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 1em">
+            <div class="flex col-grow"
+                 v-for="param in modelParameters" :key="param"
+            >
+              <q-checkbox v-model="param.enabled"></q-checkbox>
+              <q-input
+                :disable="!param.enabled"
+                v-model="param.model"
+                :type="param.type === 'float' ? 'number' : param.type"
+                :step="param.type === 'float' ? '0.01' : ''"
+                :label="param.placeholder"
+                style="width: 48%; flex-grow: 1"
+                class="q-pa-none"
+              />
+            </div>
           </q-card-section>
         </q-card>
       </q-expansion-item>
@@ -120,7 +154,7 @@ export default {
             <div class="col-grow flex q-pa-sm justify-end bg-grey-4 full-height">
               <div style="display: flex;">
                 <q-btn class="q-mx-sm" round dense flat icon="cleaning_services" @click="$emit('clearOutput')"/>
-                <q-btn class="q-mx-sm" round dense flat icon="send" @click="prepareData()"/>
+                <q-btn class="q-mx-sm" round dense flat icon="send" @click="askLLM()"/>
               </div>
             </div>
 
@@ -173,10 +207,14 @@ export default {
         :group="accordion ? 'group' : null"
 
       >
-        <q-card>
-          <q-card-section style="white-space: pre-line">
-            {{ answer }}
-          </q-card-section>
+        <q-card class="bg-grey-3 q-pa-sm full-height">
+          <textarea
+            ref="answer"
+            class="bg-white col q-pa-sm no-border rounded-borders full-width"
+            style="white-space: pre-line; min-height: 10em; height: 100%; resize: none" v-model="this.internalAnswer"
+            @input="adjustHeight($event.target); updateAnswer($event.target.value)"
+          />
+
         </q-card>
       </q-expansion-item>
       <q-separator/>

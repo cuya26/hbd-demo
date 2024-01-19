@@ -5,6 +5,8 @@ import axios from 'axios'
 // const api = axios.create({ baseURL: 'http://localhost:51119' })
 // const patientSearchApi = axios.create({ baseURL: 'http://localhost:51125' })
 
+
+const llamaAltCompletions = "http://147.189.193.77"
 const llamaHost = "http://131.175.15.22:61111/llama-server"
 const api = axios.create({ baseURL: 'http://131.175.15.22:61111/hbd-demo-api/' })
 const patientSearchApi = axios.create({baseURL: 'http://131.175.15.22:61111/patient-search-server/'})
@@ -20,4 +22,4 @@ export default boot(({ app }) => {
 
 })
 
-export { axios, api, patientSearchApi, llamaHost}
+export { axios, api, patientSearchApi, llamaHost, llamaAltCompletions }

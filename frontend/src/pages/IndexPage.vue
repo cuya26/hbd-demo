@@ -199,7 +199,6 @@
           <medical-information-extraction
           :doc="inputLetter"
           ref="medicalInformationExtractionComponent"
-          @request-document="requestText()"
           ></medical-information-extraction>
 
           </q-card-section>
@@ -229,7 +228,6 @@ import ChatBot from "components/ChatBot.vue";
 import QuestionAnswering from 'components/QuestionAnswering.vue';
 import PatientSearch from 'components/PatientSearch.vue';
 
-
 export default defineComponent({
   name: 'Health Big Data WG1 Demo',
   components: {
@@ -250,7 +248,7 @@ export default defineComponent({
       highlightColor: ref(false),
       saliencyMap: ref([]),
       loadingSaliencyMap: ref(false),
-      inputLetter: ref(null),
+      inputLetter: ref(),
       letterNames: ref([]),
       letterDict: ref({}),
       taskName: ref(null),
@@ -319,7 +317,7 @@ export default defineComponent({
         }
 
       ],
-      setupName: ref(null),
+      setupName: ref(''),
       modelConfig: ref(
         {
           'Track1 n2c2 Challenge (en)': {
