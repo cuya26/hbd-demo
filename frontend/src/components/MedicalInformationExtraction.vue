@@ -17,7 +17,22 @@ export default {
   data() {
     return {
       medExt: {
-        brokenOutput: false,
+        fixPrompt: `<|im_start|>system
+Emulate a tool for the specified task. Strictly follow the provided instructions to execute the task accurately. Your role is to adhere solely to the given guidelines and perform the designated actions without deviation.<|im_end|>
+<|im_start|>user
+The text lying between <text> and </text> tags was supposed to be a JSON array of objects.
+The parser failed to parse it.
+Your task it to generate a perfect json file from the given text.
+Remove any extra text apart from the given JSON array.
+The JSON may be malformed. If so, fix it.
+Do not print any other text apart from the JSON array.
+
+<text>
+{text}
+</text>
+<|im_end|>
+<!im_start|>assistant`,
+        brokenOutput: true,
         loading: ref(false),
         table: {
           columns: [
@@ -29,23 +44,49 @@ export default {
           rows: ref([]),
         },
         answer: ``,
-        completionInit:`Here the extracted table with the required informations
+        completionInit: `Here the extracted table with the required informations
 [CSV_START]
 medication || dose || mode || frequency`,
         userMessage: `TASK: Named Entity Medical Extraction
-Extract all the medications mentioned in the clinical document and for each of them extracts the corresponding:
-- dose: the specified amount of medication taken at one specific time.
-- mode: is the way by which a drug, fluid, poison, or other substance is taken into the body. Modes of administration are generally classified by the location at which the substance is applied. Common examples include oral and intravenous administration.
-- frequency: is indicated by how many times a day the medication is to be administered or how often it is to be administered in hours or minutes.
-Put all the extracted entities into a csv table with the columns medication, dose, mode, and frequency.
-Follow this csv format "medication || dose || mode || frequency".
+Extract all and only the medication, dosage, mode, frequency from the text.
+Put all the extracted entities into a csv table with the columns medication and dosage.
+If no data in any of the columns write "nm".
+Follow a csv format, like this "medication || dosage || mode || frequency".
+
 [CLINICAL_DOCUMENT_START]
 {file}
 [CLINICAL_DOCUMENT_END]`,
         systemMessage: `Emulate a tool for the specified task. Strictly follow the provided instructions to execute the task accurately. Your role is to adhere solely to the given guidelines and perform the designated actions without deviation.`,
       },
       timeline: {
-        brokenOutput: false,
+        fixAnswer: {
+          prompt: `<|im_start|>system
+Emulate a tool for the specified task. Strictly follow the provided instructions to execute the task accurately. Your role is to adhere solely to the given guidelines and perform the designated actions without deviation.<|im_end|>
+<|im_start|>user
+The text lying between <text> and </text> tags was supposed to be a JSON array of objects.
+The parser failed to parse it.
+Your task it to generate a perfect json file from the given text.
+Remove any extra text apart from the given JSON array.
+The JSON may be malformed. If so, fix it.
+Do not print any other text apart from the JSON array.
+
+<text>
+{text}
+</text>
+<|im_end|>
+<!im_start|>assistant`,
+          fixPromptDialog: ref(false),
+          promptUserMessage: '',
+          completionInit: '',
+          promptSystemMessage: '',
+          settings: {
+            max_tokems: 2048,
+            mirostat_tau: 3.0,
+            temperature: 0,
+          }
+        },
+
+        brokenOutput: true,
         loading: ref(false),
         times: [{}]
         ,
@@ -84,7 +125,7 @@ Generate the JSON array for the following document.
 
 
     parseMedicationsAnswer(answer) {
-      console.log('parsing medications answer',   answer)
+      console.log('parsing medications answer', answer)
       let table = []
       let lines = answer.split('\n')
       for (let line of lines) {
@@ -108,23 +149,12 @@ Generate the JSON array for the following document.
     },
 
 
-    async fixAnswer(body, answer){
-      let fixPrompt = `
-      Your task it to perfectly extract the structured data in the following text.
-      You need to understand the structure and correct the syntax in case it is broken.
-
-      In the output there will be only the structured data, no text.
-
-      TEXT:
-      `
-      fixPrompt += answer
-      return await this.askLLM({...body, prompt: fixPrompt, stream: true,
-        stop: ['<|im_end|>']})
-    },
-
-
     askLLM(body) {
-      return axios.api.post(axios.llamaHost + '/v1/completions', {...body, stream: false}, {
+      return axios.api.post(axios.llamaHost + '/v1/completions',
+        {
+          ...body, stream: false,
+          stop: ['<|im_end|>']
+        }, {
           'Content-Type': 'application/json',
           timeout: 600000
         }
@@ -177,17 +207,30 @@ Generate the JSON array for the following document.
       }
     },
 
-    fixTimelineAnswer(body, answer){
-      let fixPrompt = `The following text must be printed in json file.
-Remove all the text and leave only the json.
-Fix the json if it is broken.
+    async fixTimelineAnswer() {
+      let brokenAnswer = this.timeline.answer
+      let fixPrompt = this.timeline.fixAnswer.prompt.replace('{text}', brokenAnswer)
 
-<text>
-{answer}
-</text>`
-      fixPrompt = fixPrompt.replace('{answer}', answer)
       console.log('fix timeline answer', fixPrompt)
-      return this.askLLM({...body.parameters, prompt: fixPrompt, temperature: 0 })
+      this.timeline.loading = true
+      let answer = await this.askLLM({prompt: fixPrompt, max_tokens: 2048, temperature: 0.0, mirostat_tau: 3.0})
+      answer = answer.data.choices[0].text
+      this.timeline.loading = false
+      this.timeline.times = this.parseTimelineAnswer(answer)
+      this.timeline.answer = answer
+    },
+
+    async fixMedExtAnswer() {
+      let brokenAnswer = this.medExt.answer
+      let fixPrompt = this.medExt.fixPrompt.replace('{text}', brokenAnswer)
+
+      console.log('fix timeline answer', fixPrompt)
+      this.timeline.loading = true
+      let answer = await this.askLLM({prompt: fixPrompt, max_tokens: 2048, temperature: 0.0, mirostat_tau: 3.0})
+      answer = answer.data.choices[0].text
+      this.timeline.loading = false
+      this.timeline.times = this.parseTimelineAnswer(answer)
+      this.timeline.answer = answer
     },
 
     parseTimelineAnswer(answer) {
@@ -251,7 +294,7 @@ Fix the json if it is broken.
         <q-tab name="timeline" label="Timeline"/>
       </q-tabs>
       <q-separator class="bi-border"/>
-      <q-tab-panels v-model="tab" animated class=""
+      <q-tab-panels v-model="tab" animated class="column no-wrap full-height overflow-hidden "
                     style="height: 100%"
       >
         <q-tab-panel name="table" class="column full-height q-ma-none no-wrap">
@@ -267,11 +310,11 @@ Fix the json if it is broken.
           <div class="flex justify-between">
 
 
-          <q-btn
-            class="q-ma-sm" color="primary"
-            @click="checkNExtractMeds()"
-          >Extract medications
-          </q-btn>
+            <q-btn
+              class="q-ma-sm" color="primary"
+              @click="checkNExtractMeds()"
+            >Extract medications
+            </q-btn>
             <q-toggle
               v-show="medExt.table.rows.length > 0"
               v-model="editableTable"
@@ -281,7 +324,7 @@ Fix the json if it is broken.
             />
           </div>
           <q-table
-            class="col"
+            class="col col-grow"
             title="Medications"
             :rows="medExt.table.rows"
             :columns="medExt.table.columns"
@@ -351,12 +394,43 @@ Fix the json if it is broken.
                 @click="checkNExtractTimeline()"
               >Extract timeline
               </q-btn>
-<!--              <q-btn-->
-<!--                v-if="timeline.brokenOutput"-->
-<!--                class="q-ma-sm" color="secondary"-->
-<!--                @click="this.timeline.times = this.parseTimelineAnswer(fixTimelineAnswer(this.$refs.timelinePromptComponent.prepareData(), this.timeline.answer))"-->
-<!--              >Fix with AI-->
-<!--              </q-btn>-->
+              <q-btn-dropdown
+                split
+                v-if="timeline.brokenOutput"
+                class="q-ma-sm" color="secondary"
+                @click="fixTimelineAnswer()"
+                label="Fix with AI"
+              >
+                <q-list>
+                  <q-item clickable v-close-popup @click="timeline.fixAnswer.fixPromptDialog = true">
+                    <q-item-section>
+                      <q-item-label>Edit fix prompt</q-item-label>
+                    </q-item-section>
+                  </q-item>
+                </q-list>
+              </q-btn-dropdown>
+              <q-dialog v-model="timeline.fixAnswer.fixPromptDialog" persistent>
+                <q-card>
+                  <q-card-section class="row items-center">
+                    <span class="q-ml-sm">You are currently not connected to any network.</span>
+                  </q-card-section>
+                  <q-card-section>
+                    <prompt-component
+                      :template="template"
+                      :prompt-user-message="timeline.fixAnswer.promptUserMessage"
+                      :prompt-completion-init="timeline.fixAnswer.prompt"
+                      :prompt-system-message="timeline.fixAnswer.promptSystemMessage"
+                    >
+                    </prompt-component>
+                  </q-card-section>
+
+                  <!-- Notice v-close-popup -->
+                  <q-card-actions align="right">
+                    <q-btn flat label="Cancel" color="primary" v-close-popup/>
+                    <q-btn flat label="Save" color="primary" v-close-popup/>
+                  </q-card-actions>
+                </q-card>
+              </q-dialog>
             </div>
 
             <q-timeline layout="comfortable" side="right" color="secondary">

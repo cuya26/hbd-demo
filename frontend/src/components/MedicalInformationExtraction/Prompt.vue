@@ -11,6 +11,7 @@ export default {
     promptUserMessage: String,
     promptCompletionInit: String,
     accordion: Boolean,
+    modelSettings: {},
   },
   watch: {
     answer: function (newVal, oldVal) {
@@ -105,6 +106,13 @@ export default {
     this.adjustHeight(this.$refs.prompt);
     this.adjustHeight(this.$refs.completionInit);
     this.adjustHeight(this.$refs.answer);
+
+    if(this.modelSettings !== {}){
+      for (const [key, value] of Object.entries(this.modelSettings)) {
+        this.modelParameters[key].model = value;
+        this.modelParameters[key].enabled = true;
+      }
+    }
 
   },
 
