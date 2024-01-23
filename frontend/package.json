@@ -15,9 +15,11 @@
     "axios": "^1.6.2",
     "core-js": "^3.6.5",
     "ebnf": "^1.9.1",
+    "fs": "^0.0.1-security",
     "quasar": "^2.6.0",
     "vue": "^3.0.0",
-    "vue-router": "^4.0.0"
+    "vue-router": "^4.0.0",
+    "yaml": "^2.3.4"
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.13.14",
