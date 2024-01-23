@@ -344,7 +344,7 @@ export default defineComponent({
           // setupNames: ['Not ready yet...']
         },
       ],
-      setupName: ref("Medical Information Extraction with LLM"),
+      setupName: ref(""),
       modelConfig: ref({
         "Track1 n2c2 Challenge (en)": {
           modelName: "track1 n2c2 pipeline1",

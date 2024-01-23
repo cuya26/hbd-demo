@@ -76,80 +76,7 @@ export default {
               sortable: true,
             },
           ],
-          rows: ref([
-            {
-              name: "PANTOPRAZOLO",
-              dose: " 20 mg",
-              frequency: " cp",
-              route: " ore 8-20",
-            },
-            {
-              name: "ACENOCUMAROLO",
-              dose: " 4 mg",
-              frequency: " sec INR alle ore 16 (INR odierno = 1.16 dose 1cp)",
-              route: "",
-            },
-            {
-              name: "ENOXAPARINA",
-              dose: " 6000 U",
-              frequency: " sc",
-              route:
-                " alle ore 18 fino a raggiungimento di INR stabile e a range terapeutico",
-            },
-            {
-              name: "BISOPROLOLO",
-              dose: " 1.25 mg",
-              frequency: " 2 cp",
-              route: " alle ore 8 e 1cp alle ore 18",
-            },
-            {
-              name: "ZOLPIDEM",
-              dose: " 10",
-              frequency: " 1 cp",
-              route: " alle ore 22",
-            },
-            {
-              name: "FUROSEMIDE",
-              dose: " 25 mg",
-              frequency: " 2 cp",
-              route: " alle ore 8 e 2 cp ore 18",
-            },
-            {
-              name: "ATORVASTATINA",
-              dose: " 10 mg",
-              frequency: " 1 cp",
-              route: " alle ore 22",
-            },
-            {
-              name: "LEXOTAN",
-              dose: " 3MG",
-              frequency: " 1CP ORE 22",
-              route: "",
-            },
-            {
-              name: "TIOTROPIO Respimat",
-              dose: " 2 inalazioni",
-              frequency: " al mattino",
-              route: "",
-            },
-            {
-              name: "ROLUFTA 55 PP",
-              dose: " 1 PUFF",
-              frequency: " ore 8",
-              route: "",
-            },
-            {
-              name: "FEBUXOSTAT",
-              dose: " 80 MG",
-              frequency: " 1CP",
-              route: " ore 22",
-            },
-            {
-              name: "HUMULIN R",
-              dose: " 4 UI AI PASTI Sec DTX",
-              frequency: "",
-            },
-          ]),
+          rows: ref([]),
         },
         answer: ``,
       },
@@ -512,7 +439,7 @@ export default {
                 Save log
               </q-btn>
             </div>
-            <q-btn class="q-ma-sm" @click="saveMedExt">Save</q-btn>
+            <q-btn class="q-ma-sm" @click="saveMedExt">Save Settings</q-btn>
           </div>
           <q-table
             class="col col-grow"
@@ -692,7 +619,9 @@ export default {
                   </q-card>
                 </q-dialog>
               </div>
-              <q-btn class="q-ma-sm" @click="saveTimeline()">Save</q-btn>
+              <q-btn class="q-ma-sm" @click="saveTimeline()"
+                >Save Settings</q-btn
+              >
             </div>
           </div>
 
