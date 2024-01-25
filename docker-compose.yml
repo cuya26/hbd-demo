@@ -79,7 +79,7 @@ services:
         # npm install
         container_name: hbd-demo-frontend
         ports:
-            - 51118:51118
+            - 51130:51118
         restart: always
         command: sh -c "npm install && npm audit fix --force && quasar dev"
     backend:
@@ -94,7 +94,7 @@ services:
         environment:
             - PYTHONUNBUFFERED=1
         ports:
-            - 51119:5003
+            - 51131:5003
         extra_hosts:
             - "host.docker.internal:host-gateway"
         restart: always
