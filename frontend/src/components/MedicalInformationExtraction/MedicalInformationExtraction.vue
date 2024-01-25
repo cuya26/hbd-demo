@@ -1,5 +1,5 @@
 <script>
-import { ref } from "vue";
+import {ref} from "vue";
 import * as axios from "boot/axios";
 import PromptComponent from "components/MedicalInformationExtraction/Prompt.vue";
 
@@ -14,7 +14,7 @@ function applyTemplate(template, userMessage, systemMessage, completionInit) {
 export default {
   name: "MedicationExtraction",
   props: ["doc"],
-  components: { PromptComponent },
+  components: {PromptComponent},
   mounted() {
     this.getProperties("medExt").then((response) => {
       this.medExt.medExtProp = JSON.parse(response.data);
@@ -105,10 +105,6 @@ export default {
     },
 
     setProperties(task, properties) {
-      // axios.api.post(axios.featurePropertiesHost + "/set_test", {
-      //   text: "test",
-      // });
-      console.log(properties);
       axios.api.post("/set_properties/" + task, properties);
     },
 
@@ -117,7 +113,6 @@ export default {
     },
 
     parseMedicationsAnswer(answer) {
-      console.log("parsing medications answer", answer);
       let table = [];
       let lines = answer.split("\n");
       for (let line of lines) {
@@ -133,16 +128,15 @@ export default {
             route: row[3],
           });
         } else {
-          console.log("line not parsed", line);
+          console.log("error parsing medext answer", line);
         }
       }
-      console.log(table);
       return table;
     },
 
     askLLM(body) {
       return axios.api.post(
-        axios.llamaHost + "/v1/completions",
+        axios.llamaHostAlt + "/v1/completions",
         {
           ...body,
           stream: false,
@@ -161,7 +155,7 @@ export default {
         this.parseMedicationsAnswer(this.medExt.answer)
       );
       if (str1 === str2) {
-        this.extractMedications(this.$refs.medExtPromptComponent.prepareData());
+        this.extractMedications();
       } else {
         this.medExt.table.rows = this.parseMedicationsAnswer(
           this.medExt.answer
@@ -169,14 +163,21 @@ export default {
       }
     },
 
-    async extractMedications(data) {
+    async extractMedications() {
       this.medExt.loading = true;
       this.medExt.answer = "";
+      let prompt = applyTemplate(
+        this.template,
+        this.medExt.medExtProp.userMessage,
+        this.medExt.medExtProp.systemMessage,
+        this.medExt.medExtProp.completionInit
+      )
+      let parameters = this.medExt.medExtProp.modelParameters
       this.askLLM({
-        prompt: data.prompt.replace("{file}", this.doc),
+        prompt: prompt.replace("{file}", this.doc),
         stream: true,
         stop: ["<|im_end|>"],
-        ...data.parameters,
+        ...parameters,
       })
         .then((response) => {
           this.medExt.loading = false;
@@ -196,7 +197,7 @@ export default {
       let str1 = JSON.stringify(this.timeline.times);
       let str2 = JSON.stringify(this.parseTimelineAnswer(this.timeline.answer));
       if (str1 === str2) {
-        this.extractTimeline(this.$refs.timelinePromptComponent.prepareData());
+        this.extractTimeline();
       } else {
         this.timeline.times = this.parseTimelineAnswer(this.timeline.answer);
       }
@@ -211,7 +212,6 @@ export default {
         this.timeline.timelineFixProp.completionInit
       ).replace("{text}", brokenAnswer);
 
-      console.log("fix timeline answer", fixPrompt);
       this.timeline.loading = true;
       let answer = await this.askLLM({
         prompt: fixPrompt,
@@ -227,7 +227,6 @@ export default {
       let brokenAnswer = this.medExt.answer;
       let fixPrompt = this.medExt.fixPrompt.replace("{text}", brokenAnswer);
 
-      console.log("fix timeline answer", fixPrompt);
       this.timeline.loading = true;
       let answer = await this.askLLM({
         prompt: fixPrompt,
@@ -257,10 +256,8 @@ export default {
     },
 
     startEditingTable(start) {
-      console.log("start editing table", start);
       this.editableTable = start;
       if (this.editableTable) {
-        console.log("editing table");
         this.medExt.log.prompt = applyTemplate(
           this.template,
           this.medExt.medExtProp.userMessage,
@@ -274,14 +271,21 @@ export default {
       this.medExt.log.expected = JSON.stringify(this.medExt.table.rows);
       axios.api.post("/log/" + task, this.medExt.log);
     },
-    async extractTimeline(data) {
+    async extractTimeline() {
       this.timeline.loading = true;
       this.timeline.answer = "";
+      let prompt = applyTemplate(
+        this.template,
+        this.timeline.timelineProp.userMessage,
+        this.timeline.timelineProp.systemMessage,
+        this.timeline.timelineProp.completionInit
+      )
+      let parameters = this.medExt.medExtProp.modelParameters
       this.askLLM({
-        prompt: data.prompt.replace("{file}", this.doc),
+        prompt: prompt.replace("{file}", this.doc),
         stream: true,
         stop: ["<|im_end|>"],
-        ...data.parameters,
+        ...parameters,
       })
         .then((response) => {
           let answer = response.data.choices[0].text;
@@ -300,7 +304,6 @@ export default {
       this.setProperties("medExt", this.medExt.medExtProp);
     },
     saveTimeline() {
-      console.log(JSON.stringify(this.timeline.timelineProp));
       this.setProperties("timeline", this.timeline.timelineProp);
     },
     saveMedExtFix() {
@@ -329,10 +332,10 @@ export default {
         align="justify"
         narrow-indicator
       >
-        <q-tab name="table" label="Table" />
-        <q-tab name="timeline" label="Timeline" />
+        <q-tab name="table" label="Table"/>
+        <q-tab name="timeline" label="Timeline"/>
       </q-tabs>
-      <q-separator class="bi-border" />
+      <q-separator class="bi-border"/>
       <q-tab-panels
         v-model="tab"
         animated
@@ -345,7 +348,7 @@ export default {
             class="absolute-top-left bg-grey-3 row justify-center items-center"
             style="height: 100%; width: 100%; z-index: 10; opacity: 50%"
           >
-            <q-spinner-gears color="primary" size="8em" />
+            <q-spinner-gears color="primary" size="8em"/>
           </div>
           <div class="flex justify-between">
             <div>
@@ -353,7 +356,7 @@ export default {
                 class="q-ma-sm"
                 color="primary"
                 @click="checkNExtractMeds()"
-                >Extract medications
+              >Extract medications
               </q-btn>
 
               <q-btn-dropdown
@@ -361,8 +364,8 @@ export default {
                 split
                 class="q-ma-sm"
                 color="secondary"
-                @click="fixTimelineAnswer()"
-                label="Ask LLM to Fix"
+                @click="fixMedExtAnswer()"
+                label="Fix structure with llm"
               >
                 <q-list>
                   <q-item
@@ -404,7 +407,7 @@ export default {
 
                   <!-- Notice v-close-popup -->
                   <q-card-actions align="right">
-                    <q-btn flat label="Cancel" color="primary" v-close-popup />
+                    <q-btn flat label="Cancel" color="primary" v-close-popup/>
                     <q-btn
                       flat
                       label="Save"
@@ -515,7 +518,7 @@ export default {
               ref="medExtPromptComponent"
               :accordion="true"
               :template="template"
-              :answer="medExt.answer"
+              v-model:answer="medExt.answer"
               v-model:completion-init="medExt.medExtProp.completionInit"
               v-model:system-message="medExt.medExtProp.systemMessage"
               v-model:user-message="medExt.medExtProp.userMessage"
@@ -532,7 +535,7 @@ export default {
             class="absolute-top-left bg-grey-3 row justify-center items-center"
             style="height: 100%; width: 100%; z-index: 10; opacity: 50%"
           >
-            <q-spinner-gears color="primary" size="8em" />
+            <q-spinner-gears color="primary" size="8em"/>
           </div>
           <div class="q-pa-lg">
             <div class="flex justify-between">
@@ -541,7 +544,7 @@ export default {
                   class="q-ma-sm"
                   color="primary"
                   @click="checkNExtractTimeline()"
-                  >Extract timeline
+                >Extract timeline
                 </q-btn>
 
                 <q-btn-dropdown
@@ -550,7 +553,7 @@ export default {
                   class="q-ma-sm"
                   color="secondary"
                   @click="fixTimelineAnswer()"
-                  label="Ask LLM to Fix"
+                  label="Fix structure with llm"
                 >
                   <q-list>
                     <q-item
@@ -612,7 +615,8 @@ export default {
                 </q-dialog>
               </div>
               <q-btn class="q-ma-sm" @click="saveTimeline()"
-                >Save Settings</q-btn
+              >Save Settings
+              </q-btn
               >
             </div>
           </div>

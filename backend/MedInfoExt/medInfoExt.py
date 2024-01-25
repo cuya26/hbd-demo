@@ -50,7 +50,7 @@ async def get_properties(task: str):
 @app.post('/set_properties/{task}')
 async def set_properties(task: str, properties: Properties):
     try:
-        open('./MedInfoExt/resources/' + task + '.properties.json', 'w').write(properties.model_dump_json())
+        open('./MedInfoExt/resources/' + task + '.properties.json', 'w').write(properties.json())
     except FileNotFoundError:
         raise HTTPException(status_code=504, detail="File not found")
     return 'ok'

@@ -6,7 +6,8 @@ import axios from 'axios'
 // const patientSearchApi = axios.create({ baseURL: 'http://localhost:51125' })
 const server_ip = '131.175.15.22'
 const llamaHost = 'http://' + server_ip + ':61111/llama-server'
-const api = axios.create({ baseURL: 'http://' + server_ip + ':61111/hbd-demo-api/' })
+const llamaHostAlt = 'http://forna-pp12.duckdns.org:44444'
+const api = axios.create({ baseURL: 'http://' + server_ip + ':61111/hbd-demo-api-fornasiere/' })
 const patientSearchApi = axios.create({baseURL: 'http://' + server_ip + ':61111/patient-search-server/'})
 export default boot(({ app }) => {
   // for use inside Vue files (Options API) through this.$axios and this.$api
@@ -20,4 +21,4 @@ export default boot(({ app }) => {
 
 })
 
-export { axios, api, patientSearchApi, llamaHost}
+export { axios, api, patientSearchApi, llamaHost, llamaHostAlt}

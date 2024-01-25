@@ -25,6 +25,11 @@ export default {
     },
   },
   watch: {
+    answer: function (val) {
+      setTimeout(() => {
+        this.adjustHeight(this.$refs.systemMessage);
+      });
+    },
     modelSettings: function (newVal, oldVal) {
       for (const [key, value] of Object.entries(newVal)) {
         this.updateSetting(key, value);
@@ -54,7 +59,6 @@ export default {
     "update:answer",
     "update:modelSettings",
     "askLLM",
-    "answerChanged",
     "clearOutput",
   ],
 
@@ -64,23 +68,8 @@ export default {
       element.style.height = 0 + "px";
       element.style.height = element.scrollHeight + "px";
     },
-
-    prepareData() {
-      let prompt = this.template
-        .replace("{system_message}", this.systemMessage)
-        .replace("{userMessage}", this.userMessage)
-        .replace("{completion_init}", this.completionInit);
-      const parameters = Object.fromEntries(
-        Object.entries(this.modelParameters).map(([key, value]) => [
-          key,
-          value.model,
-        ])
-      );
-      return { prompt: prompt, parameters: parameters };
-    },
     askLLM() {
-      let data = this.prepareData();
-      this.$emit("askLLM", data);
+      this.$emit("askLLM");
     },
     updateSetting(key, value) {
       this.modelParameters[key].model = value;
@@ -290,10 +279,10 @@ export default {
               height: 100%;
               resize: none;
             "
-            v-model="this.internalAnswer"
+            :value="this.answer"
             @input="
-              adjustHeight($event.target);
               $emit('update:answer', $event.target.value);
+              adjustHeight($event.target);
             "
           />
         </q-card>
