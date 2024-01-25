@@ -53,7 +53,7 @@ module.exports = configure(function (ctx) {
       vueRouterMode: 'hash', // available values: 'hash', 'history'
 
       // transpile: false,
-      // publicPath: '/',
+      // publicPath: '/hbd-demo',
 
       // Add dependencies for transpiling with Babel (Array of string/regex)
       // (from node_modules, which are by default not transpiled).
@@ -84,8 +84,11 @@ module.exports = configure(function (ctx) {
       server: {
         type: 'http'
       },
-      port: 8080,
-      open: true // opens browser window automatically
+      port: 51118,
+      // open: true, // opens browser window automatically
+      // client: {
+      //   overlay: false
+      // }
     },
 
     // https://v2.quasar.dev/quasar-cli-webpack/quasar-config-js#Property%3A-framework
