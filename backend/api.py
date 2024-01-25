@@ -34,8 +34,6 @@ tokenizer = transformers.AutoTokenizer.from_pretrained('gpt2-large')
 pred = Predictor()
 deid = anonymizer('./config.json')
 
-app.include_router(new_router, prefix="/prefix_for_new_endpoints", tags=["new_endpoints"])
-
 
 app.add_middleware(
     CORSMiddleware,
