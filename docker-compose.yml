@@ -4,71 +4,71 @@ volumes:
     elasticsearch-data:
         driver: local
 services:
-    elasticsearch:
-        image: elasticsearch:7.9.2
-        container_name: elasticsearch_clinical
-        volumes:
-            - elasticsearch-data:/usr/share/elasticsearch/data
-        ports:
-            - "9202:9200"
-        environment:
-            - discovery.type=single-node
-
-        deploy:
-            resources:
-                limits:
-                    memory: 5G
-        restart: always
-        healthcheck:
-            test:
-                [
-                    "CMD-SHELL",
-                    "curl --silent --fail localhost:9200/_cluster/health || exit 1"
-                ]
-            interval: 30s
-            timeout: 30s
-            retries: 3
-    patient-search:
-        build:
-            context: ./patient-search-python-server/
-            dockerfile: Dockerfile
-        image: hbd-demo-patient-search:latest
-        container_name: hbd-demo-patient-search
-        volumes:
-            - ./patient-search-python-server/:/workspace/
-            - ./backend/data/checkpoints/:/models/
-        environment:
-            - PYTHONUNBUFFERED=1
-        ports:
-            - 51125:5003
-        extra_hosts:
-            - "host.docker.internal:host-gateway"
-        restart: always
-        depends_on:
-            elasticsearch:
-                condition: service_healthy
-    llamacpp:
-        container_name: llama-server
-        image: llama-cpp-python:latest
-        build:
-            context: ./llama-server/
-            dockerfile: Dockerfile
-        volumes:
-            - ~/models/:/models/
-        ports:
-            - 51124:8000
-        command: sh -c "python3 -m llama_cpp.server --model /models/mistral-7b-openorca.Q5_K_M.gguf --n_ctx 8000 --chat_format chatml --n_threads 25 --n_gpu_layers 43 --n_batch 200"
-        environment:
-            - HOST=0.0.0.0
-        deploy:
-            resources:
-                limits:
-                    memory: 32GB
-                reservations:
-                    devices:
-                        - driver: nvidia
-                          device_ids: [ '1' ]
-                          capabilities: [ gpu ]
+#    elasticsearch:
+#        image: elasticsearch:7.9.2
+#        container_name: elasticsearch_clinical
+#        volumes:
+#            - elasticsearch-data:/usr/share/elasticsearch/data
+#        ports:
+#            - "9202:9200"
+#        environment:
+#            - discovery.type=single-node
+#
+#        deploy:
+#            resources:
+#                limits:
+#                    memory: 5G
+#        restart: always
+#        healthcheck:
+#            test:
+#                [
+#                    "CMD-SHELL",
+#                    "curl --silent --fail localhost:9200/_cluster/health || exit 1"
+#                ]
+#            interval: 30s
+#            timeout: 30s
+#            retries: 3
+#    patient-search:
+#        build:
+#            context: ./patient-search-python-server/
+#            dockerfile: Dockerfile
+#        image: hbd-demo-patient-search:latest
+#        container_name: hbd-demo-patient-search
+#        volumes:
+#            - ./patient-search-python-server/:/workspace/
+#            - ./backend/data/checkpoints/:/models/
+#        environment:
+#            - PYTHONUNBUFFERED=1
+#        ports:
+#            - 51125:5003
+#        extra_hosts:
+#            - "host.docker.internal:host-gateway"
+#        restart: always
+#        depends_on:
+#            elasticsearch:
+#                condition: service_healthy
+#    llamacpp:
+#        container_name: llama-server
+#        image: llama-cpp-python:latest
+#        build:
+#            context: ./llama-server/
+#            dockerfile: Dockerfile
+#        volumes:
+#            - ~/models/:/models/
+#        ports:
+#            - 51124:8000
+#        command: sh -c "python3 -m llama_cpp.server --model /models/mistral-7b-openorca.Q5_K_M.gguf --n_ctx 8000 --chat_format chatml --n_threads 25 --n_gpu_layers 43 --n_batch 200"
+#        environment:
+#            - HOST=0.0.0.0
+#        deploy:
+#            resources:
+#                limits:
+#                    memory: 32GB
+#                reservations:
+#                    devices:
+#                        - driver: nvidia
+#                          device_ids: [ '1' ]
+#                          capabilities: [ gpu ]
     frontend:
         image: hbd-demo-frontend:latest
         build:
