@@ -1,25 +1,11 @@
 import json
-import os
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import APIRouter
+from fastapi import HTTPException
 from pydantic import BaseModel
 
-app = FastAPI()
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "http://localhost:8080",
-        "http://localhost:8081",
-        "http://localhost:8000",
-        "http:\/\/131\.175\.15\.22:61111\/hbd-demo\/*"
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+app = APIRouter()
 
 
 class ModelParameters(BaseModel):
@@ -48,7 +34,7 @@ class PromptingLog(BaseModel):
 async def get_properties(task: str):
     print(task)
     try:
-        res = open('./resources/' + task + '.properties.json', 'r').read()
+        res = open('./MedInfoExt/resources/' + task + '.properties.json', 'r').read()
     except FileNotFoundError:
         raise HTTPException(status_code=504, detail="File not found")
 
@@ -58,7 +44,7 @@ async def get_properties(task: str):
 @app.post('/set_properties/{task}')
 async def set_properties(task: str, properties: Properties):
     try:
-        open('./resources/' + task + '.properties.json', 'w').write(properties.model_dump_json())
+        open('./MedInfoExt/resources/' + task + '.properties.json', 'w').write(properties.model_dump_json())
     except FileNotFoundError:
         raise HTTPException(status_code=504, detail="File not found")
     return 'ok'
@@ -67,7 +53,7 @@ async def set_properties(task: str, properties: Properties):
 @app.get('/get_template')
 async def get_template():
     try:
-        res = open('resources/template', 'r').read()
+        res = open('./MedInfoExt/resources/template', 'r').read()
     except FileNotFoundError:
         raise HTTPException(status_code=504, detail="File not found")
     return res
@@ -79,8 +65,8 @@ async def log(task: str, log: PromptingLog):
     from pathlib import Path
     from datetime import datetime
     now = datetime.now()
-    print(now.strftime(task+"__%Y_%m_%d_%H_%M_%S.log"))
-    logs = sorted(Path('logs/').iterdir(), key=os.path.getmtime)
+    print(now.strftime(task + "__%Y_%m_%d_%H_%M_%S.log"))
+    logs = sorted(Path('./MedInfoExt/logs/').iterdir(), key=os.path.getmtime)
     last_log = [log for log in logs if log.name.startswith(task)]
     if len(last_log) > 0:
         last_log = open(last_log[-1], 'r').read()
@@ -94,7 +80,7 @@ async def log(task: str, log: PromptingLog):
         return 'ok'
     else:
         print('new log')
-        with open('./logs/' + now.strftime(task+"__%Y_%m_%d_%H_%M_%S.log"), 'w') as f:
+        with open('./MedInfoExt/logs/' + now.strftime(task + "__%Y_%m_%d_%H_%M_%S.log"), 'w') as f:
             f.write(log.model_dump_json() + '\n')
 
     return 'ok'

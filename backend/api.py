@@ -13,7 +13,11 @@ from sse_starlette import EventSourceResponse
 import json
 import transformers
 
+from MedInfoExt.medInfoExt import app  as medInfoExt_app
 
+app = FastAPI()
+
+app.include_router(medInfoExt_app)
 
 
 # print(os.listdir('./models'))
@@ -28,9 +32,12 @@ tokenizer = transformers.AutoTokenizer.from_pretrained('gpt2-large')
 # }
 # llm = Llama(f"/models/{global_model_name}", **params)
 
-app = FastAPI()
+
 pred = Predictor()
 deid = anonymizer('./config.json')
+
+app.include_router(new_router, prefix="/prefix_for_new_endpoints", tags=["new_endpoints"])
+
 
 app.add_middleware(
     CORSMiddleware,
