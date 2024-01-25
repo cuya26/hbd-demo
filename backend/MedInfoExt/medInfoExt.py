@@ -35,10 +35,16 @@ async def get_properties(task: str):
     print(task)
     try:
         res = open('./MedInfoExt/resources/' + task + '.properties.json', 'r').read()
+        res = json.loads(res)
+        model_parameters = res['modelParameters']
+        model_parameters = {k: v for k, v in model_parameters.items() if v is not None}
+        res['modelParameters'] = model_parameters
+        res = json.dumps(res)
     except FileNotFoundError:
         raise HTTPException(status_code=504, detail="File not found")
 
     return res
+
 
 
 @app.post('/set_properties/{task}')
