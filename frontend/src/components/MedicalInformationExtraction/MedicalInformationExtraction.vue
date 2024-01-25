@@ -101,7 +101,7 @@ export default {
   },
   methods: {
     getTemplate() {
-      return axios.api.get(axios.featurePropertiesHost + "/get_template");
+      return axios.api.get("/get_template");
     },
 
     setProperties(task, properties) {
@@ -109,16 +109,11 @@ export default {
       //   text: "test",
       // });
       console.log(properties);
-      axios.api.post(
-        axios.featurePropertiesHost + "/set_properties/" + task,
-        properties
-      );
+      axios.api.post("/set_properties/" + task, properties);
     },
 
     getProperties(task) {
-      return axios.api.get(
-        axios.featurePropertiesHost + "/get_properties/" + task
-      );
+      return axios.api.get("/get_properties/" + task);
     },
 
     parseMedicationsAnswer(answer) {
@@ -277,10 +272,7 @@ export default {
     },
     sendLog(task) {
       this.medExt.log.expected = JSON.stringify(this.medExt.table.rows);
-      axios.api.post(
-        axios.featurePropertiesHost + "/log/" + task,
-        this.medExt.log
-      );
+      axios.api.post("/log/" + task, this.medExt.log);
     },
     async extractTimeline(data) {
       this.timeline.loading = true;
