@@ -223,11 +223,6 @@
             style="height: 90%"
             v-if="setupName === 'Medical Information Extraction with LLM'"
           >
-            <q-card-section class="row justify-between">
-              <div class="col-2"></div>
-              <div class="text-h6 text-primary">Output</div>
-              <div class="col-2"></div>
-            </q-card-section>
             <q-card-section class="" style="height: 100%">
               <medical-information-extraction
                 :doc="inputLetter"
@@ -344,7 +339,7 @@ export default defineComponent({
           // setupNames: ['Not ready yet...']
         },
       ],
-      setupName: ref(""),
+      setupName: ref("Medical Information Extraction with LLM"),
       modelConfig: ref({
         "Track1 n2c2 Challenge (en)": {
           modelName: "track1 n2c2 pipeline1",

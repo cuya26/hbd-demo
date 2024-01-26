@@ -1,7 +1,11 @@
 <script>
-import {ref} from "vue";
+import { ref } from "vue";
 import * as axios from "boot/axios";
 import PromptComponent from "components/MedicalInformationExtraction/Prompt.vue";
+
+// inside of a Vue file
+import { useQuasar } from "quasar";
+import InformationSourceLocalization from "components/MedicalInformationExtraction/InformationSourceLocalization.vue";
 
 function applyTemplate(template, userMessage, systemMessage, completionInit) {
   return template
@@ -14,7 +18,8 @@ function applyTemplate(template, userMessage, systemMessage, completionInit) {
 export default {
   name: "MedicationExtraction",
   props: ["doc"],
-  components: {PromptComponent},
+  components: { PromptComponent },
+
   mounted() {
     this.getProperties("medExt").then((response) => {
       this.medExt.medExtProp = JSON.parse(response.data);
@@ -31,9 +36,32 @@ export default {
     this.getTemplate().then((response) => {
       this.template = response.data;
     });
+
+    // this.openInformationSourceLocalization();
   },
   data() {
     return {
+      OpenAI_API: false,
+      $q: useQuasar(),
+      servers: ref([
+        { name: "llama-server", url: axios.llamaHost },
+        {
+          name: "fornasiere-llama-server",
+          url: axios.llamaHostAlt,
+        },
+        {
+          name: "Mixtral",
+          url: "http://147.189.192.41:8080",
+        },
+      ]),
+      selectedServer: ref({
+        name: "Mixtral",
+        url: "http://147.189.192.41:8080",
+      }),
+      customServer: ref({
+        name: "",
+        url: "",
+      }),
       template: ref(null),
       medExt: {
         medExtFixProp: ref({}),
@@ -75,10 +103,17 @@ export default {
               align: "left",
               sortable: true,
             },
+            {
+              name: "lines",
+              label: "Lines",
+              field: "lines",
+              align: "left",
+              sortable: false,
+            },
           ],
           rows: ref([]),
         },
-        answer: ``,
+        answer: "",
       },
       timeline: {
         timelineProp: ref({}),
@@ -100,6 +135,38 @@ export default {
     };
   },
   methods: {
+    checkServersAvailability() {
+      for (let server of this.servers) {
+        axios.api
+          .get(server.url + "/docs")
+          .then(() => (server.reachable = true))
+          .catch(() => (server.reachable = false));
+      }
+    },
+    openInformationSourceLocalization() {
+      this.$q
+        .dialog({
+          component: InformationSourceLocalization,
+          fullWidth: true,
+          fullHeight: true,
+          // props forwarded to your custom component
+          componentProps: {
+            rows: this.medExt.table.rows,
+            columns: this.medExt.table.columns,
+            text: this.doc,
+            // ...more..props...
+          },
+        })
+        .onOk(() => {
+          console.log("OK");
+        })
+        .onCancel(() => {
+          console.log("Cancel");
+        })
+        .onDismiss(() => {
+          console.log("Called on OK or Cancel");
+        });
+    },
     getTemplate() {
       return axios.api.get("/get_template");
     },
@@ -126,6 +193,7 @@ export default {
             dose: row[1],
             frequency: row[2],
             route: row[3],
+            lines: row[4].split(",").map((x) => parseInt(x)),
           });
         } else {
           console.log("error parsing medext answer", line);
@@ -135,18 +203,29 @@ export default {
     },
 
     askLLM(body) {
-      return axios.api.post(
-        axios.llamaHostAlt + "/v1/completions",
-        {
-          ...body,
-          stream: false,
-          stop: ["<|im_end|>"],
-        },
-        {
-          "Content-Type": "application/json",
-          timeout: 600000,
-        }
-      );
+      return axios.api
+        .post(
+          this.selectedServer.url +
+            (this.OpenAI_API ? "/v1/completions" : "/completion"),
+          {
+            ...body,
+            stream: false,
+            stop: ["<|im_end|>", "###"],
+          },
+          {
+            "Content-Type": "application/json",
+            timeout: 600000,
+          }
+        )
+        .then((response) => {
+          let res = "";
+          if (this.OpenAI_API) {
+            res = response.data.choices[0].text;
+          } else {
+            res = response.data.content;
+          }
+          return res;
+        });
     },
 
     checkNExtractMeds() {
@@ -171,20 +250,21 @@ export default {
         this.medExt.medExtProp.userMessage,
         this.medExt.medExtProp.systemMessage,
         this.medExt.medExtProp.completionInit
-      )
-      let parameters = this.medExt.medExtProp.modelParameters
+      );
+      let parameters = this.medExt.medExtProp.modelParameters;
+      let file = this.doc.split("\n");
+      for (let i = 0; i < file.length; i++) {
+        file[i] = ("" + i).padStart(4, " ") + "| " + file[i];
+      }
       this.askLLM({
-        prompt: prompt.replace("{file}", this.doc),
-        stream: true,
-        stop: ["<|im_end|>"],
+        prompt: prompt.replace("{file}", file.join("\n")),
         ...parameters,
       })
-        .then((response) => {
+        .then((text) => {
+          console.log(text);
           this.medExt.loading = false;
-          let answer = response.data.choices[0].text;
-
-          this.medExt.answer = answer;
-          this.medExt.table.rows = this.parseMedicationsAnswer(answer);
+          this.medExt.answer = text;
+          this.medExt.table.rows = this.parseMedicationsAnswer(text);
         })
         .catch((error) => {
           console.error(error);
@@ -217,7 +297,6 @@ export default {
         prompt: fixPrompt,
         ...this.timeline.timelineFixProp.modelParameters,
       });
-      answer = answer.data.choices[0].text;
       this.timeline.loading = false;
       this.timeline.times = this.parseTimelineAnswer(answer);
       this.timeline.answer = answer;
@@ -234,7 +313,6 @@ export default {
         temperature: 0.0,
         mirostat_tau: 3.0,
       });
-      answer = answer.data.choices[0].text;
       this.timeline.loading = false;
       this.timeline.times = this.parseTimelineAnswer(answer);
       this.timeline.answer = answer;
@@ -279,16 +357,14 @@ export default {
         this.timeline.timelineProp.userMessage,
         this.timeline.timelineProp.systemMessage,
         this.timeline.timelineProp.completionInit
-      )
-      let parameters = this.medExt.medExtProp.modelParameters
+      );
+      let parameters = this.medExt.medExtProp.modelParameters;
       this.askLLM({
         prompt: prompt.replace("{file}", this.doc),
-        stream: true,
-        stop: ["<|im_end|>"],
         ...parameters,
       })
-        .then((response) => {
-          let answer = response.data.choices[0].text;
+        .then((text) => {
+          let answer = text;
           this.timeline.loading = false;
           this.timeline.answer = answer;
           this.timeline.times = this.parseTimelineAnswer(answer);
@@ -317,6 +393,55 @@ export default {
 </script>
 
 <template>
+  <q-btn @click="this.openInformationSourceLocalization">Click me</q-btn>
+  <div class="flex justify-between q-mb-md">
+    <q-select
+      v-model="selectedServer"
+      :options="servers"
+      :display-value="selectedServer.name + ' - ' + selectedServer.url"
+      label="LLM server"
+    >
+      <template v-slot:option="{ itemProps, opt }">
+        <q-item v-bind="itemProps" v-close-popup>
+          <q-item-section>
+            <q-item-label v-html="opt.name" />
+            <q-item-label caption v-html="opt.url"></q-item-label>
+            <q-item-label v-if="!opt.reachable" caption class="text-red"
+              >Not reachable
+            </q-item-label>
+          </q-item-section>
+        </q-item>
+      </template>
+      <template v-slot:after-options>
+        <q-item style="border-top: 1px solid #818181">
+          <q-item-section>
+            <q-item-label>Add server</q-item-label>
+            <q-input label="Name" v-model="customServer.name" dense></q-input>
+            <q-input label="Url" v-model="customServer.url" dense></q-input>
+
+            <q-card-actions align="right">
+              <q-btn
+                flat
+                label="Add server"
+                :disable="customServer.name === '' || customServer.url === ''"
+                @click="
+                  servers.push({
+                    name: customServer.name,
+                    url: customServer.url,
+                  })
+                "
+                color="primary"
+              />
+            </q-card-actions>
+          </q-item-section>
+        </q-item>
+      </template>
+    </q-select>
+    <div class="flex items-center">
+      <label>LLama.cpp api</label>
+      <q-toggle v-model="OpenAI_API" color="primary" label="OpenAI API" />
+    </div>
+  </div>
   <q-card
     class="relative-position q-pa-none shadow-0 overflow-overlay"
     style="height: 90%"
@@ -332,10 +457,10 @@ export default {
         align="justify"
         narrow-indicator
       >
-        <q-tab name="table" label="Table"/>
-        <q-tab name="timeline" label="Timeline"/>
+        <q-tab name="table" label="Table" />
+        <q-tab name="timeline" label="Timeline" />
       </q-tabs>
-      <q-separator class="bi-border"/>
+      <q-separator class="bi-border" />
       <q-tab-panels
         v-model="tab"
         animated
@@ -348,7 +473,7 @@ export default {
             class="absolute-top-left bg-grey-3 row justify-center items-center"
             style="height: 100%; width: 100%; z-index: 10; opacity: 50%"
           >
-            <q-spinner-gears color="primary" size="8em"/>
+            <q-spinner-gears color="primary" size="8em" />
           </div>
           <div class="flex justify-between">
             <div>
@@ -356,7 +481,7 @@ export default {
                 class="q-ma-sm"
                 color="primary"
                 @click="checkNExtractMeds()"
-              >Extract medications
+                >Extract medications
               </q-btn>
 
               <q-btn-dropdown
@@ -388,7 +513,7 @@ export default {
                   <q-card-section>
                     <prompt-component
                       ref="fixPromptComponent"
-                      :template="template"
+                      v-model:template="template"
                       v-model:user-message="medExt.medExtFixProp.userMessage"
                       v-model:completion-init="
                         medExt.medExtFixProp.completionInit
@@ -407,7 +532,7 @@ export default {
 
                   <!-- Notice v-close-popup -->
                   <q-card-actions align="right">
-                    <q-btn flat label="Cancel" color="primary" v-close-popup/>
+                    <q-btn flat label="Cancel" color="primary" v-close-popup />
                     <q-btn
                       flat
                       label="Save"
@@ -535,7 +660,7 @@ export default {
             class="absolute-top-left bg-grey-3 row justify-center items-center"
             style="height: 100%; width: 100%; z-index: 10; opacity: 50%"
           >
-            <q-spinner-gears color="primary" size="8em"/>
+            <q-spinner-gears color="primary" size="8em" />
           </div>
           <div class="q-pa-lg">
             <div class="flex justify-between">
@@ -544,7 +669,7 @@ export default {
                   class="q-ma-sm"
                   color="primary"
                   @click="checkNExtractTimeline()"
-                >Extract timeline
+                  >Extract timeline
                 </q-btn>
 
                 <q-btn-dropdown
@@ -615,9 +740,8 @@ export default {
                 </q-dialog>
               </div>
               <q-btn class="q-ma-sm" @click="saveTimeline()"
-              >Save Settings
-              </q-btn
-              >
+                >Save Settings
+              </q-btn>
             </div>
           </div>
 

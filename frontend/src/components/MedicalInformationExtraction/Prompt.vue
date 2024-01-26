@@ -181,6 +181,21 @@ export default {
       </q-expansion-item>
 
       <q-separator />
+      <q-expansion-item
+        icon="edit_note"
+        label="Template"
+        header-class=""
+        :group="accordion ? 'group' : null"
+        default-opened
+      >
+        <q-input
+          :model-value="template"
+          autogrow
+          @input="$emit('update:template', $event.target.value)"
+          class="q-pa-sm"
+        />
+      </q-expansion-item>
+      <q-separator />
 
       <q-expansion-item
         icon="edit_note"
