@@ -77,7 +77,7 @@ services:
         volumes:
             - ./frontend/:/usr/src/app/
         # npm install
-        container_name: hbd-demo-frontend
+        container_name: hbd-demo-frontend-fornasiere
         ports:
             - 51130:51118
         restart: always
@@ -87,7 +87,7 @@ services:
             context: ./backend/
             dockerfile: Dockerfile
         image: hbd-demo-backend:latest
-        container_name: hbd-demo-backend
+        container_name: hbd-demo-backend-fornasiere
         volumes:
             - ./backend/:/workspace/
             - ~/models/:/models/
