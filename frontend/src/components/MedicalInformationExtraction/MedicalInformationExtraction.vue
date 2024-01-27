@@ -1,11 +1,10 @@
 <script>
 import { ref } from "vue";
 import * as axios from "boot/axios";
-import PromptComponent from "components/MedicalInformationExtraction/Prompt.vue";
-
-// inside of a Vue file
+import PromptComponent from "components/MedicalInformationExtraction/Prompt.vue"; // inside of a Vue file
 import { useQuasar } from "quasar";
 import InformationSourceLocalization from "components/MedicalInformationExtraction/InformationSourceLocalization.vue";
+import SaveDialog from "components/MedicalInformationExtraction/TasksDialog.vue";
 
 function applyTemplate(template, userMessage, systemMessage, completionInit) {
   return template
@@ -41,6 +40,7 @@ export default {
   },
   data() {
     return {
+      tasks: [],
       OpenAI_API: false,
       $q: useQuasar(),
       servers: ref([
@@ -64,6 +64,7 @@ export default {
       }),
       template: ref(null),
       medExt: {
+        taskName: "medExt",
         medExtFixProp: ref({}),
         medExtProp: ref({}),
         brokenOutput: false,
@@ -376,8 +377,80 @@ export default {
         });
     },
 
+    async getTasks() {
+      return axios.api.get("/get_tasks");
+    },
+
+    loadMedExt() {
+      let dialogRef = this.$q.dialog({
+        component: SaveDialog,
+        // props forwarded to your custom component
+        componentProps: {
+          taskName: this.medExt.taskName,
+          tasks: this.tasks,
+          save: false,
+
+          onSetTask: (data) => {
+            this.medExt.taskName = data;
+            dialogRef.update({
+              taskName: this.medExt.taskName,
+            });
+          },
+          // ...more..props...
+        },
+      });
+      this.getTasks().then((response) => {
+        this.tasks = response.data;
+        dialogRef.update({
+          tasks: this.tasks,
+        });
+      });
+
+      dialogRef
+        .onOk((taskName) => {
+          console.log("OK");
+          this.getProperties(taskName).then((response) => {
+            this.medExt.medExtProp = JSON.parse(response.data);
+          });
+        })
+        .onCancel(() => {
+          console.log("Cancel");
+        });
+    },
+
     saveMedExt() {
-      this.setProperties("medExt", this.medExt.medExtProp);
+      let dialogRef = this.$q.dialog({
+        component: SaveDialog,
+        // props forwarded to your custom component
+        componentProps: {
+          taskName: this.medExt.taskName,
+          tasks: this.tasks,
+          save: true,
+
+          onSetTask: (data) => {
+            this.medExt.taskName = data;
+            dialogRef.update({
+              taskName: this.medExt.taskName,
+            });
+          },
+          // ...more..props...
+        },
+      });
+      this.getTasks().then((response) => {
+        this.tasks = response.data;
+        dialogRef.update({
+          tasks: this.tasks,
+        });
+      });
+
+      dialogRef
+        .onOk((taskName) => {
+          console.log("OK");
+          this.setProperties(taskName, this.medExt.medExtProp);
+        })
+        .onCancel(() => {
+          console.log("Cancel");
+        });
     },
     saveTimeline() {
       this.setProperties("timeline", this.timeline.timelineProp);
@@ -406,9 +479,6 @@ export default {
           <q-item-section>
             <q-item-label v-html="opt.name" />
             <q-item-label caption v-html="opt.url"></q-item-label>
-            <q-item-label v-if="!opt.reachable" caption class="text-red"
-              >Not reachable
-            </q-item-label>
           </q-item-section>
         </q-item>
       </template>
@@ -559,7 +629,10 @@ export default {
                 Save log
               </q-btn>
             </div>
+            <q-btn class="q-ma-sm" @click="loadMedExt">Load Settings</q-btn>
+
             <q-btn class="q-ma-sm" @click="saveMedExt">Save Settings</q-btn>
+            <q-dialog></q-dialog>
           </div>
           <q-table
             class="col col-grow"

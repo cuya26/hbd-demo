@@ -6,22 +6,6 @@ export default {
   },
   mounted() {
     setTimeout(() => {
-      // let highlightedLines = this.rows
-      //   .map((row) => row.lines)
-      //   .flat()
-      //   .reduce((acc, val) => {
-      //     if (Array.isArray(val)) {
-      //       let arr2 = [...Array(val[1] - val[0] + 1).keys()].map(
-      //         (i) => i + val[0]
-      //       );
-      //       return acc.concat(arr2);
-      //     }
-      //     return acc.concat(val);
-      //   }, []);
-      // let lines = this.text.split("\n");
-      // highlightedLines.forEach((line) => {
-      //   lines[line] = `<span class="mark">${lines[line]}</span>`;
-      // });
       this.$refs.text.innerHTML = this.text;
     });
   },

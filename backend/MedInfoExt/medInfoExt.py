@@ -1,4 +1,5 @@
 import json
+import os
 from typing import Optional
 
 from fastapi import APIRouter
@@ -32,7 +33,10 @@ class PromptingLog(BaseModel):
 
 @app.get('/get_properties/{task}')
 async def get_properties(task: str):
-    print(task)
+    if not task:
+        tasks = os.listdir('./MedInfoExt/resources/')
+        tasks = [task.split('.')[0] for task in tasks if task.endswith('.properties.json')]
+        return tasks
     try:
         res = open('./MedInfoExt/resources/' + task + '.properties.json', 'r').read()
         res = json.loads(res)
