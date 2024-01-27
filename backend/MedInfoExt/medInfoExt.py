@@ -33,10 +33,6 @@ class PromptingLog(BaseModel):
 
 @app.get('/get_properties/{task}')
 async def get_properties(task: str):
-    if not task:
-        tasks = os.listdir('./MedInfoExt/resources/')
-        tasks = [task.split('.')[0] for task in tasks if task.endswith('.properties.json')]
-        return tasks
     try:
         res = open('./MedInfoExt/resources/' + task + '.properties.json', 'r').read()
         res = json.loads(res)
@@ -46,9 +42,13 @@ async def get_properties(task: str):
         res = json.dumps(res)
     except FileNotFoundError:
         raise HTTPException(status_code=504, detail="File not found")
-
     return res
 
+
+@app.get('/get_tasks')
+async def get_tasks():
+    tasks = os.listdir('./MedInfoExt/resources/')
+    return [task.split('.')[0] for task in tasks if task.endswith('.properties.json')]
 
 
 @app.post('/set_properties/{task}')

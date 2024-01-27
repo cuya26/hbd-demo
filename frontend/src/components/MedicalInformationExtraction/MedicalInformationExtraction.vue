@@ -194,7 +194,7 @@ export default {
             dose: row[1],
             frequency: row[2],
             route: row[3],
-            lines: row[4].split(",").map((x) => parseInt(x)),
+            lines: (row[4] ?? "").split(",").map((x) => parseInt(x)),
           });
         } else {
           console.log("error parsing medext answer", line);
