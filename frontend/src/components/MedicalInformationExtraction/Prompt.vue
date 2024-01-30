@@ -58,6 +58,7 @@ export default {
     "update:completionInit",
     "update:answer",
     "update:modelSettings",
+    "update:template",
     "askLLM",
     "clearOutput",
   ],
@@ -88,6 +89,21 @@ export default {
 
   data() {
     return {
+      templates: [
+        `<|im_start|>system
+{system_message}<|im_end|>
+<|im_start|>user
+{prompt}<|im_end|>
+<|im_start|>assistant
+{completion_init}`,
+        `[INST]
+{system_message}
+
+{prompt}
+[/INST]
+{completion_init}
+`,
+      ],
       modelParameters: {
         max_tokens: {
           placeholder: "Max tokens",
@@ -186,14 +202,31 @@ export default {
         label="Template"
         header-class=""
         :group="accordion ? 'group' : null"
-        default-opened
       >
-        <q-input
-          :model-value="template"
-          autogrow
-          @input="$emit('update:template', $event.target.value)"
-          class="q-pa-sm"
-        />
+        <div class="flex no-wrap" style="gap: 10px">
+          <div
+            v-for="(template, index) in templates"
+            :key="template"
+            class="q-pa-sm flex"
+          >
+            <q-checkbox
+              style="align-items: start !important"
+              class="flex column items-start q-pa-md"
+              :model-value="template === this.template"
+              @update:model-value="
+                console.log(template);
+                $emit('update:template', template);
+              "
+            >
+              <template v-slot:default>
+                <div style="white-space: pre-line">
+                  {{ template }}
+                </div>
+              </template>
+            </q-checkbox>
+            <q-separator vertical v-if="index < templates.length - 1" />
+          </div>
+        </div>
       </q-expansion-item>
       <q-separator />
 

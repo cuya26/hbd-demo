@@ -1,858 +1,148 @@
 <script>
 import { ref } from "vue";
-import * as axios from "boot/axios";
-import PromptComponent from "components/MedicalInformationExtraction/Prompt.vue"; // inside of a Vue file
-import { useQuasar } from "quasar";
-import InformationSourceLocalization from "components/MedicalInformationExtraction/InformationSourceLocalization.vue";
-import SaveDialog from "components/MedicalInformationExtraction/TasksDialog.vue";
-
-function applyTemplate(template, userMessage, systemMessage, completionInit) {
-  return template
-    .replace("{system_message}", systemMessage)
-    .replace("{prompt}", userMessage)
-    .replace("{completion_init}", completionInit);
-}
+import MedicationExtraction from "components/MedicalInformationExtraction/MedicationExtraction.vue";
+import TimelineExtraction from "components/MedicalInformationExtraction/TimelineExtraction.vue";
+import { config } from "components/MedicalInformationExtraction/utils";
 
 /* @formatter:on */
 export default {
-  name: "MedicationExtraction",
+  name: "MedicalInformationExtraction",
+
+  components: { TimelineExtraction, MedicationExtraction },
   props: ["doc"],
-  components: { PromptComponent },
 
   mounted() {
-    this.getProperties("medExt").then((response) => {
-      this.medExt.medExtProp = JSON.parse(response.data);
-    });
-    this.getProperties("medExtFix").then((response) => {
-      this.medExt.medExtFixProp = JSON.parse(response.data);
-    });
-    this.getProperties("timeline").then((response) => {
-      this.timeline.timelineProp = JSON.parse(response.data);
-    });
-    this.getProperties("timelineFix").then((response) => {
-      this.timeline.timelineFixProp = JSON.parse(response.data);
-    });
-    this.getTemplate().then((response) => {
-      this.template = response.data;
-    });
-
     // this.openInformationSourceLocalization();
   },
   data() {
     return {
-      tasks: [],
-      OpenAI_API: false,
-      $q: useQuasar(),
-      servers: ref([
-        { name: "llama-server", url: axios.llamaHost },
-        {
-          name: "fornasiere-llama-server",
-          url: axios.llamaHostAlt,
-        },
-        {
-          name: "Mixtral",
-          url: "http://147.189.192.41:8080",
-        },
-      ]),
-      selectedServer: ref({
-        name: "Mixtral",
-        url: "http://147.189.192.41:8080",
-      }),
-      customServer: ref({
-        name: "",
-        url: "",
-      }),
-      template: ref(null),
-      medExt: {
-        taskName: "medExt",
-        medExtFixProp: ref({}),
-        medExtProp: ref({}),
-        brokenOutput: false,
-        loading: ref(false),
-        log: {
-          prompt: "",
-          answer: "",
-          expected: "",
-        },
-        table: {
-          columns: [
-            {
-              name: "name",
-              label: "Name",
-              field: "name",
-              align: "left",
-              sortable: true,
-            },
-            {
-              name: "dose",
-              label: "Dose",
-              field: "dose",
-              align: "left",
-              sortable: true,
-            },
-            {
-              name: "frequency",
-              label: "Frequency",
-              field: "frequency",
-              align: "left",
-              sortable: true,
-            },
-            {
-              name: "route",
-              label: "Route",
-              field: "route",
-              align: "left",
-              sortable: true,
-            },
-            {
-              name: "lines",
-              label: "Lines",
-              field: "lines",
-              align: "left",
-              sortable: false,
-            },
-          ],
-          rows: ref([]),
-        },
-        answer: "",
-      },
-      timeline: {
-        timelineProp: ref({}),
-        timelineFixProp: ref({}),
-        fixAnswer: {
-          fixPromptDialog: ref(false),
-        },
-
-        brokenOutput: false,
-        loading: ref(false),
-        times: [{}],
-        answer: "",
-      },
-
-      editableTable: ref(false),
-      tab: ref("table"),
-      showTemplate: ref(false),
-      shrinkPrompt: ref(false),
+      page: ref("Medication Extraction"),
+      mini: ref(true),
+      config: ref(config),
+      searchServer: ref(""),
     };
   },
-  methods: {
-    checkServersAvailability() {
-      for (let server of this.servers) {
-        axios.api
-          .get(server.url + "/docs")
-          .then(() => (server.reachable = true))
-          .catch(() => (server.reachable = false));
-      }
-    },
-    openInformationSourceLocalization() {
-      this.$q
-        .dialog({
-          component: InformationSourceLocalization,
-          fullWidth: true,
-          fullHeight: true,
-          // props forwarded to your custom component
-          componentProps: {
-            rows: this.medExt.table.rows,
-            columns: this.medExt.table.columns,
-            text: this.doc,
-            // ...more..props...
-          },
-        })
-        .onOk(() => {
-          console.log("OK");
-        })
-        .onCancel(() => {
-          console.log("Cancel");
-        })
-        .onDismiss(() => {
-          console.log("Called on OK or Cancel");
-        });
-    },
-    getTemplate() {
-      return axios.api.get("/get_template");
-    },
-
-    setProperties(task, properties) {
-      axios.api.post("/set_properties/" + task, properties);
-    },
-
-    getProperties(task) {
-      return axios.api.get("/get_properties/" + task);
-    },
-
-    parseMedicationsAnswer(answer) {
-      let table = [];
-      let lines = answer.split("\n");
-      for (let line of lines) {
-        if (line.match(/.*?(OUTPUT|END).*?/g)) {
-          break;
-        }
-        if (line.includes("||")) {
-          let row = line.split("||");
-          table.push({
-            name: row[0],
-            dose: row[1],
-            frequency: row[2],
-            route: row[3],
-            lines: (row[4] ?? "").split(",").map((x) => parseInt(x)),
-          });
-        } else {
-          console.log("error parsing medext answer", line);
-        }
-      }
-      return table;
-    },
-
-    askLLM(body) {
-      return axios.api
-        .post(
-          this.selectedServer.url +
-            (this.OpenAI_API ? "/v1/completions" : "/completion"),
-          {
-            ...body,
-            stream: false,
-            stop: ["<|im_end|>", "###"],
-          },
-          {
-            "Content-Type": "application/json",
-            timeout: 600000,
-          }
-        )
-        .then((response) => {
-          let res = "";
-          if (this.OpenAI_API) {
-            res = response.data.choices[0].text;
-          } else {
-            res = response.data.content;
-          }
-          return res;
-        });
-    },
-
-    checkNExtractMeds() {
-      let str1 = JSON.stringify(this.medExt.table.rows);
-      let str2 = JSON.stringify(
-        this.parseMedicationsAnswer(this.medExt.answer)
-      );
-      if (str1 === str2) {
-        this.extractMedications();
-      } else {
-        this.medExt.table.rows = this.parseMedicationsAnswer(
-          this.medExt.answer
-        );
-      }
-    },
-
-    async extractMedications() {
-      this.medExt.loading = true;
-      this.medExt.answer = "";
-      let prompt = applyTemplate(
-        this.template,
-        this.medExt.medExtProp.userMessage,
-        this.medExt.medExtProp.systemMessage,
-        this.medExt.medExtProp.completionInit
-      );
-      let parameters = this.medExt.medExtProp.modelParameters;
-      let file = this.doc.split("\n");
-      for (let i = 0; i < file.length; i++) {
-        file[i] = ("" + i).padStart(4, " ") + "| " + file[i];
-      }
-      this.askLLM({
-        prompt: prompt.replace("{file}", file.join("\n")),
-        ...parameters,
-      })
-        .then((text) => {
-          console.log(text);
-          this.medExt.loading = false;
-          this.medExt.answer = text;
-          this.medExt.table.rows = this.parseMedicationsAnswer(text);
-        })
-        .catch((error) => {
-          console.error(error);
-          this.medExt.loading = false;
-          return error.body;
-        });
-    },
-
-    checkNExtractTimeline() {
-      let str1 = JSON.stringify(this.timeline.times);
-      let str2 = JSON.stringify(this.parseTimelineAnswer(this.timeline.answer));
-      if (str1 === str2) {
-        this.extractTimeline();
-      } else {
-        this.timeline.times = this.parseTimelineAnswer(this.timeline.answer);
-      }
-    },
-
-    async fixTimelineAnswer() {
-      let brokenAnswer = this.timeline.answer;
-      let fixPrompt = applyTemplate(
-        this.template,
-        this.timeline.timelineFixProp.userMessage,
-        this.timeline.timelineFixProp.systemMessage,
-        this.timeline.timelineFixProp.completionInit
-      ).replace("{text}", brokenAnswer);
-
-      this.timeline.loading = true;
-      let answer = await this.askLLM({
-        prompt: fixPrompt,
-        ...this.timeline.timelineFixProp.modelParameters,
-      });
-      this.timeline.loading = false;
-      this.timeline.times = this.parseTimelineAnswer(answer);
-      this.timeline.answer = answer;
-    },
-
-    async fixMedExtAnswer() {
-      let brokenAnswer = this.medExt.answer;
-      let fixPrompt = this.medExt.fixPrompt.replace("{text}", brokenAnswer);
-
-      this.timeline.loading = true;
-      let answer = await this.askLLM({
-        prompt: fixPrompt,
-        max_tokens: 2048,
-        temperature: 0.0,
-        mirostat_tau: 3.0,
-      });
-      this.timeline.loading = false;
-      this.timeline.times = this.parseTimelineAnswer(answer);
-      this.timeline.answer = answer;
-    },
-
-    parseTimelineAnswer(answer) {
-      let res = [];
-      this.timeline.brokenOutput = false;
-
-      try {
-        res = JSON.parse(answer);
-      } catch (e) {
-        console.log("error parsing timeline answer");
-        this.timeline.brokenOutput = true;
-        res = [{}];
-      }
-
-      return res;
-    },
-
-    startEditingTable(start) {
-      this.editableTable = start;
-      if (this.editableTable) {
-        this.medExt.log.prompt = applyTemplate(
-          this.template,
-          this.medExt.medExtProp.userMessage,
-          this.medExt.medExtProp.systemMessage,
-          this.medExt.medExtProp.completionInit
-        ).replace("{file}", this.doc);
-        this.medExt.log.answer = this.medExt.answer;
-      }
-    },
-    sendLog(task) {
-      this.medExt.log.expected = JSON.stringify(this.medExt.table.rows);
-      axios.api.post("/log/" + task, this.medExt.log);
-    },
-    async extractTimeline() {
-      this.timeline.loading = true;
-      this.timeline.answer = "";
-      let prompt = applyTemplate(
-        this.template,
-        this.timeline.timelineProp.userMessage,
-        this.timeline.timelineProp.systemMessage,
-        this.timeline.timelineProp.completionInit
-      );
-      let parameters = this.medExt.medExtProp.modelParameters;
-      this.askLLM({
-        prompt: prompt.replace("{file}", this.doc),
-        ...parameters,
-      })
-        .then((text) => {
-          let answer = text;
-          this.timeline.loading = false;
-          this.timeline.answer = answer;
-          this.timeline.times = this.parseTimelineAnswer(answer);
-        })
-        .catch((error) => {
-          console.error(error);
-          this.timeline.loading = false;
-          return error.body;
-        });
-    },
-
-    async getTasks() {
-      return axios.api.get("/get_tasks");
-    },
-
-    loadMedExt() {
-      let dialogRef = this.$q.dialog({
-        component: SaveDialog,
-        // props forwarded to your custom component
-        componentProps: {
-          taskName: this.medExt.taskName,
-          tasks: this.tasks,
-          save: false,
-
-          onSetTask: (data) => {
-            this.medExt.taskName = data;
-            dialogRef.update({
-              taskName: this.medExt.taskName,
-            });
-          },
-          // ...more..props...
-        },
-      });
-      this.getTasks().then((response) => {
-        this.tasks = response.data;
-        dialogRef.update({
-          tasks: this.tasks,
-        });
-      });
-
-      dialogRef
-        .onOk((taskName) => {
-          console.log("OK");
-          this.getProperties(taskName).then((response) => {
-            this.medExt.medExtProp = JSON.parse(response.data);
-          });
-        })
-        .onCancel(() => {
-          console.log("Cancel");
-        });
-    },
-
-    saveMedExt() {
-      let dialogRef = this.$q.dialog({
-        component: SaveDialog,
-        // props forwarded to your custom component
-        componentProps: {
-          taskName: this.medExt.taskName,
-          tasks: this.tasks,
-          save: true,
-
-          onSetTask: (data) => {
-            this.medExt.taskName = data;
-            dialogRef.update({
-              taskName: this.medExt.taskName,
-            });
-          },
-          // ...more..props...
-        },
-      });
-      this.getTasks().then((response) => {
-        this.tasks = response.data;
-        dialogRef.update({
-          tasks: this.tasks,
-        });
-      });
-
-      dialogRef
-        .onOk((taskName) => {
-          console.log("OK");
-          this.setProperties(taskName, this.medExt.medExtProp);
-        })
-        .onCancel(() => {
-          console.log("Cancel");
-        });
-    },
-    saveTimeline() {
-      this.setProperties("timeline", this.timeline.timelineProp);
-    },
-    saveMedExtFix() {
-      this.setProperties("medExtFix", this.medExt.medExtFixProp);
-    },
-    saveTimelineFix() {
-      this.setProperties("timelineFix", this.timeline.timelineFixProp);
-    },
-  },
+  methods: {},
 };
 </script>
 
 <template>
-  <q-btn @click="this.openInformationSourceLocalization">Click me</q-btn>
-  <div class="flex justify-between q-mb-md">
-    <q-select
-      v-model="selectedServer"
-      :options="servers"
-      :display-value="selectedServer.name + ' - ' + selectedServer.url"
-      label="LLM server"
-    >
-      <template v-slot:option="{ itemProps, opt }">
-        <q-item v-bind="itemProps" v-close-popup>
-          <q-item-section>
-            <q-item-label v-html="opt.name" />
-            <q-item-label caption v-html="opt.url"></q-item-label>
-          </q-item-section>
-        </q-item>
-      </template>
-      <template v-slot:after-options>
-        <q-item style="border-top: 1px solid #818181">
-          <q-item-section>
-            <q-item-label>Add server</q-item-label>
-            <q-input label="Name" v-model="customServer.name" dense></q-input>
-            <q-input label="Url" v-model="customServer.url" dense></q-input>
+  <div class="full-height">
+    <q-layout view="hHh Lpr lff" container class="shadow-2 rounded-borders">
+      <q-header elevated class="bg-primary">
+        <q-toolbar>
+          <q-btn flat @click="mini = !mini" round dense icon="menu" />
+          <q-toolbar-title>{{ page }}</q-toolbar-title>
+        </q-toolbar>
+      </q-header>
 
-            <q-card-actions align="right">
-              <q-btn
-                flat
-                label="Add server"
-                :disable="customServer.name === '' || customServer.url === ''"
-                @click="
-                  servers.push({
-                    name: customServer.name,
-                    url: customServer.url,
-                  })
-                "
-                color="primary"
-              />
-            </q-card-actions>
-          </q-item-section>
-        </q-item>
-      </template>
-    </q-select>
-    <div class="flex items-center">
-      <label>LLama.cpp api</label>
-      <q-toggle v-model="OpenAI_API" color="primary" label="OpenAI API" />
-    </div>
-  </div>
-  <q-card
-    class="relative-position q-pa-none shadow-0 overflow-overlay"
-    style="height: 90%"
-  >
-    <q-card class="full-height column full-width no-wrap">
-      <q-tabs
-        class="text-grey"
-        v-model="tab"
-        dense
-        active-color="primary"
-        active-bg-color="grey-3"
-        indicator-color="primary"
-        align="justify"
-        narrow-indicator
+      <q-drawer
+        :model-value="true"
+        show-if-above
+        :mini="mini"
+        :width="300"
+        :breakpoint="500"
+        bordered
+        class="bg-grey-3"
       >
-        <q-tab name="table" label="Table" />
-        <q-tab name="timeline" label="Timeline" />
-      </q-tabs>
-      <q-separator class="bi-border" />
-      <q-tab-panels
-        v-model="tab"
-        animated
-        class="column no-wrap full-height overflow-hidden"
-        style="height: 100%"
-      >
-        <q-tab-panel name="table" class="column full-height q-ma-none no-wrap">
-          <div
-            v-if="medExt.loading === true"
-            class="absolute-top-left bg-grey-3 row justify-center items-center"
-            style="height: 100%; width: 100%; z-index: 10; opacity: 50%"
-          >
-            <q-spinner-gears color="primary" size="8em" />
-          </div>
-          <div class="flex justify-between">
-            <div>
-              <q-btn
-                class="q-ma-sm"
-                color="primary"
-                @click="checkNExtractMeds()"
-                >Extract medications
-              </q-btn>
-
-              <q-btn-dropdown
-                :disable-main-btn="!medExt.brokenOutput"
-                split
-                class="q-ma-sm"
-                color="secondary"
-                @click="fixMedExtAnswer()"
-                label="Fix structure with llm"
-              >
-                <q-list>
-                  <q-item
-                    clickable
-                    v-close-popup
-                    @click="timeline.fixAnswer.fixPromptDialog = true"
-                  >
-                    <q-item-section>
-                      <q-item-label>Edit fix prompt</q-item-label>
-                    </q-item-section>
-                  </q-item>
-                </q-list>
-              </q-btn-dropdown>
-
-              <q-dialog v-model="timeline.fixAnswer.fixPromptDialog">
-                <q-card
-                  style="width: 50%; height: 50%"
-                  class="flex column justify-between"
-                >
-                  <q-card-section>
-                    <prompt-component
-                      ref="fixPromptComponent"
-                      v-model:template="template"
-                      v-model:user-message="medExt.medExtFixProp.userMessage"
-                      v-model:completion-init="
-                        medExt.medExtFixProp.completionInit
-                      "
-                      v-model:system-message="
-                        medExt.medExtFixProp.systemMessage
-                      "
-                      v-model:model-settings="
-                        medExt.medExtFixProp.modelParameters
-                      "
-                      :enable-answer="false"
-                      :enable-send="false"
-                    >
-                    </prompt-component>
-                  </q-card-section>
-
-                  <!-- Notice v-close-popup -->
-                  <q-card-actions align="right">
-                    <q-btn flat label="Cancel" color="primary" v-close-popup />
-                    <q-btn
-                      flat
-                      label="Save"
-                      @click="saveMedExtFix()"
-                      color="primary"
-                      v-close-popup
-                    />
-                  </q-card-actions>
-                </q-card>
-              </q-dialog>
-              <q-toggle
-                v-show="medExt.table.rows.length > 0"
-                :model-value="editableTable"
-                @update:model-value="startEditingTable($event)"
-                color="primary"
-                icon="edit"
-                label="Edit table"
-              />
-              <q-btn
-                v-if="editableTable"
-                @click="sendLog('medExt')"
-                class="q-ma-sm"
-              >
-                Save log
-              </q-btn>
-            </div>
-            <q-btn class="q-ma-sm" @click="loadMedExt">Load Settings</q-btn>
-
-            <q-btn class="q-ma-sm" @click="saveMedExt">Save Settings</q-btn>
-            <q-dialog></q-dialog>
-          </div>
-          <q-table
-            class="col col-grow"
-            title="Medications"
-            :rows="medExt.table.rows"
-            :columns="medExt.table.columns"
-            row-key="name"
-            :rows-per-page-options="[0, 10, 20, 30]"
-          >
-            <template v-slot:body="props">
-              <q-tr :props="props">
-                <q-td key="name" :props="props">
-                  {{ props.row.name }}
-                  <q-popup-edit
-                    :disable="!editableTable"
-                    v-model="props.row.name"
-                    v-slot="scope"
-                  >
-                    <q-input
-                      v-model="scope.value"
-                      dense
-                      autofocus
-                      title="Update Name"
-                      @keyup.enter="scope.set"
-                    />
-                  </q-popup-edit>
-                </q-td>
-                <q-td key="dose" :props="props">
-                  {{ props.row.dose }}
-                  <q-popup-edit
-                    :disable="!editableTable"
-                    v-model="props.row.dose"
-                    v-slot="scope"
-                  >
-                    <q-input
-                      v-model="scope.value"
-                      dense
-                      autofocus
-                      title="Update dosage"
-                      @keyup.enter="scope.set"
-                    />
-                  </q-popup-edit>
-                </q-td>
-                <q-td key="frequency" :props="props">
-                  {{ props.row.frequency }}
-                  <q-popup-edit
-                    :disable="!editableTable"
-                    v-model="props.row.frequency"
-                    v-slot="scope"
-                  >
-                    <q-input
-                      v-model="scope.value"
-                      dense
-                      autofocus
-                      title="Update dosage"
-                      @keyup.enter="scope.set"
-                    />
-                  </q-popup-edit>
-                </q-td>
-                <q-td key="route" :props="props">
-                  {{ props.row.route }}
-                  <q-popup-edit
-                    :disable="!editableTable"
-                    v-model="props.row.route"
-                    v-slot="scope"
-                  >
-                    <q-input
-                      v-model="scope.value"
-                      dense
-                      autofocus
-                      title="Update dosage"
-                      @keyup.enter="scope.set"
-                    />
-                  </q-popup-edit>
-                </q-td>
-              </q-tr>
-            </template>
-          </q-table>
-          <div>
-            <prompt-component
-              ref="medExtPromptComponent"
-              :accordion="true"
-              :template="template"
-              v-model:answer="medExt.answer"
-              v-model:completion-init="medExt.medExtProp.completionInit"
-              v-model:system-message="medExt.medExtProp.systemMessage"
-              v-model:user-message="medExt.medExtProp.userMessage"
-              v-model:model-settings="medExt.medExtProp.modelParameters"
-              @askLLM="extractMedications"
-              @clear-output="medExt.answer = ''"
-              @answer-changed="medExt.answer = $event"
-            ></prompt-component>
-          </div>
-        </q-tab-panel>
-        <q-tab-panel name="timeline">
-          <div
-            v-if="timeline.loading === true"
-            class="absolute-top-left bg-grey-3 row justify-center items-center"
-            style="height: 100%; width: 100%; z-index: 10; opacity: 50%"
-          >
-            <q-spinner-gears color="primary" size="8em" />
-          </div>
-          <div class="q-pa-lg">
-            <div class="flex justify-between">
-              <div class="flex">
-                <q-btn
-                  class="q-ma-sm"
-                  color="primary"
-                  @click="checkNExtractTimeline()"
-                  >Extract timeline
-                </q-btn>
-
-                <q-btn-dropdown
-                  :disable-main-btn="!timeline.brokenOutput"
-                  split
-                  class="q-ma-sm"
-                  color="secondary"
-                  @click="fixTimelineAnswer()"
-                  label="Fix structure with llm"
-                >
-                  <q-list>
-                    <q-item
-                      clickable
-                      v-close-popup
-                      @click="timeline.fixAnswer.fixPromptDialog = true"
-                    >
-                      <q-item-section>
-                        <q-item-label>Edit fix prompt</q-item-label>
-                      </q-item-section>
-                    </q-item>
-                  </q-list>
-                </q-btn-dropdown>
-
-                <q-dialog v-model="timeline.fixAnswer.fixPromptDialog">
-                  <q-card
-                    style="width: 50%; height: 50%"
-                    class="flex column justify-between"
-                  >
-                    <q-card-section>
-                      <prompt-component
-                        ref="fixPromptComponent"
-                        :template="template"
-                        v-model:user-message="
-                          timeline.timelineFixProp.userMessage
-                        "
-                        v-model:completion-init="
-                          timeline.timelineFixProp.completionInit
-                        "
-                        v-model:system-message="
-                          timeline.timelineFixProp.systemMessage
-                        "
-                        v-model:model-settings="
-                          timeline.timelineFixProp.modelParameters
-                        "
-                        :enable-answer="false"
-                        :enable-send="false"
-                      >
-                      </prompt-component>
-                    </q-card-section>
-
-                    <!-- Notice v-close-popup -->
-                    <q-card-actions align="right">
-                      <q-btn
-                        flat
-                        label="Cancel"
-                        color="primary"
-                        v-close-popup
-                      />
-                      <q-btn
-                        flat
-                        label="Save"
-                        color="primary"
-                        @click="saveTimelineFix()"
-                        v-close-popup
-                      />
-                    </q-card-actions>
-                  </q-card>
-                </q-dialog>
-              </div>
-              <q-btn class="q-ma-sm" @click="saveTimeline()"
-                >Save Settings
-              </q-btn>
-            </div>
-          </div>
-
-          <q-timeline layout="comfortable" side="right" color="secondary">
-            <q-timeline-entry heading>Timeline</q-timeline-entry>
-
-            <q-timeline-entry
-              v-for="time in timeline.times"
-              :key="time"
-              :subtitle="time.time"
-              :title="time.headline"
+        <q-scroll-area class="fit" :horizontal-thumb-style="{ opacity: 0 }">
+          <q-list padding>
+            <q-item
+              :active="page === 'Medication Extraction'"
+              clickable
+              v-ripple
+              @click="page = 'Medication Extraction'"
             >
-              <ul>
-                <li v-for="event in time.events" :key="event">
-                  {{ event }}
-                </li>
-              </ul>
-            </q-timeline-entry>
-          </q-timeline>
-          <div>
-            <prompt-component
-              ref="timelinePromptComponent"
-              :template="template"
-              :answer="timeline.answer"
-              v-model:system-message="timeline.timelineProp.systemMessage"
-              v-model:user-message="timeline.timelineProp.userMessage"
-              v-model:completion-init="timeline.timelineProp.completionInit"
-              v-model:model-settings="timeline.timelineProp.modelParameters"
-              @askLLM="extractTimeline"
-              @clear-output="timeline.answer = ''"
-              @answer-changed="timeline.answer = $event"
-            ></prompt-component>
+              <q-item-section avatar>
+                <q-icon name="medication" />
+              </q-item-section>
+
+              <q-item-section> Medication Extraction</q-item-section>
+            </q-item>
+
+            <q-item
+              :active="page === 'Timeline extraction'"
+              clickable
+              v-ripple
+              @click="page = 'Timeline extraction'"
+            >
+              <q-item-section avatar>
+                <q-icon name="timeline" />
+              </q-item-section>
+
+              <q-item-section> Timeline Extraction</q-item-section>
+            </q-item>
+
+            <q-item
+              :active="page === 'Settings'"
+              clickable
+              v-ripple
+              @click="page = 'Settings'"
+            >
+              <q-item-section avatar>
+                <q-icon name="settings" />
+              </q-item-section>
+
+              <q-item-section> Settings</q-item-section>
+            </q-item>
+          </q-list>
+        </q-scroll-area>
+      </q-drawer>
+
+      <q-page-container>
+        <q-page v-if="page === 'Medication Extraction'" padding>
+          <medication-extraction :doc="doc"></medication-extraction>
+        </q-page>
+        <q-page v-if="page === 'Timeline extraction'" padding>
+          <timeline-extraction :doc="doc"></timeline-extraction>
+        </q-page>
+        <q-page
+          v-if="page === 'Settings'"
+          style="gap: 20px"
+          class="full-width flex column"
+          padding
+        >
+          <span class="full-width text-center text-h6"> Settings </span>
+          <div style="width: 50%">
+            <q-list
+              bordered
+              separator
+              class="overflow-auto"
+              style="max-height: 300px"
+            >
+              <q-item
+                :active="config.selectedServer.url === server.url"
+                v-for="server in config.servers"
+                :key="server"
+                clickable
+                v-ripple
+                @click="config.selectedServer = server"
+              >
+                <q-item-section>
+                  <q-item-label title>{{ server.name }}</q-item-label>
+                  <q-item-label caption>{{ server.url }}</q-item-label>
+                </q-item-section>
+              </q-item>
+            </q-list>
+            <q-input
+              v-if="config.servers.length > 10"
+              v-model="searchServer"
+              label="Search Server"
+            />
           </div>
-        </q-tab-panel>
-        <q-tab-panel name="chat"></q-tab-panel>
-      </q-tab-panels>
-    </q-card>
-  </q-card>
+
+          <div class="flex items-center">
+            <label>LLama.cpp api</label>
+            <q-toggle
+              v-model="config.OpenAI_API"
+              color="primary"
+              label="OpenAI API"
+            />
+          </div>
+        </q-page>
+      </q-page-container>
+    </q-layout>
+  </div>
 </template>
 
 <style scoped lang="scss">

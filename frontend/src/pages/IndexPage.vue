@@ -265,7 +265,7 @@ export default defineComponent({
   },
   setup() {
     return {
-      resizableWidth: ref(30),
+      resizableWidth: ref(45),
       draggable: false,
       inputMode: ref("edit"),
       dropzoneURL: ref(""),

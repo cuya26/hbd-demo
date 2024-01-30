@@ -1,1 +1,13 @@
-{"userMessage": "TASK: Temporal Entity Extraction from Medical Document\nExtract a coherent chronological sequence of events from the medical document. Use each date mentioned in the text as a timeline delimiter, emphasizing the context for events without specific dates. Ensure that the output is a list of events ordered chronologically, with each event clearly associated with its relative position in the timeline. Be explicit about the importance of maintaining chronological coherence among the events.\n\nThe output must be in JSON list of objects where each object contains the \"date\" key and the  \"events\" key.\nIf there is no date (like before admission), put \"none\"\nExample:\nsdfsdfsd\n[{\n \"time\": \"10/07/1998\",\n \"headline\": \"Admission and Diagnosis\",\n \"events\": [\"presents with abdominal pain of seven days duration\", \"admission\", \"diagnosed with acute pancreatitis\"]\n}, ... ]\n\nGenerate the JSON array for the following document.\n[CLINICAL_DOCUMENT_START]\n{file}\n[CLINICAL_DOCUMENT_END]", "systemMessage": "Emulate a tool for the specified task. Strictly follow the provided instructions to execute the task accurately. Your role is to adhere solely to the given guidelines and perform the designated actions without deviation.", "completionInit": "", "modelParameters": {"temperature": 0.5, "top_k": 40, "top_p": 0.95, "repetition_penalty": 1.1, "max_tokens": 2048, "mirostat_tau": 3.0}}
+{
+  "userMessage": "TASK: Temporal Entity Extraction from Medical Document\nExtract a coherent chronological sequence of events from the medical document. Use each date mentioned in the text as a timeline delimiter, emphasizing the context for events without specific dates. Ensure that the output is a list of events ordered chronologically, with each event clearly associated with its relative position in the timeline. Be explicit about the importance of maintaining chronological coherence among the events.\n\nThe output must be in JSON list of objects where each object contains the \"date\" key and the  \"events\" key.\nIf there is no date (like before admission), put \"none\"\nExample:\nsdfsdfsd\n[{\n \"time\": \"10/07/1998\",\n \"headline\": \"Admission and Diagnosis\",\n \"events\": [\"presents with abdominal pain of seven days duration\", \"admission\", \"diagnosed with acute pancreatitis\"]\n}, ... ]\n\nGenerate the JSON array for the following document.\n[CLINICAL_DOCUMENT_START]\n{file}\n[CLINICAL_DOCUMENT_END]",
+  "systemMessage": "Emulate a tool for the specified task. Strictly follow the provided instructions to execute the task accurately. Your role is to adhere solely to the given guidelines and perform the designated actions without deviation.",
+  "completionInit": "",
+  "modelParameters": {
+    "temperature": 0.5,
+    "top_k": 40,
+    "top_p": 0.95,
+    "repetition_penalty": 1.1,
+    "max_tokens": 2048,
+    "mirostat_tau": 3.0
+  }
+}
