@@ -47,6 +47,7 @@ export default {
   },
   data() {
     return {
+      separator: ref(";"),
       template: ref(""),
       $q: useQuasar(),
       tasks: [],
@@ -160,8 +161,8 @@ export default {
         if (line.match(/.*?(OUTPUT|END).*?/g)) {
           break;
         }
-        if (line.includes(";")) {
-          let row = line.split(";");
+        if (line.includes(this.separator)) {
+          let row = line.split(this.separator);
           table.push({
             name: row[0],
             dose: row[1],
@@ -274,6 +275,11 @@ export default {
       row-key="name"
       :rows-per-page-options="[0, 10, 20, 30]"
     >
+      <template v-slot:top>
+        <div class="col-2 q-table__title">Medications</div>
+        <q-space />
+        <q-input v-model="separator" label="Separator" dense />
+      </template>
       <template v-slot:body="props">
         <q-tr :props="props">
           <q-td key="name" :props="props">
