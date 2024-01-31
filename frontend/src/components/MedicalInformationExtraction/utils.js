@@ -3,7 +3,7 @@ import * as axios from "boot/axios";
 export let config = {
   servers: [
     {
-      name: "llama-server",
+      name: "polimi-llama-server",
       url: axios.llamaHost,
       OpenAI_API: true,
       reachable: false,
