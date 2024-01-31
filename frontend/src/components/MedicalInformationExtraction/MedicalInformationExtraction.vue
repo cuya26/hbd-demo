@@ -119,8 +119,8 @@ export default {
         if (line.match(/.*?(OUTPUT|END).*?/g)) {
           break;
         }
-        if (line.includes("||")) {
-          let row = line.split("||");
+        if (line.includes(";")) {
+          let row = line.split(";");
           table.push({
             name: row[0],
             dose: row[1],
@@ -136,7 +136,7 @@ export default {
 
     askLLM(body) {
       return axios.api.post(
-        axios.llamaHostAlt + "/v1/completions",
+        axios.llamaHost + "/v1/completions",
         {
           ...body,
           stream: false,
