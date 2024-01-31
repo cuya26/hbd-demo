@@ -23,7 +23,10 @@ export let config = {
   ],
 
   selectedServer: {
+    name: "llama-server",
     url: axios.llamaHost,
+    OpenAI_API: true,
+    reachable: false,
   },
   customServer: {
     name: "",
@@ -79,6 +82,10 @@ export function askLLM(body) {
 }
 
 export function buildLLMUrl() {
+  console.log((
+    config.selectedServer.url +
+    (config.selectedServer.OpenAI_API ? "/v1/completions" : "/completion")
+  ))
   return (
     config.selectedServer.url +
     (config.selectedServer.OpenAI_API ? "/v1/completions" : "/completion")
@@ -87,7 +94,7 @@ export function buildLLMUrl() {
 
 function mapLLMAnswer(response) {
   let res = "";
-  if (config.OpenAI_API) {
+  if (config.selectedServer.OpenAI_API) {
     res = response.data.choices[0].text;
   } else {
     res = response.data.content;
