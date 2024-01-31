@@ -2,7 +2,12 @@
 import { ref } from "vue";
 import MedicationExtraction from "components/MedicalInformationExtraction/MedicationExtraction.vue";
 import TimelineExtraction from "components/MedicalInformationExtraction/TimelineExtraction.vue";
-import { config } from "components/MedicalInformationExtraction/utils";
+import {
+  checkCustomServerAvailability,
+  checkServersAvailability,
+  config,
+  saveServer,
+} from "components/MedicalInformationExtraction/utils";
 
 /* @formatter:on */
 export default {
@@ -12,7 +17,7 @@ export default {
   props: ["doc"],
 
   mounted() {
-    // this.openInformationSourceLocalization();
+    checkServersAvailability();
   },
   data() {
     return {
@@ -22,7 +27,11 @@ export default {
       searchServer: ref(""),
     };
   },
-  methods: {},
+  methods: {
+    checkCustomServerAvailability,
+    saveServer,
+    checkServersAvailability,
+  },
 };
 </script>
 
@@ -90,25 +99,31 @@ export default {
       </q-drawer>
 
       <q-page-container>
-        <q-page v-if="page === 'Medication Extraction'" padding>
-          <medication-extraction :doc="doc"></medication-extraction>
+        <q-page v-show="page === 'Medication Extraction'" padding>
+          <medication-extraction
+            :doc="doc"
+            :show="page === 'Medication Extraction'"
+          ></medication-extraction>
         </q-page>
-        <q-page v-if="page === 'Timeline extraction'" padding>
-          <timeline-extraction :doc="doc"></timeline-extraction>
+        <q-page v-show="page === 'Timeline extraction'" padding>
+          <timeline-extraction
+            :doc="doc"
+            :show="page === 'Timeline extraction'"
+          ></timeline-extraction>
         </q-page>
         <q-page
-          v-if="page === 'Settings'"
+          v-show="page === 'Settings'"
           style="gap: 20px"
           class="full-width flex column"
           padding
         >
           <span class="full-width text-center text-h6"> Settings </span>
-          <div style="width: 50%">
+          <div style="width: 100%">
             <q-list
               bordered
               separator
               class="overflow-auto"
-              style="max-height: 300px"
+              style="max-height: 400px"
             >
               <q-item
                 :active="config.selectedServer.url === server.url"
@@ -116,27 +131,75 @@ export default {
                 :key="server"
                 clickable
                 v-ripple
-                @click="config.selectedServer = server"
+                @click="
+                  config.selectedServer = server;
+                  console.log(config.selectedServer);
+                "
               >
                 <q-item-section>
                   <q-item-label title>{{ server.name }}</q-item-label>
                   <q-item-label caption>{{ server.url }}</q-item-label>
+                  <q-item-label v-show="!server.reachable" class="text-red"
+                    >This server is not available
+                  </q-item-label>
+                </q-item-section>
+                <q-item-section avatar>
+                  <div class="flex items-center">
+                    <label>LLama.cpp api</label>
+                    <q-toggle
+                      @update:model-value="checkServersAvailability()"
+                      v-model="server.OpenAI_API"
+                      color="primary"
+                      label="OpenAI API"
+                    />
+                  </div>
                 </q-item-section>
               </q-item>
             </q-list>
+            <div class="flex column bg-grey-3 q-pa-sm">
+              <div class="flex no-wrap justify-between items-center">
+                <div class="flex" style="gap: 10px">
+                  <q-input
+                    v-model="config.customServer.name"
+                    label="Add Server Name"
+                  />
+                  <q-input
+                    v-model="config.customServer.url"
+                    label="Add Server Url"
+                    @update:model-value="checkCustomServerAvailability()"
+                  />
+                  <div class="flex items-center">
+                    <label>LLama.cpp api</label>
+                    <q-toggle
+                      @update:model-value="
+                        config.customServer.OpenAI_API =
+                          !config.customServer.OpenAI_API;
+                        checkCustomServerAvailability();
+                      "
+                      :model-value="config.customServer.OpenAI_API"
+                      color="primary"
+                      label="OpenAI API"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div class="full-width flex justify-end" style="gap: 10px">
+                <q-btn
+                  color="primary"
+                  :disable="
+                    config.customServer.url === '' ||
+                    config.customServer.name === ''
+                  "
+                  label="Save"
+                  @click="saveServer()"
+                />
+              </div>
+            </div>
+
             <q-input
               v-if="config.servers.length > 10"
               v-model="searchServer"
               label="Search Server"
-            />
-          </div>
-
-          <div class="flex items-center">
-            <label>LLama.cpp api</label>
-            <q-toggle
-              v-model="config.OpenAI_API"
-              color="primary"
-              label="OpenAI API"
             />
           </div>
         </q-page>

@@ -1,29 +1,42 @@
 import * as axios from "boot/axios";
 
 export let config = {
-  OpenAI_API: true,
-
   servers: [
-    { name: "llama-server", url: axios.llamaHost },
+    {
+      name: "llama-server",
+      url: axios.llamaHost,
+      OpenAI_API: true,
+      reachable: false,
+    },
     {
       name: "fornasiere-llama-server",
       url: axios.llamaHostAlt,
+      OpenAI_API: true,
+      reachable: false,
     },
     {
       name: "Mixtral",
       url: "http://147.189.192.41:8080",
+      OpenAI_API: false,
+      reachable: false,
     },
   ],
-  selectedServer: { name: "llama-server", url: axios.llamaHost },
+
+  selectedServer: {
+    url: axios.llamaHost,
+  },
   customServer: {
     name: "",
     url: "",
+    OpenAI_API: false,
+    reachable: false,
   },
 };
 
 export function getTemplate() {
   return axios.api.get("/get_template");
 }
+
 export function applyTemplate(
   template,
   userMessage,
@@ -35,6 +48,7 @@ export function applyTemplate(
     .replace("{prompt}", userMessage)
     .replace("{completion_init}", completionInit);
 }
+
 export function setProperties(task, properties) {
   return axios.api.post("/set_properties/" + task, properties);
 }
@@ -67,7 +81,7 @@ export function askLLM(body) {
 export function buildLLMUrl() {
   return (
     config.selectedServer.url +
-    (config.OpenAI_API ? "/v1/completions" : "/completion")
+    (config.selectedServer.OpenAI_API ? "/v1/completions" : "/completion")
   );
 }
 
@@ -81,11 +95,40 @@ function mapLLMAnswer(response) {
   return res;
 }
 
+export function saveServer() {
+  config.servers.push(config.customServer);
+  config.customServer = {
+    name: "",
+    url: "",
+    OpenAI_API: false,
+    reachable: false,
+  };
+}
+
+export function checkCustomServerAvailability() {
+  if (config.customServer.url === "") return;
+  console.log(
+    config.customServer.url + (config.customServer.OpenAI_API ? "/docs" : "")
+  );
+  axios.api
+    .get(
+      config.customServer.url + (config.customServer.OpenAI_API ? "/docs" : "")
+    )
+    .then(() => (config.customServer.reachable = true))
+    .catch((err) => {
+      console.log(err, err.code, err.code === "ERR_NETWORK");
+      config.customServer.reachable = err.code !== "ERR_NETWORK";
+    });
+}
+
 export function checkServersAvailability() {
-  for (let server of this.servers) {
+  for (let server of config.servers) {
     axios.api
-      .get(server.url + "/docs")
+      .get(server.url + (server.OpenAI_API ? "/docs" : ""))
       .then(() => (server.reachable = true))
-      .catch(() => (server.reachable = false));
+      .catch((err) => {
+        console.log(err, err.code, err.code === "ERR_NETWORK");
+        server.reachable = err.code !== "ERR_NETWORK";
+      });
   }
 }

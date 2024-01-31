@@ -14,7 +14,14 @@ import SaveDialog from "components/MedicalInformationExtraction/TasksDialog.vue"
 export default {
   name: "TimelineExtraction",
   components: { PromptComponent },
-  props: { doc: String },
+  props: { doc: String, show: Boolean },
+  watch: {
+    show: function (val) {
+      this.$nextTick(() => {
+        this.$refs.timelinePromptComponent.updateHeights();
+      });
+    },
+  },
 
   mounted() {
     getProperties("timeline").then((response) => {
@@ -156,6 +163,7 @@ export default {
           console.log("OK");
           getProperties(taskName).then((response) => {
             this.timeline.timelineProp = JSON.parse(response.data);
+            this.$refs.timelinePromptComponent.updateHeights();
           });
         })
         .onCancel(() => {

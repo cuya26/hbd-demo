@@ -3,6 +3,7 @@ import { ref } from "vue";
 
 export default {
   name: "PromptComponent",
+  expose: ["updateHeights"],
   props: {
     template: String,
     answer: String,
@@ -64,6 +65,12 @@ export default {
   ],
 
   methods: {
+    updateHeights() {
+      this.adjustHeight(this.$refs.systemMessage);
+      this.adjustHeight(this.$refs.userMessage);
+      this.adjustHeight(this.$refs.completionInit);
+      this.adjustHeight(this.$refs.answer);
+    },
     adjustHeight(element) {
       if (!element) return;
       element.style.height = 0 + "px";
@@ -272,6 +279,7 @@ export default {
                 ref="systemMessage"
                 placeholder="System message"
                 :value="this.systemMessage"
+                @focusin="adjustHeight($event.target)"
                 @input="
                   $emit('update:systemMessage', $event.target.value);
                   adjustHeight($event.target);
@@ -285,6 +293,7 @@ export default {
                 style="resize: none"
                 ref="userMessage"
                 :value="this.userMessage"
+                @focusin="adjustHeight($event.target)"
                 @input="
                   $emit('update:userMessage', $event.target.value);
                   adjustHeight($event.target);
@@ -298,6 +307,7 @@ export default {
                 style="resize: none"
                 ref="completionInit"
                 placeholder="Completion init"
+                @focusin="adjustHeight($event.target)"
                 :value="this.completionInit"
                 @input="
                   $emit('update:completionInit', $event.target.value);
@@ -328,6 +338,7 @@ export default {
               resize: none;
             "
             :value="this.answer"
+            @focusin="adjustHeight($event.target)"
             @input="
               $emit('update:answer', $event.target.value);
               adjustHeight($event.target);

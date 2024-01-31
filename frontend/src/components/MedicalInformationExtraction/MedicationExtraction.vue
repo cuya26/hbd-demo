@@ -4,6 +4,14 @@ import { useQuasar } from "quasar";
 import { ref } from "vue";
 import InformationSourceLocalization from "components/MedicalInformationExtraction/InformationSourceLocalization.vue";
 import SaveDialog from "components/MedicalInformationExtraction/TasksDialog.vue";
+import {
+  applyTemplate,
+  askLLM,
+  getProperties,
+  getTasks,
+  getTemplate,
+  setProperties,
+} from "components/MedicalInformationExtraction/utils";
 
 // prettier-ignore
 const columns = [
@@ -14,19 +22,17 @@ const columns = [
   {name: "lines", label: "Lines", field: "lines", align: "left", sortable: false},
 ]
 
-import {
-  applyTemplate,
-  askLLM,
-  getProperties,
-  getTasks,
-  getTemplate,
-  setProperties,
-} from "components/MedicalInformationExtraction/utils";
-
 export default {
   name: "MedicationExtraction",
   components: { PromptComponent },
-  props: { doc: String },
+  props: { doc: String, show: Boolean },
+  watch: {
+    show: function (val) {
+      this.$nextTick(function () {
+        this.$refs.medExtPromptComponent.updateHeights();
+      });
+    },
+  },
 
   mounted() {
     getProperties("medExt").then((response) => {
@@ -202,6 +208,7 @@ export default {
           console.log("OK");
           getProperties(taskName).then((response) => {
             this.medExt.medExtProp = JSON.parse(response.data);
+            this.$refs.medExtPromptComponent.updateHeights();
           });
         })
         .onCancel(() => {
