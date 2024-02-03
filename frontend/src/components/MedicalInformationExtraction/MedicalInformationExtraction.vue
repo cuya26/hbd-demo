@@ -21,7 +21,7 @@ export default {
   },
   data() {
     return {
-      page: ref("Timeline extraction"),
+      page: ref("Medication Extraction"),
       mini: ref(true),
       config: ref(config),
       searchServer: ref(""),
