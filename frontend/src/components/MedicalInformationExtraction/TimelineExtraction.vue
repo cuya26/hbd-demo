@@ -10,6 +10,7 @@ import {
   setProperties,
 } from "components/MedicalInformationExtraction/utils";
 import SaveDialog from "components/MedicalInformationExtraction/TasksDialog.vue";
+import ISLTimeline from "components/MedicalInformationExtraction/ISLTimeline.vue";
 
 export default {
   name: "TimelineExtraction",
@@ -24,7 +25,7 @@ export default {
   },
 
   mounted() {
-    getProperties("timeline").then((response) => {
+    getProperties(this.timeline.taskName).then((response) => {
       this.timeline.timelineProp = JSON.parse(response.data);
     });
     getProperties("timelineFix").then((response) => {
@@ -39,7 +40,7 @@ export default {
       tasks: [],
       template: ref(""),
       timeline: {
-        taskName: "timeline",
+        taskName: "ISLTimelineIta",
         timelineProp: ref({}),
         timelineFixProp: ref({}),
         fixAnswer: {
@@ -48,19 +49,12 @@ export default {
 
         brokenOutput: false,
         loading: ref(false),
-        times: [{}],
+        times: [],
         answer: "",
       },
     };
   },
   methods: {
-    saveTimeline() {
-      setProperties("timeline", this.timeline.timelineProp);
-    },
-    saveTimelineFix() {
-      setProperties("timelineFix", this.timeline.timelineFixProp);
-    },
-
     checkNExtractTimeline() {
       let str1 = JSON.stringify(this.timeline.times);
       let str2 = JSON.stringify(this.parseTimelineAnswer(this.timeline.answer));
@@ -69,25 +63,6 @@ export default {
       } else {
         this.timeline.times = this.parseTimelineAnswer(this.timeline.answer);
       }
-    },
-
-    async fixTimelineAnswer() {
-      let brokenAnswer = this.timeline.answer;
-      let fixPrompt = applyTemplate(
-        this.template,
-        this.timeline.timelineFixProp.userMessage,
-        this.timeline.timelineFixProp.systemMessage,
-        this.timeline.timelineFixProp.completionInit
-      ).replace("{text}", brokenAnswer);
-
-      this.timeline.loading = true;
-      let answer = await askLLM(this.buildLLMUrl(), {
-        prompt: fixPrompt,
-        ...this.timeline.timelineFixProp.modelParameters,
-      });
-      this.timeline.loading = false;
-      this.timeline.times = this.parseTimelineAnswer(answer);
-      this.timeline.answer = answer;
     },
 
     parseTimelineAnswer(answer) {
@@ -113,8 +88,12 @@ export default {
         this.timeline.timelineProp.completionInit
       );
       let parameters = this.timeline.timelineProp.modelParameters;
+      let file = this.doc.split("\n");
+      for (let i = 0; i < file.length; i++) {
+        file[i] = ("" + i).padStart(4, " ") + "| " + file[i];
+      }
       askLLM({
-        prompt: prompt.replace("{file}", this.doc),
+        prompt: prompt.replace("{file}", file),
         ...parameters,
       })
         .then((text) => {
@@ -181,6 +160,29 @@ export default {
           console.log("Cancel");
         });
     },
+    openInformationSourceLocalization() {
+      this.$q
+        .dialog({
+          component: ISLTimeline,
+          fullWidth: true,
+          fullHeight: true,
+          // props forwarded to your custom component
+          componentProps: {
+            timeline: this.timeline.times,
+            text: this.doc,
+            // ...more..props...
+          },
+        })
+        .onOk(() => {
+          console.log("OK");
+        })
+        .onCancel(() => {
+          console.log("Cancel");
+        })
+        .onDismiss(() => {
+          console.log("Called on OK or Cancel");
+        });
+    },
   },
 };
 </script>
@@ -201,7 +203,8 @@ export default {
 
       <q-timeline layout="comfortable" side="right" color="secondary">
         <q-timeline-entry heading>Timeline</q-timeline-entry>
-
+        <q-timeline-entry v-if="timeline.times.length === 0">
+        </q-timeline-entry>
         <q-timeline-entry
           v-for="time in timeline.times"
           :key="time"
@@ -217,13 +220,20 @@ export default {
       </q-timeline>
       <div class="q-pa-lg">
         <div class="flex justify-between">
-          <div class="flex">
-            <q-btn
-              class="q-ma-sm"
-              color="primary"
-              @click="checkNExtractTimeline()"
-              >Extract timeline
-            </q-btn>
+          <div class="flex justify-between">
+            <div class="flex items-center" style="gap: 0.8em">
+              <q-btn
+                class="q-ma-sm"
+                color="primary"
+                @click="checkNExtractTimeline()"
+                >Extract timeline
+              </q-btn>
+              <q-btn
+                v-if="timeline.times.length > 0"
+                @click="this.openInformationSourceLocalization"
+                >See source localization
+              </q-btn>
+            </div>
 
             <!--            <q-btn-dropdown-->
             <!--              :disable-main-btn="!timeline.brokenOutput"-->

@@ -8,11 +8,11 @@ export default {
     setTimeout(() => {
       this.$refs.text.innerHTML = this.text;
     });
+    console.log(this.timeline);
   },
   methods: {
-    highlightLine(props) {
-      let rowIndex = props.rowIndex;
-      let lines = this.rows[rowIndex].lines;
+    highlightLine(start, end) {
+      let lines = [start, end];
       if (lines.length > 1) {
         lines = [...Array(lines[1] - lines[0] + 1).keys()].map(
           (i) => i + lines[0]
@@ -62,8 +62,7 @@ export default {
   },
 
   props: {
-    rows: [],
-    columns: [],
+    timeline: [],
     text: String,
   },
 
@@ -89,34 +88,26 @@ export default {
           ></div>
         </q-card>
         <q-card bordered class="bg-grey-2 col">
-          <q-table
-            class="col col-grow"
-            title="Medications"
-            :rows="rows"
-            :columns="columns"
-            row-key="name"
-            :rows-per-page-options="[0, 10, 20, 30]"
-          >
-            <template v-slot:body="props">
-              <q-tr :props="props" @mouseenter="highlightLine(props)">
-                <q-td key="name" :props="props">
-                  {{ props.row.name }}
-                </q-td>
-                <q-td key="dose" :props="props">
-                  {{ props.row.dose }}
-                </q-td>
-                <q-td key="frequency" :props="props">
-                  {{ props.row.frequency }}
-                </q-td>
-                <q-td key="route" :props="props">
-                  {{ props.row.route }}
-                </q-td>
-                <q-td key="lines" :props="props">
-                  {{ props.row.lines }}
-                </q-td>
-              </q-tr>
-            </template>
-          </q-table>
+          <q-timeline layout="comfortable" side="right" color="secondary">
+            <q-timeline-entry heading>Timeline</q-timeline-entry>
+
+            <q-timeline-entry
+              v-for="time in timeline"
+              :key="time"
+              :subtitle="time.time"
+              :title="time.title"
+              @mouseenter="
+                highlightLine(time.line_range.start, time.line_range.end)
+              "
+              @mouseleave="highlightLine(-1, -1)"
+            >
+              <ul>
+                <li v-for="event in time.events" :key="event">
+                  {{ event }}
+                </li>
+              </ul>
+            </q-timeline-entry>
+          </q-timeline>
         </q-card>
       </div>
       <q-card-actions align="right">

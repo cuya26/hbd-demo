@@ -110,6 +110,7 @@ export default {
 [/INST]
 {completion_init}
 `,
+        `{system_message} USER: {prompt} ASSISTANT: {completion_init}`,
       ],
       modelParameters: {
         max_tokens: {
