@@ -1,8 +1,12 @@
 <script>
+import { ref } from "vue";
+
 export default {
   name: "InformationSourceLocalization",
   data() {
-    return {};
+    return {
+      highlightTimer: ref(null),
+    };
   },
   mounted() {
     setTimeout(() => {
@@ -11,7 +15,7 @@ export default {
     console.log(this.timeline);
   },
   methods: {
-    highlightLine(start, end) {
+    setHighlighting(start, end) {
       let lines = [start, end];
       if (lines.length > 1) {
         lines = [...Array(lines[1] - lines[0] + 1).keys()].map(
@@ -19,12 +23,29 @@ export default {
         );
       }
       let highlightedText = this.text.split("\n");
-      lines.forEach((line) => {
-        highlightedText[
-          line
-        ] = `<span highlight="true">${highlightedText[line]}</span>`;
+      lines.forEach((line, index) => {
+        highlightedText[line] = `<span ${
+          index === 0 ? 'id="firstLine"' : ""
+        } highlight="true">${highlightedText[line]}</span>`;
       });
       this.$refs.text.innerHTML = highlightedText.join("\n");
+
+      this.$nextTick(() => {
+        let firstLine = document.getElementById("firstLine");
+        if (firstLine) {
+          firstLine.scrollIntoView();
+        }
+      });
+    },
+    clearHighlighting() {
+      this.setHighlighting(-1, -1);
+    },
+    highlightLine(start, end) {
+      this.clearHighlighting();
+      this.setHighlighting(start, end);
+      setTimeout(() => {
+        this.clearHighlighting();
+      }, 10000);
     },
     // following method is REQUIRED
     // (don't change its name --> "show")
@@ -88,6 +109,10 @@ export default {
           ></div>
         </q-card>
         <q-card bordered class="bg-grey-2 col">
+          <h6 class="text-h6 q-my-sm q-pa-md">
+            Click on timeline point to see source
+          </h6>
+
           <q-timeline layout="comfortable" side="right" color="secondary">
             <q-timeline-entry heading>Timeline</q-timeline-entry>
 
@@ -96,10 +121,7 @@ export default {
               :key="time"
               :subtitle="time.time"
               :title="time.title"
-              @mouseenter="
-                highlightLine(time.line_range.start, time.line_range.end)
-              "
-              @mouseleave="highlightLine(-1, -1)"
+              @click="highlightLine(time.line_range.start, time.line_range.end)"
             >
               <ul>
                 <li v-for="event in time.events" :key="event">

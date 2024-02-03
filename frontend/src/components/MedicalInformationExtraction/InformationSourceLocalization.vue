@@ -10,21 +10,42 @@ export default {
     });
   },
   methods: {
-    highlightLine(props) {
-      let rowIndex = props.rowIndex;
-      let lines = this.rows[rowIndex].lines;
+    setHighlighting(start, end) {
+      let lines = [start, end];
+      if (!end) lines = [start];
       if (lines.length > 1) {
         lines = [...Array(lines[1] - lines[0] + 1).keys()].map(
           (i) => i + lines[0]
         );
       }
+
       let highlightedText = this.text.split("\n");
-      lines.forEach((line) => {
-        highlightedText[
-          line
-        ] = `<span highlight="true">${highlightedText[line]}</span>`;
+      lines.forEach((line, index) => {
+        highlightedText[line] = `<span ${
+          index === 0 ? 'id="firstLine"' : ""
+        } highlight="true">${highlightedText[line]}</span>`;
       });
       this.$refs.text.innerHTML = highlightedText.join("\n");
+      this.$nextTick(() => {
+        let firstLine = document.getElementById("firstLine");
+        if (firstLine) {
+          firstLine.scrollIntoView();
+        }
+      });
+    },
+    clearHighlighting() {
+      this.setHighlighting(-1, -1);
+    },
+    highlightLine(props) {
+      let rowIndex = props.rowIndex;
+      let lines = this.rows[rowIndex].lines;
+      console.log(lines);
+
+      this.clearHighlighting();
+      this.setHighlighting(lines[0], lines[1]);
+      setTimeout(() => {
+        this.clearHighlighting();
+      }, 10000);
     },
     // following method is REQUIRED
     // (don't change its name --> "show")
@@ -89,6 +110,8 @@ export default {
           ></div>
         </q-card>
         <q-card bordered class="bg-grey-2 col">
+          <h6 class="text-h6 q-my-sm q-pa-md">Click on row to see source</h6>
+
           <q-table
             class="col col-grow"
             title="Medications"
@@ -98,7 +121,7 @@ export default {
             :rows-per-page-options="[0, 10, 20, 30]"
           >
             <template v-slot:body="props">
-              <q-tr :props="props" @mouseenter="highlightLine(props)">
+              <q-tr :props="props" @click="highlightLine(props)">
                 <q-td key="name" :props="props">
                   {{ props.row.name }}
                 </q-td>

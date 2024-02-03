@@ -35,7 +35,7 @@ export default {
   },
 
   mounted() {
-    getProperties("medExt").then((response) => {
+    getProperties(this.medExt.taskName).then((response) => {
       this.medExt.medExtProp = JSON.parse(response.data);
     });
     getProperties("medExtFix").then((response) => {
@@ -57,7 +57,7 @@ export default {
         fixAnswer: {
           fixPromptDialog: ref(false),
         },
-        taskName: "medExt",
+        taskName: "medExtIta",
         medExtFixProp: ref({}),
         medExtProp: ref({}),
         brokenOutput: false,
