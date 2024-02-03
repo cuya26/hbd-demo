@@ -66,6 +66,9 @@ export default {
     },
 
     parseTimelineAnswer(answer) {
+      if (answer.endsWith("\`\`\`")) {
+        answer = answer.slice(0, -3);
+      }
       let res = [];
       this.timeline.brokenOutput = false;
       try {
@@ -73,7 +76,7 @@ export default {
       } catch (e) {
         console.log("error parsing timeline answer");
         this.timeline.brokenOutput = true;
-        res = [{}];
+        res = [];
       }
       return res;
     },
