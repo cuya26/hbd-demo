@@ -175,6 +175,7 @@ export default {
           console.log("error parsing medext answer", line);
         }
       }
+      console.log(table);
       return table;
     },
     openLoadDialog(save = true) {
@@ -278,7 +279,7 @@ export default {
         title="Medications"
         :rows="
           medExt.table.rows.length > 0
-            ? medExt.table.rows.length
+            ? medExt.table.rows
             : [
                 {
                   name: 'No Data',

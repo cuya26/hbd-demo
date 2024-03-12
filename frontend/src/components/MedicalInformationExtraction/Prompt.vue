@@ -66,7 +66,6 @@ export default {
 
   methods: {
     openAccordion() {
-      console.log("aaa");
       setTimeout(() => this.updateHeights(), 100);
     },
 
