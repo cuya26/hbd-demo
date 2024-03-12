@@ -3,8 +3,6 @@ import { ref } from "vue";
 import MedicationExtraction from "components/MedicalInformationExtraction/MedicationExtraction.vue";
 import TimelineExtraction from "components/MedicalInformationExtraction/TimelineExtraction.vue";
 import {
-  checkCustomServerAvailability,
-  checkServersAvailability,
   config,
   saveServer,
 } from "components/MedicalInformationExtraction/utils";
@@ -17,7 +15,6 @@ export default {
   props: ["doc"],
 
   mounted() {
-    checkServersAvailability();
   },
   data() {
     return {
@@ -28,9 +25,7 @@ export default {
     };
   },
   methods: {
-    checkCustomServerAvailability,
     saveServer,
-    checkServersAvailability,
   },
 };
 </script>
@@ -139,15 +134,11 @@ export default {
                 <q-item-section>
                   <q-item-label title>{{ server.name }}</q-item-label>
                   <q-item-label caption>{{ server.url }}</q-item-label>
-                  <q-item-label v-show="!server.reachable" class="text-red"
-                    >This server is not available
-                  </q-item-label>
                 </q-item-section>
                 <q-item-section avatar>
                   <div class="flex items-center">
                     <label>LLama.cpp api</label>
                     <q-toggle
-                      @update:model-value="checkServersAvailability()"
                       v-model="server.OpenAI_API"
                       color="primary"
                       label="OpenAI API"
@@ -166,7 +157,6 @@ export default {
                   <q-input
                     v-model="config.customServer.url"
                     label="Add Server Url"
-                    @update:model-value="checkCustomServerAvailability()"
                   />
                   <div class="flex items-center">
                     <label>LLama.cpp api</label>
@@ -174,7 +164,6 @@ export default {
                       @update:model-value="
                         config.customServer.OpenAI_API =
                           !config.customServer.OpenAI_API;
-                        checkCustomServerAvailability();
                       "
                       :model-value="config.customServer.OpenAI_API"
                       color="primary"

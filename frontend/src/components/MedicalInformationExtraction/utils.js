@@ -6,19 +6,16 @@ export let config = {
       name: "polimi-llama-server",
       url: axios.llamaHost,
       OpenAI_API: true,
-      reachable: false,
     },
     {
       name: "fornasiere-llama-server",
       url: axios.llamaHostAlt,
       OpenAI_API: true,
-      reachable: false,
     },
     {
       name: "Mixtral",
       url: "http://147.189.192.41:8080",
       OpenAI_API: false,
-      reachable: false,
     },
   ],
 
@@ -26,13 +23,11 @@ export let config = {
     name: "llama-server",
     url: axios.llamaHost,
     OpenAI_API: true,
-    reachable: false,
   },
   customServer: {
     name: "",
     url: "",
     OpenAI_API: false,
-    reachable: false,
   },
 };
 
@@ -111,31 +106,31 @@ export function saveServer() {
     reachable: false,
   };
 }
-
-export function checkCustomServerAvailability() {
-  if (config.customServer.url === "") return;
-  console.log(
-    config.customServer.url + (config.customServer.OpenAI_API ? "/docs" : "")
-  );
-  axios.api
-    .get(
-      config.customServer.url + (config.customServer.OpenAI_API ? "/docs" : "")
-    )
-    .then(() => (config.customServer.reachable = true))
-    .catch((err) => {
-      console.log(err, err.code, err.code === "ERR_NETWORK");
-      config.customServer.reachable = err.code !== "ERR_NETWORK";
-    });
-}
-
-export function checkServersAvailability() {
-  for (let server of config.servers) {
-    axios.api
-      .get(server.url + (server.OpenAI_API ? "/docs" : ""))
-      .then(() => (server.reachable = true))
-      .catch((err) => {
-        console.log(err, err.code, err.code === "ERR_NETWORK");
-        server.reachable = err.code !== "ERR_NETWORK";
-      });
-  }
-}
+//
+// export function checkCustomServerAvailability() {
+//   if (config.customServer.url === "") return;
+//   console.log(
+//     config.customServer.url + (config.customServer.OpenAI_API ? "/docs" : "")
+//   );
+//   axios.api
+//     .get(
+//       config.customServer.url + (config.customServer.OpenAI_API ? "/docs" : "")
+//     )
+//     .then(() => (config.customServer.reachable = true))
+//     .catch((err) => {
+//       console.log(err, err.code, err.code === "ERR_NETWORK");
+//       config.customServer.reachable = err.code !== "ERR_NETWORK";
+//     });
+// }
+//
+// export function checkServersAvailability() {
+//   for (let server of config.servers) {
+//     axios.api
+//       .get(server.url + (server.OpenAI_API ? "/docs" : ""))
+//       .then(() => (server.reachable = true))
+//       .catch((err) => {
+//         console.log(err, err.code, err.code === "ERR_NETWORK");
+//         server.reachable = err.code !== "ERR_NETWORK";
+//       });
+//   }
+// }
