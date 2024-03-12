@@ -131,7 +131,6 @@ export default {
                 v-ripple
                 @click="
                   config.selectedServer = server;
-                  console.log(config.selectedServer);
                 "
               >
                 <q-item-section>
