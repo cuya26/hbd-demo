@@ -14,8 +14,7 @@ export default {
   components: { TimelineExtraction, MedicationExtraction },
   props: ["doc"],
 
-  mounted() {
-  },
+  mounted() {},
   data() {
     return {
       page: ref("Medication Extraction"),
@@ -32,7 +31,11 @@ export default {
 
 <template>
   <div class="full-height">
-    <q-layout view="hHh Lpr lff" container class="shadow-2 rounded-borders">
+    <q-layout
+      view="hHh Lpr lff"
+      container
+      class="shadow-2 full-height rounded-borders"
+    >
       <q-header elevated class="bg-primary">
         <q-toolbar>
           <q-btn flat @click="mini = !mini" round dense icon="menu" />
@@ -94,13 +97,13 @@ export default {
       </q-drawer>
 
       <q-page-container>
-        <q-page v-show="page === 'Medication Extraction'" padding>
+        <q-page v-show="page === 'Medication Extraction'" class="full-height">
           <medication-extraction
             :doc="doc"
             :show="page === 'Medication Extraction'"
           ></medication-extraction>
         </q-page>
-        <q-page v-show="page === 'Timeline extraction'" padding>
+        <q-page v-show="page === 'Timeline extraction'">
           <timeline-extraction
             :doc="doc"
             :show="page === 'Timeline extraction'"
@@ -163,7 +166,7 @@ export default {
                     <q-toggle
                       @update:model-value="
                         config.customServer.OpenAI_API =
-                          !config.customServer.OpenAI_API;
+                          !config.customServer.OpenAI_API
                       "
                       :model-value="config.customServer.OpenAI_API"
                       color="primary"

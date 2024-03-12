@@ -191,7 +191,10 @@ export default {
 </script>
 
 <template>
-  <q-card class="full-height column full-width no-wrap">
+  <div
+    id="child"
+    class="full-height q-pa-md column justify-between full-width no-wrap"
+  >
     <div
       class="column no-wrap full-height overflow-hidden"
       style="height: 100%"
@@ -237,66 +240,6 @@ export default {
                 >See source localization
               </q-btn>
             </div>
-
-            <!--            <q-btn-dropdown-->
-            <!--              :disable-main-btn="!timeline.brokenOutput"-->
-            <!--              split-->
-            <!--              class="q-ma-sm"-->
-            <!--              color="secondary"-->
-            <!--              @click="fixTimelineAnswer()"-->
-            <!--              label="Fix structure with llm"-->
-            <!--            >-->
-            <!--              <q-list>-->
-            <!--                <q-item-->
-            <!--                  clickable-->
-            <!--                  v-close-popup-->
-            <!--                  @click="timeline.fixAnswer.fixPromptDialog = true"-->
-            <!--                >-->
-            <!--                  <q-item-section>-->
-            <!--                    <q-item-label>Edit fix prompt</q-item-label>-->
-            <!--                  </q-item-section>-->
-            <!--                </q-item>-->
-            <!--              </q-list>-->
-            <!--            </q-btn-dropdown>-->
-
-            <!--            <q-dialog v-model="timeline.fixAnswer.fixPromptDialog">-->
-            <!--              <q-card-->
-            <!--                style="width: 50%; height: 50%"-->
-            <!--                class="flex column justify-between"-->
-            <!--              >-->
-            <!--                <q-card-section>-->
-            <!--                  <prompt-component-->
-            <!--                    ref="fixPromptComponent"-->
-            <!--                    v-model:template="template"-->
-            <!--                    v-model:user-message="timeline.timelineFixProp.userMessage"-->
-            <!--                    v-model:completion-init="-->
-            <!--                      timeline.timelineFixProp.completionInit-->
-            <!--                    "-->
-            <!--                    v-model:system-message="-->
-            <!--                      timeline.timelineFixProp.systemMessage-->
-            <!--                    "-->
-            <!--                    v-model:model-settings="-->
-            <!--                      timeline.timelineFixProp.modelParameters-->
-            <!--                    "-->
-            <!--                    :enable-answer="false"-->
-            <!--                    :enable-send="false"-->
-            <!--                  >-->
-            <!--                  </prompt-component>-->
-            <!--                </q-card-section>-->
-
-            <!--                &lt;!&ndash; Notice v-close-popup &ndash;&gt;-->
-            <!--                <q-card-actions align="right">-->
-            <!--                  <q-btn flat label="Cancel" color="primary" v-close-popup />-->
-            <!--                  <q-btn-->
-            <!--                    flat-->
-            <!--                    label="Save"-->
-            <!--                    color="primary"-->
-            <!--                    @click="saveTimelineFix()"-->
-            <!--                    v-close-popup-->
-            <!--                  />-->
-            <!--                </q-card-actions>-->
-            <!--              </q-card>-->
-            <!--            </q-dialog>-->
           </div>
           <div class="flex items-center" style="gap: 0.8em">
             <q-btn class="" @click="loadMedExt">Load Settings</q-btn>
@@ -304,22 +247,27 @@ export default {
           </div>
         </div>
       </div>
-      <div>
-        <prompt-component
-          ref="timelinePromptComponent"
-          v-model:template="template"
-          v-model:answer="timeline.answer"
-          v-model:system-message="timeline.timelineProp.systemMessage"
-          v-model:user-message="timeline.timelineProp.userMessage"
-          v-model:completion-init="timeline.timelineProp.completionInit"
-          v-model:model-settings="timeline.timelineProp.modelParameters"
-          @askLLM="extractTimeline"
-          @clear-output="timeline.answer = ''"
-          @answer-changed="timeline.answer = $event"
-        ></prompt-component>
-      </div>
     </div>
-  </q-card>
+
+    <div>
+      <prompt-component
+        ref="timelinePromptComponent"
+        v-model:template="template"
+        v-model:answer="timeline.answer"
+        v-model:system-message="timeline.timelineProp.systemMessage"
+        v-model:user-message="timeline.timelineProp.userMessage"
+        v-model:completion-init="timeline.timelineProp.completionInit"
+        v-model:model-settings="timeline.timelineProp.modelParameters"
+        @askLLM="extractTimeline"
+        @clear-output="timeline.answer = ''"
+        @answer-changed="timeline.answer = $event"
+      ></prompt-component>
+    </div>
+  </div>
 </template>
 
-<style scoped lang="sass"></style>
+<style scoped lang="scss">
+#child {
+  min-height: inherit;
+}
+</style>

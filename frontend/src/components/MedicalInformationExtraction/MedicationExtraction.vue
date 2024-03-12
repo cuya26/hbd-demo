@@ -1,7 +1,8 @@
 <script>
-import PromptComponent from "./Prompt.vue";
 import { useQuasar } from "quasar";
 import { ref } from "vue";
+import PromptComponent from "./Prompt.vue";
+
 import InformationSourceLocalization from "components/MedicalInformationExtraction/InformationSourceLocalization.vue";
 import SaveDialog from "components/MedicalInformationExtraction/TasksDialog.vue";
 import {
@@ -259,178 +260,149 @@ export default {
 </script>
 
 <template>
-  <div class="column full-height q-ma-none no-wrap">
-    <div
-      v-if="medExt.loading === true"
-      class="absolute-top-left bg-grey-3 row justify-center items-center"
-      style="height: 100%; width: 100%; z-index: 10; opacity: 50%"
-    >
-      <q-spinner-gears color="primary" size="8em" />
-    </div>
-    <q-table
-      class="col col-grow"
-      title="Medications"
-      :rows="medExt.table.rows"
-      :columns="medExt.table.columns"
-      row-key="name"
-      :rows-per-page-options="[0, 10, 20, 30]"
-    >
-      <template v-slot:top>
-        <div class="col-2 q-table__title">Medications</div>
-        <q-space />
-        <q-input v-model="separator" label="Separator" dense />
-      </template>
-      <template v-slot:body="props">
-        <q-tr :props="props">
-          <q-td key="name" :props="props">
-            {{ props.row.name }}
-            <q-popup-edit
-              :disable="!editableTable"
-              v-model="props.row.name"
-              v-slot="scope"
-            >
-              <q-input
-                v-model="scope.value"
-                dense
-                autofocus
-                title="Update Name"
-                @keyup.enter="scope.set"
-              />
-            </q-popup-edit>
-          </q-td>
-          <q-td key="dose" :props="props">
-            {{ props.row.dose }}
-            <q-popup-edit
-              :disable="!editableTable"
-              v-model="props.row.dose"
-              v-slot="scope"
-            >
-              <q-input
-                v-model="scope.value"
-                dense
-                autofocus
-                title="Update dosage"
-                @keyup.enter="scope.set"
-              />
-            </q-popup-edit>
-          </q-td>
-          <q-td key="frequency" :props="props">
-            {{ props.row.frequency }}
-            <q-popup-edit
-              :disable="!editableTable"
-              v-model="props.row.frequency"
-              v-slot="scope"
-            >
-              <q-input
-                v-model="scope.value"
-                dense
-                autofocus
-                title="Update dosage"
-                @keyup.enter="scope.set"
-              />
-            </q-popup-edit>
-          </q-td>
-          <q-td key="route" :props="props">
-            {{ props.row.route }}
-            <q-popup-edit
-              :disable="!editableTable"
-              v-model="props.row.route"
-              v-slot="scope"
-            >
-              <q-input
-                v-model="scope.value"
-                dense
-                autofocus
-                title="Update dosage"
-                @keyup.enter="scope.set"
-              />
-            </q-popup-edit>
-          </q-td>
-        </q-tr>
-      </template>
-    </q-table>
-    <div class="flex justify-between q-py-sm">
-      <div class="flex items-center" style="gap: 0.8em">
-        <q-btn class="" color="primary" @click="checkNExtractMeds()"
-          >Extract medications
-        </q-btn>
-
-        <!--        <q-btn-dropdown-->
-        <!--          :disable-main-btn="!medExt.brokenOutput"-->
-        <!--          split-->
-        <!--          color="secondary"-->
-        <!--          @click="fixMedExtAnswer()"-->
-        <!--          label="Fix structure with llm"-->
-        <!--        >-->
-        <!--          <q-list>-->
-        <!--            <q-item-->
-        <!--              clickable-->
-        <!--              v-close-popup-->
-        <!--              @click="medExt.fixAnswer.fixPromptDialog = true"-->
-        <!--            >-->
-        <!--              <q-item-section>-->
-        <!--                <q-item-label>Edit fix prompt</q-item-label>-->
-        <!--              </q-item-section>-->
-        <!--            </q-item>-->
-        <!--          </q-list>-->
-        <!--        </q-btn-dropdown>-->
-
-        <!--        <q-dialog v-model="medExt.fixAnswer.fixPromptDialog">-->
-        <!--          <q-card-->
-        <!--            style="width: 50%; height: 50%"-->
-        <!--            class="flex column justify-between"-->
-        <!--          >-->
-        <!--            <q-card-section>-->
-        <!--              <prompt-component-->
-        <!--                ref="fixPromptComponent"-->
-        <!--                v-model:template="template"-->
-        <!--                v-model:user-message="medExt.medExtFixProp.userMessage"-->
-        <!--                v-model:completion-init="medExt.medExtFixProp.completionInit"-->
-        <!--                v-model:system-message="medExt.medExtFixProp.systemMessage"-->
-        <!--                v-model:model-settings="medExt.medExtFixProp.modelParameters"-->
-        <!--                :enable-answer="false"-->
-        <!--                :enable-send="false"-->
-        <!--              >-->
-        <!--              </prompt-component>-->
-        <!--            </q-card-section>-->
-
-        <!--            &lt;!&ndash; Notice v-close-popup &ndash;&gt;-->
-        <!--            <q-card-actions align="right">-->
-        <!--              <q-btn flat label="Cancel" color="primary" v-close-popup />-->
-        <!--              <q-btn-->
-        <!--                flat-->
-        <!--                label="Save"-->
-        <!--                @click="saveMedExtFix()"-->
-        <!--                color="primary"-->
-        <!--                v-close-popup-->
-        <!--              />-->
-        <!--            </q-card-actions>-->
-        <!--          </q-card>-->
-        <!--        </q-dialog>-->
-        <q-toggle
-          v-show="medExt.table.rows.length > 0"
-          :model-value="editableTable"
-          @update:model-value="startEditingTable($event)"
-          color="primary"
-          icon="edit"
-          label="Edit table"
-        />
-        <q-btn
-          v-if="medExt.table.rows.length > 0"
-          @click="this.openInformationSourceLocalization"
-          >See source localization
-        </q-btn>
-        <q-btn v-if="editableTable" @click="sendLog('medExt')" class="q-ma-sm">
-          Save log
-        </q-btn>
+  <div
+    id="child"
+    class="q-pa-md full-height column flex q-ma-none no-wrap"
+    style="height: 100% !important; flex-shrink: 0"
+  >
+    <div>
+      <div
+        v-if="medExt.loading === true"
+        class="absolute-top-left bg-grey-3 row justify-center items-center"
+        style="height: 100%; width: 100%; z-index: 10; opacity: 50%"
+      >
+        <q-spinner-gears color="primary" size="8em" />
       </div>
+      <q-table
+        class="col col-grow"
+        title="Medications"
+        :rows="
+          medExt.table.rows.length > 0
+            ? medExt.table.rows.length
+            : [
+                {
+                  name: 'No Data',
+                  dose: '',
+                  frequency: '',
+                  route: '',
+                  lines: [],
+                },
+              ]
+        "
+        :columns="medExt.table.columns"
+        row-key="name"
+        :rows-per-page-options="[0, 10, 20, 30]"
+      >
+        <template v-slot:top>
+          <div class="col-2 q-table__title">Medications</div>
+          <q-space />
+          <q-input v-model="separator" label="Separator" dense />
+        </template>
+        <template v-slot:body="props">
+          <q-tr :props="props">
+            <q-td key="name" :props="props">
+              {{ props.row.name }}
+              <q-popup-edit
+                :disable="!editableTable"
+                v-model="props.row.name"
+                v-slot="scope"
+              >
+                <q-input
+                  v-model="scope.value"
+                  dense
+                  autofocus
+                  title="Update Name"
+                  @keyup.enter="scope.set"
+                />
+              </q-popup-edit>
+            </q-td>
+            <q-td key="dose" :props="props">
+              {{ props.row.dose }}
+              <q-popup-edit
+                :disable="!editableTable"
+                v-model="props.row.dose"
+                v-slot="scope"
+              >
+                <q-input
+                  v-model="scope.value"
+                  dense
+                  autofocus
+                  title="Update dosage"
+                  @keyup.enter="scope.set"
+                />
+              </q-popup-edit>
+            </q-td>
+            <q-td key="frequency" :props="props">
+              {{ props.row.frequency }}
+              <q-popup-edit
+                :disable="!editableTable"
+                v-model="props.row.frequency"
+                v-slot="scope"
+              >
+                <q-input
+                  v-model="scope.value"
+                  dense
+                  autofocus
+                  title="Update dosage"
+                  @keyup.enter="scope.set"
+                />
+              </q-popup-edit>
+            </q-td>
+            <q-td key="route" :props="props">
+              {{ props.row.route }}
+              <q-popup-edit
+                :disable="!editableTable"
+                v-model="props.row.route"
+                v-slot="scope"
+              >
+                <q-input
+                  v-model="scope.value"
+                  dense
+                  autofocus
+                  title="Update dosage"
+                  @keyup.enter="scope.set"
+                />
+              </q-popup-edit>
+            </q-td>
+          </q-tr>
+        </template>
+      </q-table>
+      <div class="flex justify-between q-py-sm">
+        <div class="flex items-center" style="gap: 0.8em">
+          <q-btn class="" color="primary" @click="checkNExtractMeds()"
+            >Extract medications
+          </q-btn>
+          <q-toggle
+            v-show="medExt.table.rows.length > 0"
+            :model-value="editableTable"
+            @update:model-value="startEditingTable($event)"
+            color="primary"
+            icon="edit"
+            label="Edit table"
+          />
+          <q-btn
+            v-if="medExt.table.rows.length > 0"
+            @click="this.openInformationSourceLocalization"
+            >See source localization
+          </q-btn>
+          <q-btn
+            v-if="editableTable"
+            @click="sendLog('medExt')"
+            class="q-ma-sm"
+          >
+            Save log
+          </q-btn>
+        </div>
 
-      <div class="flex items-center" style="gap: 0.8em">
-        <q-btn class="" @click="loadMedExt">Load Settings</q-btn>
-        <q-btn class="" @click="saveMedExt">Save Settings</q-btn>
+        <div class="flex items-center" style="gap: 0.8em">
+          <q-btn class="" @click="loadMedExt">Load Settings</q-btn>
+          <q-btn class="" @click="saveMedExt">Save Settings</q-btn>
+        </div>
       </div>
     </div>
-
+    <div class="col-grow">
+      <div class="col-grow"></div>
+    </div>
     <div>
       <prompt-component
         ref="medExtPromptComponent"
@@ -448,4 +420,8 @@ export default {
   </div>
 </template>
 
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+#child {
+  min-height: inherit;
+}
+</style>

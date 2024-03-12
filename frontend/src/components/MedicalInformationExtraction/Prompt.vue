@@ -65,6 +65,11 @@ export default {
   ],
 
   methods: {
+    openAccordion() {
+      console.log("aaa");
+      setTimeout(() => this.updateHeights(), 100);
+    },
+
     updateHeights() {
       this.adjustHeight(this.$refs.systemMessage);
       this.adjustHeight(this.$refs.userMessage);
@@ -147,6 +152,9 @@ export default {
     };
   },
   created() {},
+  beforeUpdate() {
+    this.updateHeights();
+  },
   mounted() {
     this.adjustHeight(this.$refs.systemMessage);
     this.adjustHeight(this.$refs.userMessage);
@@ -241,9 +249,9 @@ export default {
       <q-expansion-item
         icon="edit_note"
         label="Prompt"
+        @click="openAccordion()"
         header-class=""
         :group="accordion ? 'group' : null"
-        default-opened
       >
         <q-card>
           <div class="bg-grey-3 overflow-scroll column full-height">
