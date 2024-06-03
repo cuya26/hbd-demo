@@ -6,18 +6,23 @@ import {
   config,
   saveServer,
 } from "components/MedicalInformationExtraction/utils";
+import * as docs from "./documents.json";
 
-/* @formatter:on */
+let documents = Object.fromEntries(
+  Object.entries(docs).filter(([key]) => !key.includes("default"))
+);
+
 export default {
   name: "MedicalInformationExtraction",
 
   components: { TimelineExtraction, MedicationExtraction },
   props: ["doc"],
-
+  emits: ["update:doc"],
   mounted() {},
   data() {
     return {
-      page: ref("Medication Extraction"),
+      docs: documents,
+      page: ref("Documents"),
       mini: ref(true),
       config: ref(config),
       searchServer: ref(""),
@@ -90,7 +95,7 @@ export default {
                 <q-icon name="settings" />
               </q-item-section>
 
-              <q-item-section> Settings </q-item-section>
+              <q-item-section> Settings</q-item-section>
             </q-item>
             <q-item
               :active="page === 'Documents'"
@@ -102,7 +107,7 @@ export default {
                 <q-icon name="folder_open" />
               </q-item-section>
 
-              <q-item-section> Example Documents </q-item-section>
+              <q-item-section> Example Documents</q-item-section>
             </q-item>
           </q-list>
         </q-scroll-area>
@@ -213,7 +218,64 @@ export default {
             />
           </div>
         </q-page>
-        <q-page v-show="page === 'Documents'"> </q-page>
+        <q-page v-show="page === 'Documents'">
+          <div class="q-pa-md flex" style="gap: 10px">
+            <div
+              v-for="(value, language, index) in docs"
+              :key="index"
+              class="column full-width"
+            >
+              <q-separator></q-separator>
+              <h6 class="q-ma-none">{{ language }}</h6>
+              <div class="column full-width justify-around q-pa-md">
+                <div
+                  v-for="(value, task, index) in value"
+                  :key="index"
+                  class="q-mb-md"
+                >
+                  <h6 class="q-ma-none">{{ task }}</h6>
+                  <div
+                    class="flex full-width overflow-auto no-wrap"
+                    style="gap: 10px"
+                  >
+                    <q-card
+                      v-for="(value, name, index) in value"
+                      :key="index"
+                      style="min-width: 25%"
+                      class="my-card bg-secondary text-white"
+                    >
+                      <q-card-section>
+                        <div class="text-h6">
+                          {{
+                            value.text
+                              .substring(0, 40)
+                              .split(" ")
+                              .slice(0, 3)
+                              .join(" ")
+                          }}
+                        </div>
+                        <div class="text-subtitle2">
+                          {{ value.text.substring(0, 100) }}...
+                        </div>
+                      </q-card-section>
+
+                      <q-separator dark />
+
+                      <q-card-actions>
+                        <q-btn flat>Open</q-btn>
+                        <q-btn
+                          @click="this.$emit('update:doc', value.text)"
+                          flat
+                          >Use</q-btn
+                        >
+                      </q-card-actions>
+                    </q-card>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </q-page>
       </q-page-container>
     </q-layout>
   </div>

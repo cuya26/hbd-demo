@@ -1,0 +1,268 @@
+{
+  "it": {
+    "Medication extraction": [
+      {
+        "text": "Report Medico\nPaziente: Maria Rossi\nData: 27 Aprile 2024\nStoria Clinica\nMaria Rossi, 45 anni, si presenta con una storia di ipertensione e diabete di tipo 2 diagnosticati due anni fa. Attualmente è in trattamento con metformina 500 mg due volte al giorno per il diabete e valsartan 80 mg una volta al giorno per l'ipertensione.\n\nEsame Fisico\nDurante l'esame fisico, la paziente presenta una pressione arteriosa di 130/80 mmHg e una glicemia a digiuno di 120 mg/dL. Non sono presenti segni di insufficienza cardiaca o alterazioni polmonari.\n\nPianificazione Terapeutica\nDiabete\n\nContinuare con metformina 500 mg due volte al giorno.\nAggiungere sitagliptin 100 mg una volta al giorno dopo la colazione.\nMonitorare la glicemia a digiuno ogni settimana e regolare la terapia in base ai risultati.\nIpertensione\n\nContinuare con valsartan 80 mg una volta al giorno.\nAggiungere idroclorotiazide 12.5 mg una volta al giorno al mattino.\nRaccomandare una dieta iposodica e un aumento dell'attività fisica.\nDolore Cronico\n\nPrescrivere paracetamolo 500 mg in caso di dolore moderato, fino a 3 volte al giorno.\nOsteoporosi\n\nIniziare terapia con alendronato 70 mg una volta alla settimana.\nAnsia e Depressione\n\nConsultare uno psicologo per una valutazione approfondita.\nConsiderare la terapia farmacologica con sertralina 50 mg una volta al giorno, se indicato.\nFollow-Up\nLa paziente è stata programmata per un follow-up dopo due settimane per monitorare la risposta alla terapia aggiuntiva e per valutare eventuali effetti collaterali.",
+        "tags": [
+          {
+            "nome_farmaco": "metformina",
+            "dosaggio": "500 mg",
+            "modalità": "due volte al giorno",
+            "frequenza": ""
+          },
+          {
+            "nome_farmaco": "valsartan",
+            "dosaggio": "80 mg",
+            "modalità": "una volta al giorno",
+            "frequenza": ""
+          },
+          {
+            "nome_farmaco": "sitagliptin",
+            "dosaggio": "100 mg",
+            "modalità": "una volta al giorno",
+            "frequenza": "dopo la colazione"
+          },
+          {
+            "nome_farmaco": "idroclorotiazide",
+            "dosaggio": "12.5 mg",
+            "modalità": "una volta al giorno",
+            "frequenza": "al mattino"
+          },
+          {
+            "nome_farmaco": "paracetamolo",
+            "dosaggio": "500 mg",
+            "modalità": "fino a 3 volte al giorno",
+            "frequenza": ""
+          },
+          {
+            "nome_farmaco": "alendronato",
+            "dosaggio": "70 mg",
+            "modalità": "una volta alla settimana",
+            "frequenza": ""
+          },
+          {
+            "nome_farmaco": "sertralina",
+            "dosaggio": "50 mg",
+            "modalità": "una volta al giorno",
+            "frequenza": ""
+          }
+        ]
+      },
+      {
+        "text": "Cartella Clinica\nPaziente: Luca Bianchi\nData: 27 Aprile 2024\nAnamnesi\nLuca Bianchi, 55 anni, si presenta con una storia di artrite reumatoide diagnosticata 10 anni fa. Attualmente è in trattamento con methotrexate 15 mg una volta alla settimana e prednisone 5 mg al giorno per il controllo dei sintomi.\n\nEsame Obiettivo\nDurante l'esame obiettivo, il paziente presenta gonfiore e dolore articolare alle mani e ai piedi. La mobilità delle articolazioni è limitata, con segni di infiammazione evidenti.\n\nPianificazione Terapeutica\nArtrite Reumatoide\n\nContinuare con methotrexate 15 mg una volta alla settimana.\nAggiungere adalimumab 40 mg iniezione sottocutanea una volta ogni due settimane.\nGradualmente ridurre la dose di prednisone a 2.5 mg al giorno nelle prossime 4 settimane.\nControllo del Dolore\n\nPrescrivere ibuprofene 400 mg in caso di dolore acuto, fino a 3 volte al giorno.\nProfilassi Gastrica\n\nRaccomandare l'assunzione di omeprazolo 20 mg una volta al giorno per prevenire irritazioni gastriche dovute all'ibuprofene.\nSupplementazione di Calcio e Vitamina D\n\nIniziare la terapia con calcio 1000 mg e vitamina D 800 UI una volta al giorno per prevenire l'osteoporosi dovuta all'uso prolungato di corticosteroidi.\nFollow-Up\nIl paziente è stato programmato per un follow-up dopo un mese per valutare la risposta alla terapia aggiuntiva e monitorare eventuali effetti collaterali.",
+        "tags": [
+          {
+            "nome_farmaco": "methotrexate",
+            "dosaggio": "15 mg",
+            "modalità": "una volta alla settimana",
+            "frequenza": ""
+          },
+          {
+            "nome_farmaco": "prednisone",
+            "dosaggio": "5 mg",
+            "modalità": "al giorno",
+            "frequenza": ""
+          },
+          {
+            "nome_farmaco": "adalimumab",
+            "dosaggio": "40 mg",
+            "modalità": "iniezione sottocutanea",
+            "frequenza": "una volta ogni due settimane"
+          },
+          {
+            "nome_farmaco": "ibuprofene",
+            "dosaggio": "400 mg",
+            "modalità": "fino a 3 volte al giorno",
+            "frequenza": ""
+          },
+          {
+            "nome_farmaco": "omeprazolo",
+            "dosaggio": "20 mg",
+            "modalità": "una volta al giorno",
+            "frequenza": ""
+          },
+          {
+            "nome_farmaco": "calcio",
+            "dosaggio": "1000 mg",
+            "modalità": "una volta al giorno",
+            "frequenza": ""
+          },
+          {
+            "nome_farmaco": "vitamina D",
+            "dosaggio": "800 UI",
+            "modalità": "una volta al giorno",
+            "frequenza": ""
+          }
+        ]
+      },
+      {
+        "text": "Relazione Clinica\nPaziente: Giovanni Verdi\nData: 27 Aprile 2024\nMotivo della Visita\nGiovanni Verdi, 60 anni, si presenta per un controllo di routine. Il paziente ha una storia di ipercolesterolemia e asma cronica. Attualmente assume atorvastatina 20 mg una volta al giorno per il colesterolo alto e salbutamolo 100 mcg per inalazione al bisogno per l'asma.\n\nEsame Clinico\nDurante l'esame clinico, la pressione arteriosa del paziente è di 120/75 mmHg, con un livello di colesterolo LDL di 150 mg/dL. Il paziente riferisce episodi di dispnea controllati con l'uso di salbutamolo.\n\nDiagnosi e Piano Terapeutico\nIpercolesterolemia\n\nContinuare con atorvastatina 20 mg una volta al giorno.\nAggiungere ezetimibe 10 mg una volta al giorno per migliorare il controllo del colesterolo LDL.\nProgrammare un esame del sangue per il controllo del profilo lipidico tra tre mesi.\nAsma\n\nContinuare con salbutamolo 100 mcg per inalazione al bisogno.\nAggiungere budesonide/formoterolo 160/4.5 mcg per inalazione due volte al giorno per migliorare il controllo dell'asma.\nOsteoporosi\n\nPrescrivere vitamina D 1000 UI e calcio 500 mg una volta al giorno per la prevenzione dell'osteoporosi.\nPrevenzione Cardiovascolare\n\nIniziare l'aspirina 81 mg una volta al giorno come profilassi secondaria.\nRaccomandazioni\nSeguire una dieta a basso contenuto di grassi saturi e colesterolo.\nIncrementare l'attività fisica con esercizi aerobici moderati almeno 3 volte alla settimana.\nRitornare per una visita di controllo in sei mesi, salvo peggioramento dei sintomi.",
+        "tags": [
+          {
+            "nome_farmaco": "atorvastatina",
+            "dosaggio": "20 mg",
+            "modalità": "una volta al giorno",
+            "frequenza": ""
+          },
+          {
+            "nome_farmaco": "salbutamolo",
+            "dosaggio": "100 mcg",
+            "modalità": "per inalazione",
+            "frequenza": "al bisogno"
+          },
+          {
+            "nome_farmaco": "ezetimibe",
+            "dosaggio": "10 mg",
+            "modalità": "una volta al giorno",
+            "frequenza": ""
+          },
+          {
+            "nome_farmaco": "budesonide/formoterolo",
+            "dosaggio": "160/4.5 mcg",
+            "modalità": "per inalazione",
+            "frequenza": "due volte al giorno"
+          },
+          {
+            "nome_farmaco": "vitamina D",
+            "dosaggio": "1000 UI",
+            "modalità": "una volta al giorno",
+            "frequenza": ""
+          },
+          {
+            "nome_farmaco": "calcio",
+            "dosaggio": "500 mg",
+            "modalità": "una volta al giorno",
+            "frequenza": ""
+          },
+          {
+            "nome_farmaco": "aspirina",
+            "dosaggio": "81 mg",
+            "modalità": "una volta al giorno",
+            "frequenza": ""
+          }
+        ]
+      }
+        ],
+    "Timeline extraction": [
+      {
+        "text": "Relazione Medica\nPaziente: Anna Ferrari\nData: 27 Aprile 2024\nResoconto Medico\nAnna Ferrari, 49 anni, è venuta per un controllo di routine. Negli ultimi mesi, ha avuto vari episodi che hanno richiesto attenzione medica.\n\nA metà marzo, precisamente il 15 Marzo, Anna ha iniziato a notare un leggero dolore addominale. Inizialmente, ha pensato che fosse qualcosa di passeggero, forse legato all'alimentazione.\n\nIl 18 Marzo, il dolore addominale è diventato più intenso e si è accompagnato a nausea e vomito. Questa situazione l'ha portata a consultare il medico di famiglia, il quale le ha suggerito di andare in ospedale se i sintomi fossero peggiorati.\n\nIl 20 Marzo, Anna si è recata al Pronto Soccorso a causa del peggioramento dei sintomi. Dopo un'ecografia addominale, le è stata diagnosticata una colecistite acuta. Le è stata prescritta una terapia antibiotica con amoxicillina/clavulanato 875/125 mg da assumere due volte al giorno.\n\nNonostante la terapia, il 23 del mese, Anna è tornata al Pronto Soccorso poiché il dolore era insopportabile. Questa volta è stata ricoverata e sottoposta a un intervento chirurgico di colecistectomia laparoscopica. L'operazione è andata bene e dopo due giorni, il 25 Marzo, è stata dimessa dall'ospedale. Le è stato consigliato di riposare e di prendere paracetamolo 500 mg fino a tre volte al giorno per gestire il dolore post-operatorio.\n\nIl 1° Aprile, Anna è tornata per una visita di controllo. I medici hanno constatato che la guarigione procedeva regolarmente. Le hanno raccomandato di iniziare ad aumentare gradualmente l'attività fisica per favorire la ripresa completa.\n\nA metà aprile, il 15 Aprile, Anna ha completato la terapia antibiotica e ha riferito di non avere più dolore. Un'ulteriore visita di follow-up è stata programmata per sei settimane dopo l'intervento per valutare la ripresa completa.\n\nOggi, 27 Aprile, durante l'esame clinico, le ferite chirurgiche di Anna appaiono ben cicatrizzate e non vi sono segni di infezione. Le è stato consigliato di continuare con una dieta equilibrata e un'attività fisica moderata.",
+        "tags": [
+          {
+            "dateValue": "15-03-2024",
+            "description": "Anna inizia a notare un leggero dolore addominale."
+          },
+          {
+            "dateValue": "18-03-2024",
+            "description": "Il dolore addominale diventa più intenso e si accompagna a nausea e vomito."
+          },
+          {
+            "dateValue": "20-03-2024",
+            "description": "Anna si reca al Pronto Soccorso e viene diagnosticata una colecistite acuta. Le viene prescritta amoxicillina/clavulanato 875/125 mg due volte al giorno."
+          },
+          {
+            "dateValue": "23-03-2024",
+            "description": "Anna ritorna al Pronto Soccorso e viene ricoverata e sottoposta a colecistectomia laparoscopica."
+          },
+          {
+            "dateValue": "25-03-2024",
+            "description": "Anna viene dimessa dall'ospedale con istruzioni di riposo e una prescrizione di paracetamolo 500 mg per il dolore, fino a tre volte al giorno."
+          },
+          {
+            "dateValue": "01-04-2024",
+            "description": "Anna si presenta per una visita di controllo. La guarigione procede regolarmente."
+          },
+          {
+            "dateValue": "15-04-2024",
+            "description": "Anna completa la terapia antibiotica e il dolore è scomparso. Viene programmata un'ulteriore visita di follow-up a sei settimane dall'intervento."
+          },
+          {
+            "dateValue": "27-04-2024",
+            "description": "Durante l'esame clinico, le ferite chirurgiche appaiono ben cicatrizzate e non vi sono segni di infezione."
+          }
+        ]
+      },
+      {
+        "text": "Relazione Clinica\nPaziente: Marco Rossi\nData: 27 Maggio 2024\nResoconto Medico\nMarco Rossi, 52 anni, è venuto per un controllo di follow-up dopo un recente intervento chirurgico. Negli ultimi mesi, ha avuto diversi episodi medici significativi.\n\nA metà febbraio, precisamente il 12 Febbraio, Marco ha iniziato a notare un dolore toracico intermittente. Pensando che fosse dovuto allo stress, non ha immediatamente cercato assistenza medica.\n\nIl 15 Febbraio, il dolore toracico è diventato costante e si è associato a difficoltà respiratorie. Marco si è recato al Pronto Soccorso, dove gli è stata diagnosticata un'angina instabile. Gli è stata prescritta nitroglicerina 0.4 mg per via sublinguale al bisogno e aspirina 81 mg una volta al giorno.\n\nIl 18 Febbraio, Marco ha subito una coronarografia che ha rivelato una stenosi critica dell'arteria coronaria destra. È stato programmato un intervento di angioplastica con inserimento di stent per il giorno successivo.\n\nIl 19 Febbraio, Marco è stato sottoposto con successo all'angioplastica. Dopo due giorni di osservazione, il 21 Febbraio, è stato dimesso dall'ospedale con raccomandazioni di riposo e una terapia con clopidogrel 75 mg una volta al giorno.\n\nIl 1 Marzo, Marco è tornato per una visita di controllo post-operatoria. La guarigione procedeva bene e i sintomi di angina erano scomparsi.\n\nA inizio aprile, il 5 Aprile, Marco ha completato un test da sforzo che ha mostrato una buona capacità di esercizio senza segni di ischemia. È stato incoraggiato a continuare con un programma di riabilitazione cardiaca.\n\nOggi, 27 Maggio, Marco si presenta per un ulteriore controllo. I segni vitali sono stabili e non ci sono sintomi di angina. È stato consigliato di continuare con una dieta sana e un regolare esercizio fisico.",
+        "tags": [
+          {
+            "dateValue": "12-02-2024",
+            "description": "Marco inizia a notare un dolore toracico intermittente."
+          },
+          {
+            "dateValue": "15-02-2024",
+            "description": "Il dolore toracico diventa costante e si associa a difficoltà respiratorie. Diagnosi di angina instabile. Prescrizione di nitroglicerina 0.4 mg per via sublinguale al bisogno e aspirina 81 mg una volta al giorno."
+          },
+          {
+            "dateValue": "18-02-2024",
+            "description": "Coronarografia che rivela una stenosi critica dell'arteria coronaria destra. Programmazione di un intervento di angioplastica con inserimento di stent per il giorno successivo."
+          },
+          {
+            "dateValue": "19-02-2024",
+            "description": "Marco viene sottoposto con successo all'angioplastica."
+          },
+          {
+            "dateValue": "21-02-2024",
+            "description": "Marco viene dimesso dall'ospedale con raccomandazioni di riposo e una terapia con clopidogrel 75 mg una volta al giorno."
+          },
+          {
+            "dateValue": "01-03-2024",
+            "description": "Visita di controllo post-operatoria. La guarigione procede bene e i sintomi di angina sono scomparsi."
+          },
+          {
+            "dateValue": "05-04-2024",
+            "description": "Marco completa un test da sforzo che mostra una buona capacità di esercizio senza segni di ischemia. Viene incoraggiato a continuare con un programma di riabilitazione cardiaca."
+          },
+          {
+            "dateValue": "27-05-2024",
+            "description": "Marco si presenta per un ulteriore controllo. I segni vitali sono stabili e non ci sono sintomi di angina."
+          }
+        ]
+      },
+      {
+        "text": "Resoconto Clinico\nPaziente: Lucia Bianchi\nData: 3 Giugno 2024\nDettagli Medici\nLucia Bianchi, 45 anni, si è presentata per una valutazione a seguito di diversi eventi medici recenti. Negli ultimi due mesi ha avuto vari problemi di salute che hanno richiesto interventi e visite mediche.\n\nTutto è iniziato il 7 Marzo quando Lucia ha iniziato a sentire una persistente stanchezza e un malessere generale. Non ha dato molta importanza alla cosa fino a quando, il 10 Marzo, ha notato una febbre alta e persistente.\n\nIl 12 Marzo 2024, la febbre non era diminuita, così Lucia è andata dal medico di famiglia. Dopo alcuni esami, le è stata diagnosticata un'infezione batterica e le è stato prescritto un antibiotico, ciprofloxacina 500 mg due volte al giorno.\n\nDurante la settimana successiva, il 18 Marzo, Lucia ha avuto una reazione allergica all'antibiotico, manifestando un'eruzione cutanea diffusa. Ha contattato il medico che le ha cambiato la terapia con un altro antibiotico, amoxicillina 875 mg ogni 12 ore.\n\nIl 25 Marzo, Lucia si è recata al Pronto Soccorso a causa di un forte dolore addominale. Dopo un'ecografia, le è stata diagnosticata un'appendicite acuta. L'intervento chirurgico di appendicectomia è stato eseguito lo stesso giorno.\n\nIl 27 Marzo, Lucia è stata dimessa dall'ospedale con raccomandazioni di riposo e una prescrizione di ibuprofene 400 mg per il dolore, da prendere ogni 8 ore se necessario.\n\nDue settimane dopo l'intervento, il 10 Aprile, Lucia è tornata per una visita di controllo. La guarigione procedeva bene e non c'erano segni di complicazioni.\n\nIl 15 Maggio, Lucia ha completato la terapia antibiotica e il medico ha confermato che l'infezione era completamente risolta.\n\nOggi, 3 Giugno, durante l'esame di follow-up, Lucia non presenta sintomi significativi e le ferite chirurgiche appaiono ben cicatrizzate. Le è stato consigliato di continuare con uno stile di vita sano e di fare attività fisica moderata.",
+        "tags": [
+          {
+            "dateValue": "07-03-2024",
+            "description": "Lucia inizia a sentire una persistente stanchezza e un malessere generale."
+          },
+          {
+            "dateValue": "10-03-2024",
+            "description": "Lucia nota una febbre alta e persistente."
+          },
+          {
+            "dateValue": "12-03-2024",
+            "description": "Lucia va dal medico di famiglia e le viene diagnosticata un'infezione batterica. Prescrizione di ciprofloxacina 500 mg due volte al giorno."
+          },
+          {
+            "dateValue": "18-03-2024",
+            "description": "Lucia ha una reazione allergica all'antibiotico, manifestando un'eruzione cutanea diffusa. Cambio della terapia con amoxicillina 875 mg ogni 12 ore."
+          },
+          {
+            "dateValue": "25-03-2024",
+            "description": "Lucia si reca al Pronto Soccorso per un forte dolore addominale e le viene diagnosticata un'appendicite acuta. Viene eseguita un'appendicectomia lo stesso giorno."
+          },
+          {
+            "dateValue": "27-03-2024",
+            "description": "Lucia viene dimessa dall'ospedale con raccomandazioni di riposo e una prescrizione di ibuprofene 400 mg ogni 8 ore se necessario."
+          },
+          {
+            "dateValue": "10-04-2024",
+            "description": "Visita di controllo. La guarigione procede bene e non ci sono segni di complicazioni."
+          },
+          {
+            "dateValue": "15-05-2024",
+            "description": "Lucia completa la terapia antibiotica e l'infezione è completamente risolta."
+          },
+          {
+            "dateValue": "03-06-2024",
+            "description": "Esame di follow-up. Lucia non presenta sintomi significativi e le ferite chirurgiche appaiono ben cicatrizzate."
+          }
+        ]
+      }
+    ]
+  },
+  "en": {
+    "timeline_extraction": [
+    ]
+  }
+}

@@ -225,7 +225,7 @@
           >
             <q-card-section class="" style="height: 100%">
               <medical-information-extraction
-                :doc="inputLetter"
+                v-model:doc="inputLetter"
                 ref="medicalInformationExtractionComponent"
               ></medical-information-extraction>
             </q-card-section>
