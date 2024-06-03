@@ -1,46 +1,47 @@
 <script>
 import { ref } from "vue";
-import PromptComponent from "./Prompt.vue";
+import ModelInterface from "./ModelInterface.vue";
 import {
-  applyTemplate,
-  askLLM,
+  isAdvanced,
   getProperties,
-  getTasks,
-  getTemplate,
-  setProperties,
 } from "components/MedicalInformationExtraction/utils";
-import SaveDialog from "components/MedicalInformationExtraction/TasksDialog.vue";
 import ISLTimeline from "components/MedicalInformationExtraction/ISLTimeline.vue";
+import { useQuasar } from "quasar";
 
 export default {
   name: "TimelineExtraction",
-  components: { PromptComponent },
+  components: { ModelInterface },
   props: { doc: String, show: Boolean },
   watch: {
     show: function (val) {
-      this.$nextTick(() => {
-        this.$refs.timelinePromptComponent.updateHeights();
-      });
+      this.$nextTick(() => {});
     },
   },
 
   mounted() {
     getProperties(this.timeline.taskName).then((response) => {
-      this.timeline.timelineProp = JSON.parse(response.data);
-    });
-    getProperties("timelineFix").then((response) => {
-      this.timeline.timelineFixProp = JSON.parse(response.data);
-    });
-    getTemplate().then((response) => {
-      this.template = response.data;
+      this.timelineSettings = JSON.parse(response.data);
     });
   },
   data() {
     return {
+      $q: useQuasar(),
       tasks: [],
       template: ref(""),
+      timelineSettings: ref({}),
+      mapPrompt: ref([
+        (s) => {
+          let file = this.doc.split("\n");
+          for (let i = 0; i < file.length; i++) {
+            file[i] = ("" + i).padStart(4, " ") + "| " + file[i];
+          }
+          file = file.join("\n");
+          return s.replace("{file}", file);
+        },
+      ]),
+
       timeline: {
-        taskName: "ISLTimelineIta",
+        taskName: "ISLTimelineItaThree",
         timelineProp: ref({}),
         timelineFixProp: ref({}),
         fixAnswer: {
@@ -55,6 +56,7 @@ export default {
     };
   },
   methods: {
+    isAdvanced,
     checkNExtractTimeline() {
       let str1 = JSON.stringify(this.timeline.times);
       let str2 = JSON.stringify(this.parseTimelineAnswer(this.timeline.answer));
@@ -66,9 +68,13 @@ export default {
     },
 
     parseTimelineAnswer(answer) {
-      if (answer.endsWith("\`\`\`")) {
-        answer = answer.slice(0, -3);
+      const startIndex = answer.indexOf("[");
+      const endIndex = answer.lastIndexOf("]");
+      if (startIndex === -1 || endIndex === -1) {
+        return [];
       }
+      answer = answer.slice(startIndex, endIndex + 1);
+
       let res = [];
       this.timeline.brokenOutput = false;
       try {
@@ -81,88 +87,6 @@ export default {
       return res;
     },
 
-    async extractTimeline() {
-      this.timeline.loading = true;
-      this.timeline.answer = "";
-      let prompt = applyTemplate(
-        this.template,
-        this.timeline.timelineProp.userMessage,
-        this.timeline.timelineProp.systemMessage,
-        this.timeline.timelineProp.completionInit
-      );
-      let parameters = this.timeline.timelineProp.modelParameters;
-      let file = this.doc.split("\n");
-      for (let i = 0; i < file.length; i++) {
-        file[i] = ("" + i).padStart(4, " ") + "| " + file[i];
-      }
-      askLLM({
-        prompt: prompt.replace("{file}", file),
-        ...parameters,
-      })
-        .then((text) => {
-          let answer = text;
-          this.timeline.loading = false;
-          this.timeline.answer = answer;
-          this.timeline.times = this.parseTimelineAnswer(answer);
-        })
-        .catch((error) => {
-          console.error(error);
-          this.timeline.loading = false;
-          return error.body;
-        });
-    },
-
-    openLoadDialog(save = true) {
-      let dialogRef = this.$q.dialog({
-        component: SaveDialog,
-        // props forwarded to your custom component
-        componentProps: {
-          taskName: this.timeline.taskName,
-          tasks: this.tasks,
-          save: save,
-
-          onSetTask: (data) => {
-            this.timeline.taskName = data;
-            dialogRef.update({
-              taskName: this.timeline.taskName,
-            });
-          },
-          // ...more..props...
-        },
-      });
-      getTasks().then((response) => {
-        this.tasks = response.data;
-        dialogRef.update({
-          tasks: this.tasks,
-        });
-      });
-      return dialogRef;
-    },
-    loadMedExt() {
-      let dialogRef = this.openLoadDialog(false);
-      dialogRef
-        .onOk((taskName) => {
-          console.log("OK");
-          getProperties(taskName).then((response) => {
-            this.timeline.timelineProp = JSON.parse(response.data);
-            this.$refs.timelinePromptComponent.updateHeights();
-          });
-        })
-        .onCancel(() => {
-          console.log("Cancel");
-        });
-    },
-    saveMedExt() {
-      let dialogRef = this.openLoadDialog(true);
-      dialogRef
-        .onOk((taskName) => {
-          console.log("OK");
-          setProperties(taskName, this.timeline.timelineProp);
-        })
-        .onCancel(() => {
-          console.log("Cancel");
-        });
-    },
     openInformationSourceLocalization() {
       this.$q
         .dialog({
@@ -214,13 +138,13 @@ export default {
         <q-timeline-entry
           v-for="time in timeline.times"
           :key="time"
-          :subtitle="time.time"
+          :subtitle="time.dateValue"
           :title="time.headline"
         >
           <ul>
-            <li v-for="event in time.events" :key="event">
-              {{ event }}
-            </li>
+            {{
+              time.description
+            }}
           </ul>
         </q-timeline-entry>
       </q-timeline>
@@ -231,7 +155,7 @@ export default {
               <q-btn
                 class="q-ma-sm"
                 color="primary"
-                @click="checkNExtractTimeline()"
+                @click="this.$refs.timelinePromptComponent.sendLLM()"
                 >Extract timeline
               </q-btn>
               <q-btn
@@ -241,27 +165,21 @@ export default {
               </q-btn>
             </div>
           </div>
-          <div class="flex items-center" style="gap: 0.8em">
-            <q-btn class="" @click="loadMedExt">Load Settings</q-btn>
-            <q-btn class="" @click="saveMedExt">Save Settings</q-btn>
-          </div>
         </div>
       </div>
     </div>
-
-    <div>
-      <prompt-component
+    <div v-show="isAdvanced()">
+      <model-interface
         ref="timelinePromptComponent"
-        v-model:template="template"
+        v-model:settings="timelineSettings"
         v-model:answer="timeline.answer"
-        v-model:system-message="timeline.timelineProp.systemMessage"
-        v-model:user-message="timeline.timelineProp.userMessage"
-        v-model:completion-init="timeline.timelineProp.completionInit"
-        v-model:model-settings="timeline.timelineProp.modelParameters"
-        @askLLM="extractTimeline"
-        @clear-output="timeline.answer = ''"
-        @answer-changed="timeline.answer = $event"
-      ></prompt-component>
+        @loading="timeline.loading = $event"
+        @update:answer="
+          this.timeline.times = this.parseTimelineAnswer(this.timeline.answer)
+        "
+        :map-prompt="mapPrompt"
+        :map-outputs="[]"
+      ></model-interface>
     </div>
   </div>
 </template>

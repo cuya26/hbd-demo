@@ -68,10 +68,10 @@ export default {
             </q-item>
 
             <q-item
-              :active="page === 'Timeline extraction'"
+              :active="page === 'Timeline Extraction'"
               clickable
               v-ripple
-              @click="page = 'Timeline extraction'"
+              @click="page = 'Timeline Extraction'"
             >
               <q-item-section avatar>
                 <q-icon name="timeline" />
@@ -90,7 +90,19 @@ export default {
                 <q-icon name="settings" />
               </q-item-section>
 
-              <q-item-section> Settings</q-item-section>
+              <q-item-section> Settings </q-item-section>
+            </q-item>
+            <q-item
+              :active="page === 'Documents'"
+              clickable
+              v-ripple
+              @click="page = 'Documents'"
+            >
+              <q-item-section avatar>
+                <q-icon name="folder_open" />
+              </q-item-section>
+
+              <q-item-section> Example Documents </q-item-section>
             </q-item>
           </q-list>
         </q-scroll-area>
@@ -103,10 +115,10 @@ export default {
             :show="page === 'Medication Extraction'"
           ></medication-extraction>
         </q-page>
-        <q-page v-show="page === 'Timeline extraction'">
+        <q-page v-show="page === 'Timeline Extraction'">
           <timeline-extraction
             :doc="doc"
-            :show="page === 'Timeline extraction'"
+            :show="page === 'Timeline Extraction'"
           ></timeline-extraction>
         </q-page>
         <q-page
@@ -115,7 +127,13 @@ export default {
           class="full-width flex column"
           padding
         >
+          <q-toggle
+            v-model="config.advanced"
+            color="primary"
+            label="Advanced Interface"
+          />
           <span class="full-width text-center text-h6"> Settings </span>
+
           <div style="width: 100%">
             <q-list
               bordered
@@ -195,6 +213,7 @@ export default {
             />
           </div>
         </q-page>
+        <q-page v-show="page === 'Documents'"> </q-page>
       </q-page-container>
     </q-layout>
   </div>

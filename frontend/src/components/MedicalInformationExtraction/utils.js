@@ -1,6 +1,7 @@
 import * as axios from "boot/axios";
 
 export let config = {
+  advanced: false,
   servers: [
     {
       name: "polimi-llama-server",
@@ -15,6 +16,11 @@ export let config = {
     {
       name: "Mixtral",
       url: "http://147.189.192.41:8080",
+      OpenAI_API: false,
+    },
+    {
+      name: "Mistral8kContext",
+      url: "http://147.189.192.78:8080",
       OpenAI_API: false,
     },
   ],
@@ -35,16 +41,44 @@ export function getTemplate() {
   return axios.api.get("/get_template");
 }
 
+export function sanitizeTemplate(template) {
+  return {
+    assistantMessageStart: template.assistantMessageStart ?? "",
+    assistantMessageEnd: template.assistantMessageEnd ?? "",
+    userMessageStart: template.userMessageStart ?? "",
+    userMessageEnd: template.userMessageEnd ?? "",
+    systemMessageStart: template.systemMessageStart ?? "",
+    systemMessageEnd: template.systemMessageEnd ?? "",
+  };
+}
+
 export function applyTemplate(
   template,
-  userMessage,
   systemMessage,
-  completionInit
+  userMessage,
+  completionInit,
+  prevMessage
 ) {
-  return template
-    .replace("{system_message}", systemMessage)
-    .replace("{prompt}", userMessage)
-    .replace("{completion_init}", completionInit);
+  template = sanitizeTemplate(template);
+  let prompt = "";
+  if (prevMessage) {
+    prompt += prevMessage + "\n";
+    if (!prevMessage.endsWith(template.assistantMessageEnd))
+      prompt += template.assistantMessageEnd;
+  } else if (systemMessage !== "")
+    prompt +=
+      template.systemMessageStart +
+      systemMessage +
+      template.systemMessageEnd +
+      "\n";
+  prompt +=
+    template.userMessageStart + userMessage + template.userMessageEnd + "\n";
+  prompt += template.assistantMessageStart + completionInit;
+  return prompt;
+}
+
+export function isAdvanced() {
+  return config.advanced;
 }
 
 export function setProperties(task, properties) {
@@ -77,10 +111,6 @@ export function askLLM(body) {
 }
 
 export function buildLLMUrl() {
-  console.log((
-    config.selectedServer.url +
-    (config.selectedServer.OpenAI_API ? "/v1/completions" : "/completion")
-  ))
   return (
     config.selectedServer.url +
     (config.selectedServer.OpenAI_API ? "/v1/completions" : "/completion")
@@ -94,6 +124,7 @@ function mapLLMAnswer(response) {
   } else {
     res = response.data.content;
   }
+  res.replace("<dummy32000>", "");
   return res;
 }
 
@@ -106,6 +137,7 @@ export function saveServer() {
     reachable: false,
   };
 }
+
 //
 // export function checkCustomServerAvailability() {
 //   if (config.customServer.url === "") return;

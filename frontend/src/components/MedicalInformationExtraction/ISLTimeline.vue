@@ -119,15 +119,11 @@ export default {
             <q-timeline-entry
               v-for="time in timeline"
               :key="time"
-              :subtitle="time.time"
+              :subtitle="time.dateValue"
               :title="time.title"
-              @click="highlightLine(time.line_range.start, time.line_range.end)"
+              @click="highlightLine(time.line, time.line + 1)"
             >
-              <ul>
-                <li v-for="event in time.events" :key="event">
-                  {{ event }}
-                </li>
-              </ul>
+              {{ time.description }}
             </q-timeline-entry>
           </q-timeline>
         </q-card>
