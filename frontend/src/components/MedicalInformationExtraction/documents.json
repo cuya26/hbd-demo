@@ -142,7 +142,7 @@
           }
         ]
       }
-        ],
+    ],
     "Timeline extraction": [
       {
         "text": "Relazione Medica\nPaziente: Anna Ferrari\nData: 27 Aprile 2024\nResoconto Medico\nAnna Ferrari, 49 anni, è venuta per un controllo di routine. Negli ultimi mesi, ha avuto vari episodi che hanno richiesto attenzione medica.\n\nA metà marzo, precisamente il 15 Marzo, Anna ha iniziato a notare un leggero dolore addominale. Inizialmente, ha pensato che fosse qualcosa di passeggero, forse legato all'alimentazione.\n\nIl 18 Marzo, il dolore addominale è diventato più intenso e si è accompagnato a nausea e vomito. Questa situazione l'ha portata a consultare il medico di famiglia, il quale le ha suggerito di andare in ospedale se i sintomi fossero peggiorati.\n\nIl 20 Marzo, Anna si è recata al Pronto Soccorso a causa del peggioramento dei sintomi. Dopo un'ecografia addominale, le è stata diagnosticata una colecistite acuta. Le è stata prescritta una terapia antibiotica con amoxicillina/clavulanato 875/125 mg da assumere due volte al giorno.\n\nNonostante la terapia, il 23 del mese, Anna è tornata al Pronto Soccorso poiché il dolore era insopportabile. Questa volta è stata ricoverata e sottoposta a un intervento chirurgico di colecistectomia laparoscopica. L'operazione è andata bene e dopo due giorni, il 25 Marzo, è stata dimessa dall'ospedale. Le è stato consigliato di riposare e di prendere paracetamolo 500 mg fino a tre volte al giorno per gestire il dolore post-operatorio.\n\nIl 1° Aprile, Anna è tornata per una visita di controllo. I medici hanno constatato che la guarigione procedeva regolarmente. Le hanno raccomandato di iniziare ad aumentare gradualmente l'attività fisica per favorire la ripresa completa.\n\nA metà aprile, il 15 Aprile, Anna ha completato la terapia antibiotica e ha riferito di non avere più dolore. Un'ulteriore visita di follow-up è stata programmata per sei settimane dopo l'intervento per valutare la ripresa completa.\n\nOggi, 27 Aprile, durante l'esame clinico, le ferite chirurgiche di Anna appaiono ben cicatrizzate e non vi sono segni di infezione. Le è stato consigliato di continuare con una dieta equilibrata e un'attività fisica moderata.",
@@ -263,6 +263,8 @@
   },
   "en": {
     "timeline_extraction": [
+    ],
+    "Medication extraction": [
     ]
   }
 }
