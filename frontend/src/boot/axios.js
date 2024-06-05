@@ -14,7 +14,7 @@ const altApi = axios.create({
   baseURL: "http://localhost:8082",
 });
 
-const api = altApi;
+const api = poliApi;
 const patientSearchApi = axios.create({
   baseURL: "http://" + server_ip + ":61111/patient-search-server/",
 });

@@ -22,7 +22,7 @@ export default {
   data() {
     return {
       docs: documents,
-      page: ref("Documents"),
+      page: ref("Example Documents"),
       mini: ref(true),
       config: ref(config),
       searchServer: ref(""),
@@ -98,10 +98,10 @@ export default {
               <q-item-section> Settings</q-item-section>
             </q-item>
             <q-item
-              :active="page === 'Documents'"
+              :active="page === 'Example Documents'"
               clickable
               v-ripple
-              @click="page = 'Documents'"
+              @click="page = 'Example Documents'"
             >
               <q-item-section avatar>
                 <q-icon name="folder_open" />
@@ -218,7 +218,7 @@ export default {
             />
           </div>
         </q-page>
-        <q-page v-show="page === 'Documents'">
+        <q-page v-show="page === 'Example Documents'">
           <div class="q-pa-md flex" style="gap: 10px">
             <div
               v-for="(value, language, index) in docs"

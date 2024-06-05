@@ -1,0 +1,39 @@
+{
+  "taskName": "ISLTimelineItaThree",
+  "template": {
+    "systemMessageStart": "<|im_start|>system\n",
+    "systemMessageEnd": "<|im_end|>\n",
+    "userMessageStart": "<|im_start|>user\n",
+    "userMessageEnd": "<|im_end|>\n",
+    "assistantMessageStart": "<|im_start|>assistant\n",
+    "assistantMessageEnd": "<|im_end|>\n"
+  },
+  "systemMessage": "",
+  "steps": [
+    {
+      "name": "Step 1",
+      "userMessage": "How many time expressions (dates, times, timestamps, relative dates) can you count in the following document?\n---\n```medical_document.txt\n{file}\n```\n---",
+      "completionInit": ""
+    },
+    {
+      "name": "Step 2",
+      "userMessage": "Put the result into a Json array where each object of the array follows the structure:\n{\n    dateValue: string,\n    description: string,\n}\nBe sure that the value format is yyyy-mm-dd",
+      "completionInit": "```dates.json"
+    },
+    {
+      "name": "Step 3",
+      "userMessage": "For each element in the json array add a \"line\" field with the line number where the date was found.",
+      "completionInit": "```dates.json"
+    }
+  ],
+  "modelParameters": {
+    "temperature": 0.0,
+    "top_k": 40,
+    "top_p": 0.95,
+    "repetition_penalty": 1.1,
+    "max_tokens": 2049,
+    "mirostat_tau": 3.0
+  }
+}
+
+

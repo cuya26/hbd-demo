@@ -1,1 +1,30 @@
-{"userMessage": "TASK: Temporal Entity Extraction from Medical Document\nExtract a coherent chronological sequence of events from the medical document. Use each date mentioned in the text as a timeline delimiter, emphasizing the context for events without specific dates. Ensure that the output is a list of events ordered chronologically, with each event clearly associated with its relative position in the timeline. Be explicit about the importance of maintaining chronological coherence among the events.\n\nThe output must be in JSON list of objects where each object contains the \"date\" key and the  \"events\" key.\nIf there is no date (like before admission), put \"none\"\nExample:\n\n[{\n \"time\": \"10/07/1998\",\n \"headline\": \"Admission and Diagnosis\",\n \"events\": [\"presents with abdominal pain of seven days duration\", \"admission\", \"diagnosed with acute pancreatitis\"]\n}, ... ]\n\nGenerate the JSON array for the following document.\n[CLINICAL_DOCUMENT_START]\n{file}\n[CLINICAL_DOCUMENT_END]", "systemMessage": "Emulate a tool for the specified task. Strictly follow the provided instructions to execute the task accurately. Your role is to adhere solely to the given guidelines and perform the designated actions without deviation.", "completionInit": "", "modelParameters": {"temperature": 0.5, "top_k": 40, "top_p": 0.95, "repetition_penalty": 1.1, "max_tokens": 2048, "mirostat_tau": 3.0}}
+{
+  "userMessage": "TASK: Temporal Entity Extraction from Medical Document\nExtract a coherent chronological sequence of events from the medical document. Use each date mentioned in the text as a timeline delimiter, emphasizing the context for events without specific dates. Ensure that the output is a list of events ordered chronologically, with each event clearly associated with its relative position in the timeline. Be explicit about the importance of maintaining chronological coherence among the events.\n\nThe output must be in JSON list of objects where each object contains the \"date\" key and the  \"events\" key.\nIf there is no date (like before admission), put \"none\"\nExample:\n\n[{\n \"time\": \"10/07/1998\",\n \"headline\": \"Admission and Diagnosis\",\n \"events\": [\"presents with abdominal pain of seven days duration\", \"admission\", \"diagnosed with acute pancreatitis\"]\n}, ... ]\n\nGenerate the JSON array for the following document.\n[CLINICAL_DOCUMENT_START]\n{file}\n[CLINICAL_DOCUMENT_END]",
+  "systemMessage": "Emulate a tool for the specified task. Strictly follow the provided instructions to execute the task accurately. Your role is to adhere solely to the given guidelines and perform the designated actions without deviation.",
+  "completionInit": "",
+
+
+  "template": {
+    "systemMessageStart": "<|im_start|>system\n",
+    "systemMessageEnd": "<|im_end|>\n",
+    "userMessageStart": "<|im_start|>user\n",
+    "userMessageEnd": "<|im_end|>\n",
+    "assistantMessageStart": "<|im_start|>assistant\n",
+    "assistantMessageEnd": "<|im_end|>\n"
+  },
+  "steps": [
+    {
+      "userMessage": "COMPITO: Estrazione di entit\u00e0 denominate di farmaci\nEstrarre tutti i farmaci menzionati nel documento clinico e per ognuno di essi estrarre il corrispondente:\n- dosaggio: la quantit\u00e0 specificata di farmaco assunto in un momento specifico.\n- frequenza: indica quante volte al giorno deve essere somministrato il farmaco o la frequenza di somministrazione in ore o minuti.\n- modalit\u00e0: \u00e8 il modo in cui un farmaco, un fluido, un veleno o un'altra sostanza viene assunta dall'organismo. Le modalit\u00e0 di somministrazione sono generalmente classificate in base al punto in cui la sostanza viene applicata. Esempi comuni sono la somministrazione orale e quella endovenosa.\n- righe: il numero di riga o l'intervallo di righe del documento clinico in cui sono state trovate le informazioni sul farmaco.\n\nMettere tutte le entit\u00e0 estratte in una tabella csv con le colonne farmaco, dosaggio, modalit\u00e0, frequenza e righe.\nInserire solo le entit\u00e0 chiaramente indicate nel testo e niente altro.\n\n```documento.txt\n{file}\n```",
+      "completionInit": "Ecco la tabella estratta con le informazioni richieste \n```dati.csv\nfarmaco; dosaggio; frequenza; modalit\u00e0; righe\n"
+    }
+  ],
+  "systemMessage": "Emulare uno strumento per il compito specificato. Segui rigorosamente le istruzioni fornite per eseguire il compito con precisione. Il tuo ruolo \u00e8 quello di aderire esclusivamente alle linee guida fornite e di eseguire le azioni designate senza alcuna deviazione.",
+  "modelParameters": {
+    "temperature": 0.5,
+    "top_k": 1,
+    "top_p": 0.0,
+    "repetition_penalty": 1.1,
+    "max_tokens": 2048,
+    "mirostat_tau": 3.0
+  }
+}
