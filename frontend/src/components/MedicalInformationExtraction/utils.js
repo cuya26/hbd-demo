@@ -8,21 +8,21 @@ export let config = {
       url: axios.llamaHost,
       OpenAI_API: true,
     },
-    {
-      name: "fornasiere-llama-server",
-      url: axios.llamaHostAlt,
-      OpenAI_API: true,
-    },
-    {
-      name: "Mixtral",
-      url: "http://147.189.192.41:8080",
-      OpenAI_API: false,
-    },
-    {
-      name: "Mistral8kContext",
-      url: "http://147.189.192.78:8080",
-      OpenAI_API: false,
-    },
+    // {
+    //   name: "fornasiere-llama-server",
+    //   url: axios.llamaHostAlt,
+    //   OpenAI_API: true,
+    // },
+    // {
+    //   name: "Mixtral",
+    //   url: "http://147.189.192.41:8080",
+    //   OpenAI_API: false,
+    // },
+    // {
+    //   name: "Mistral8kContext",
+    //   url: "http://147.189.192.78:8080",
+    //   OpenAI_API: false,
+    // },
   ],
 
   selectedServer: {
