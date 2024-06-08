@@ -37,10 +37,6 @@ export let config = {
   },
 };
 
-export function getTemplate() {
-  return axios.api.get("/get_template");
-}
-
 export function sanitizeTemplate(template) {
   return {
     assistantMessageStart: template.assistantMessageStart ?? "",

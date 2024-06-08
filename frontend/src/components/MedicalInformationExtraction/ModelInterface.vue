@@ -4,7 +4,7 @@ import PromptTemplate from "components/MedicalInformationExtraction/PromptTempla
 import * as utils from "components/MedicalInformationExtraction/utils";
 import {
   getProperties,
-  getTasks,
+  getTasks, sanitizeTemplate,
   setProperties,
 } from "components/MedicalInformationExtraction/utils";
 import SaveDialog from "components/MedicalInformationExtraction/TasksDialog.vue";
@@ -24,6 +24,7 @@ export default {
     settings: function (newVal) {
       console.log(newVal);
       this.settingsLocal = newVal;
+      this.settingsLocal.template = sanitizeTemplate(this.settingsLocal.template)
     },
 
     answer: function (val) {
@@ -199,22 +200,6 @@ export default {
     return {
       tab: "Step 1",
       template: ref(""),
-      templates: [
-        `<|im_start|>system
-{system_message}<|im_end|>
-<|im_start|>user
-{prompt}<|im_end|>
-<|im_start|>assistant
-{completion_init}`,
-        `[INST]
-{system_message}
-
-{prompt}
-[/INST]
-{completion_init}
-`,
-        `{system_message} USER: {prompt} ASSISTANT: {completion_init}`,
-      ],
       settingsLocal: ref(this.settings),
       modelParameters: {
         max_tokens: {
@@ -316,28 +301,12 @@ export default {
         :group="accordion ? 'group' : null"
       >
         <div class="flex no-wrap" style="gap: 10px">
-          <div
-            v-for="(template, index) in templates"
-            :key="template"
-            class="q-pa-sm flex"
-          >
-            <q-checkbox
-              style="align-items: start !important"
-              class="flex column items-start q-pa-md"
-              :model-value="template === this.template"
-              @update:model-value="
-                console.log(template);
-                $emit('update:template', template);
-              "
-            >
-              <template v-slot:default>
-                <div style="white-space: pre-line">
-                  {{ template }}
-                </div>
-              </template>
-            </q-checkbox>
-            <q-separator vertical v-if="index < templates.length - 1" />
-          </div>
+<!--          <q-input v-model="this.settingsLocal.template.assistantMessageStart"></q-input>-->
+<!--          <q-input v-model="this.settingsLocal.template.assistantMessageEnd"></q-input>-->
+<!--          <q-input v-model="this.settingsLocal.template.userMessageStart"></q-input>-->
+<!--          <q-input v-model="this.settingsLocal.template.userMessageEnd"></q-input>-->
+<!--          <q-input v-model="this.settingsLocal.template.systemMessageStart"></q-input>-->
+<!--          <q-input v-model="this.settingsLocal.template.systemMessageEnd"></q-input>-->
         </div>
       </q-expansion-item>
       <q-separator />

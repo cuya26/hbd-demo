@@ -1,6 +1,60 @@
 <template>
   <q-page padding class="row items-stretch" style="height: 100%">
     <div class="col-12 column no-wrap">
+      <div class="q-pb-md" style="width: 50%">
+        <div class="row justify-evenly">
+          <!-- <q-select
+          style="width: 48%"
+          dense
+          outlined
+          v-model="taskName"
+          :options="taskNames"
+          label="Choose a Task"
+          @update:model-value="setupName=null"
+          /> -->
+          <q-select
+            outlined
+            v-model="taskName"
+            :options="taskOptionGroups"
+            dense
+            label="Choose a Task"
+            @update:model-value="updateTaskName"
+            style="width: 48%"
+          >
+            <template v-slot:option="scope">
+              <q-item v-if="!scope.opt.group" v-bind="scope.itemProps">
+                <q-item-section>
+                  <q-item-label class="q-pl-md">{{
+                      scope.opt.label
+                    }}</q-item-label>
+                </q-item-section>
+              </q-item>
+              <q-item v-if="scope.opt.group">
+                <q-item-section>
+                  <q-item-label class="text-bold text-primary">{{
+                      scope.opt.group + ":"
+                    }}</q-item-label>
+                </q-item-section>
+              </q-item>
+            </template>
+          </q-select>
+          <q-select
+            style="width: 48%"
+            dense
+            outlined
+            v-model="setupName"
+            :options="
+                  taskName
+                    ? taskOptionGroups.filter(
+                        (optionTask) => optionTask.value === taskName
+                      )[0]['setupNames']
+                    : []
+                "
+            label="Choose a Model"
+            @update:model-value="whenChangeSetupModel"
+          />
+        </div>
+      </div>
       <div
         ref="resizableBlock"
         class="row no-wrap justify-between"
@@ -10,15 +64,12 @@
           class="column no-wrap"
           :style="{ width: this.resizableWidth + '%' }"
         >
-          <div class="q-pb-md">
-            <div style="height: 40px"></div>
-          </div>
-          <q-card class="items-strech" style="height: 90%">
+          <q-card class="items-strech" style="height: 100%">
             <div class="col-12 column no-wrap" style="height: 100%">
               <q-card-section class="row justify-between">
                 <div class="col-3"></div>
                 <div class="text-h6 text-primary">Input</div>
-                <div class="col-3">
+                <div class="col-4">
                   <div class="col-6 justify-end row">
                     <q-btn
                       v-if="inputMode === 'saliency'"
@@ -35,7 +86,7 @@
                   </div> -->
                   <q-btn-toggle
                     v-model="inputMode"
-                    style="border: 1px solid #027be3"
+                    style="border: 1px solid #027be3;"
                     no-caps
                     dense
                     spread
@@ -47,13 +98,13 @@
                     text-color="primary"
                     :options="[
                       { label: 'PDF', value: 'pdf' },
-                      { label: 'REGIONS', value: 'regions' },
+                      { label: 'PARTS', value: 'regions' },
                       { label: 'TEXT', value: 'edit' },
                     ]"
                   />
                 </div>
               </q-card-section>
-              <q-card-section style="height: 90%">
+              <q-card-section style="height: 90%; width: 95%">
                 <div
                   v-if="!loadingSaliencyMap"
                   style="overflow: auto; flex-grow: 1; max-height: 100%"
@@ -130,67 +181,14 @@
           class="column no-wrap full-height"
           :style="{ width: 100 - this.resizableWidth + '%' }"
         >
-          <div class="q-pb-md">
-            <div class="row justify-evenly">
-              <!-- <q-select
-              style="width: 48%"
-              dense
-              outlined
-              v-model="taskName"
-              :options="taskNames"
-              label="Choose a Task"
-              @update:model-value="setupName=null"
-              /> -->
-              <q-select
-                outlined
-                v-model="taskName"
-                :options="taskOptionGroups"
-                dense
-                label="Choose a Task"
-                @update:model-value="updateTaskName"
-                style="width: 48%"
-              >
-                <template v-slot:option="scope">
-                  <q-item v-if="!scope.opt.group" v-bind="scope.itemProps">
-                    <q-item-section>
-                      <q-item-label class="q-pl-md">{{
-                        scope.opt.label
-                      }}</q-item-label>
-                    </q-item-section>
-                  </q-item>
-                  <q-item v-if="scope.opt.group">
-                    <q-item-section>
-                      <q-item-label class="text-bold text-primary">{{
-                        scope.opt.group + ":"
-                      }}</q-item-label>
-                    </q-item-section>
-                  </q-item>
-                </template>
-              </q-select>
-              <q-select
-                style="width: 48%"
-                dense
-                outlined
-                v-model="setupName"
-                :options="
-                  taskName
-                    ? taskOptionGroups.filter(
-                        (optionTask) => optionTask.value === taskName
-                      )[0]['setupNames']
-                    : []
-                "
-                label="Choose a Model"
-                @update:model-value="whenChangeSetupModel"
-              />
-            </div>
-          </div>
+
           <DeidentificationClassic
-            style="height: 90%"
+            style="height: 100%"
             :inputLetter="inputLetter"
             v-if="setupName === 'Classic'"
           />
           <PharmacologicalEventExtraction
-            style="height: 90%"
+            style="height: 100%"
             :inputLetter="inputLetter"
             :modelConfig="modelConfig['Track1 n2c2 Challenge (en)']"
             v-model:inputMode="inputMode"
@@ -199,13 +197,13 @@
             v-if="setupName === 'Track1 n2c2 Challenge (en)'"
           />
           <ChatBot
-            style="height: 90%"
+            style="height: 100%"
             :inputLetter="inputLetter"
             v-if="setupName === 'mistral-7b-openorca-q5'"
           />
           <QuestionAnswering
             v-if="taskName === 'question answering' && setupName !== null"
-            style="height: 90%"
+            style="height: 100%"
             :inputLetter="inputLetter"
             :modelConfig="modelConfig[setupName]"
             v-model:inputMode="inputMode"
@@ -214,13 +212,13 @@
           />
           <PatientSearch
             v-if="setupName === 'Patient Search Engine'"
-            style="height: 90%"
+            style="height: 100%"
             v-model:inputLetter="inputLetter"
             v-model:inputMode="inputMode"
           />
           <q-card
             class=""
-            style="height: 90%"
+            style="height: 100%"
             v-if="setupName === 'Medical Information Extraction with LLM'"
           >
             <q-card-section class="" style="height: 100%">
@@ -230,7 +228,7 @@
               ></medical-information-extraction>
             </q-card-section>
           </q-card>
-          <q-card class="" style="height: 90%" v-if="setupName === null">
+          <q-card class="" style="height: 100%" v-if="setupName === null">
             <q-card-section class="row justify-between">
               <div class="col-2"></div>
               <div class="text-h6 text-primary">Output</div>
@@ -245,7 +243,7 @@
 
 <script>
 import { defineComponent, ref } from "vue";
-import { api } from "boot/axios";
+import { api, llamaHost } from "boot/axios";
 import MedicalInformationExtraction from "components/MedicalInformationExtraction/MedicalInformationExtraction.vue";
 import DeidentificationClassic from "components/DeidentificationClassic.vue";
 import PharmacologicalEventExtraction from "components/PharmacologicalEventExtraction.vue";
@@ -265,6 +263,8 @@ export default defineComponent({
   },
   setup() {
     return {
+      modelName: ref(''),
+
       resizableWidth: ref(45),
       draggable: false,
       inputMode: ref("edit"),
@@ -326,7 +326,7 @@ export default defineComponent({
         {
           label: "ChatBot",
           value: "ChatBot",
-          setupNames: ["mistral-7b-openorca-q5"],
+          setupNames: ['mistral-7b-openorca-q5']
         },
         {
           group: "Search",
@@ -411,7 +411,14 @@ export default defineComponent({
       }),
     };
   },
+  mounted() {
+    // api.get(llamaHost+'/v1/models').then(data =>{
+    //   this.modelName = data.data.data[0].id.split('/').slice(1)
+    // })
+  },
   methods: {
+
+
     startDrag() {
       this.draggable = true;
       this.$refs.resizableBlock.addEventListener("mousemove", this.handleDrag);

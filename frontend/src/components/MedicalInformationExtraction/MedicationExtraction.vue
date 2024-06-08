@@ -6,10 +6,8 @@ import InformationSourceLocalization from "components/MedicalInformationExtracti
 import SaveDialog from "components/MedicalInformationExtraction/TasksDialog.vue";
 import {
   applyTemplate,
-  askLLM,
   getProperties,
   getTasks,
-  getTemplate,
   isAdvanced,
   setProperties,
 } from "components/MedicalInformationExtraction/utils";
