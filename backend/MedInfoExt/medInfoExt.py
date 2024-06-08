@@ -5,8 +5,10 @@ from typing import Optional
 from fastapi import APIRouter
 from fastapi import HTTPException
 from pydantic import BaseModel
-
+from typing import List
 app = APIRouter()
+
+
 
 
 class ModelParameters(BaseModel):
@@ -17,11 +19,24 @@ class ModelParameters(BaseModel):
     max_tokens: Optional[int] = None
     mirostat_tau: Optional[float] = None
 
+class Step(BaseModel):
+    name: str
+    userMessage: str
+    completionInit: str
+
+class Template(BaseModel):
+    systemMessageStart:str
+    systemMessageEnd:str
+    userMessageStart:str
+    userMessageEnd:str
+    assistantMessageStart:str
+    assistantMessageEnd:str
+
 
 class Properties(BaseModel):
-    userMessage: str
     systemMessage: str
-    completionInit: str
+    steps: List[Step]
+    template: Template
     modelParameters: ModelParameters
 
 

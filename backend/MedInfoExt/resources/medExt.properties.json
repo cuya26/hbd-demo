@@ -1,11 +1,11 @@
 {
   "template": {
-    "systemMessageStart": "<|im_start|>system\n",
-    "systemMessageEnd": "<|im_end|>\n",
-    "userMessageStart": "<|im_start|>user\n",
-    "userMessageEnd": "<|im_end|>\n",
-    "assistantMessageStart": "<|im_start|>assistant\n",
-    "assistantMessageEnd": "<|im_end|>\n"
+    "systemMessageStart": "<|begin_of_text|><|start_header_id|>system<|end_header_id|>",
+    "systemMessageEnd": "<|eot_id|>",
+    "userMessageStart": "<|start_header_id|>user<|end_header_id|>",
+    "userMessageEnd": "<|eot_id|>",
+    "assistantMessageStart": "<|start_header_id|>assistant<|end_header_id|>",
+    "assistantMessageEnd": "<|eot_id|>"
   },
   "steps": [
     {
