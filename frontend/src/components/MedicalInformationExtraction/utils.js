@@ -39,12 +39,12 @@ export let config = {
 
 export function sanitizeTemplate(template) {
   return {
-    assistantMessageStart: template.assistantMessageStart ?? "",
-    assistantMessageEnd: template.assistantMessageEnd ?? "",
-    userMessageStart: template.userMessageStart ?? "",
-    userMessageEnd: template.userMessageEnd ?? "",
-    systemMessageStart: template.systemMessageStart ?? "",
-    systemMessageEnd: template.systemMessageEnd ?? "",
+    assistantMessageStart: template?.assistantMessageStart ?? "",
+    assistantMessageEnd: template?.assistantMessageEnd ?? "",
+    userMessageStart: template?.userMessageStart ?? "",
+    userMessageEnd: template?.userMessageEnd ?? "",
+    systemMessageStart: template?.systemMessageStart ?? "",
+    systemMessageEnd: template?.systemMessageEnd ?? "",
   };
 }
 

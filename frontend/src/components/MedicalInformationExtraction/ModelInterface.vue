@@ -4,7 +4,8 @@ import PromptTemplate from "components/MedicalInformationExtraction/PromptTempla
 import * as utils from "components/MedicalInformationExtraction/utils";
 import {
   getProperties,
-  getTasks, sanitizeTemplate,
+  getTasks,
+  sanitizeTemplate,
   setProperties,
 } from "components/MedicalInformationExtraction/utils";
 import SaveDialog from "components/MedicalInformationExtraction/TasksDialog.vue";
@@ -24,7 +25,9 @@ export default {
     settings: function (newVal) {
       console.log(newVal);
       this.settingsLocal = newVal;
-      this.settingsLocal.template = sanitizeTemplate(this.settingsLocal.template)
+      this.settingsLocal.template = sanitizeTemplate(
+        this.settingsLocal.template
+      );
     },
 
     answer: function (val) {
@@ -150,6 +153,10 @@ export default {
       this.settingsLocal.modelParameters[key] = value;
       this.updateSettings();
     },
+    updateTemplate(key, value) {
+      this.settingsLocal.template[key] = value;
+      this.updateSettings();
+    },
 
     updateSettings() {
       this.$emit("update:settings", this.settingsLocal);
@@ -237,7 +244,9 @@ export default {
   },
   created() {},
   beforeUpdate() {},
-  mounted() {},
+  mounted() {
+    this.settingsLocal.template = sanitizeTemplate(this.settingsLocal.template);
+  },
 };
 </script>
 
@@ -250,11 +259,11 @@ export default {
         <q-btn-dropdown flat icon="more_vert">
           <q-list>
             <q-item clickable v-close-popup @click="loadSettings">
-              <q-item-section> Load Settings </q-item-section>
+              <q-item-section> Load Settings</q-item-section>
             </q-item>
 
             <q-item clickable v-close-popup @click="saveSettings">
-              <q-item-section> Save Settings </q-item-section>
+              <q-item-section> Save Settings</q-item-section>
             </q-item>
           </q-list>
         </q-btn-dropdown>
@@ -300,13 +309,77 @@ export default {
         header-class=""
         :group="accordion ? 'group' : null"
       >
-        <div class="flex no-wrap" style="gap: 10px">
-<!--          <q-input v-model="this.settingsLocal.template.assistantMessageStart"></q-input>-->
-<!--          <q-input v-model="this.settingsLocal.template.assistantMessageEnd"></q-input>-->
-<!--          <q-input v-model="this.settingsLocal.template.userMessageStart"></q-input>-->
-<!--          <q-input v-model="this.settingsLocal.template.userMessageEnd"></q-input>-->
-<!--          <q-input v-model="this.settingsLocal.template.systemMessageStart"></q-input>-->
-<!--          <q-input v-model="this.settingsLocal.template.systemMessageEnd"></q-input>-->
+        <div class="no-wrap column" style="gap: 10px">
+          <div class="row full-width">
+            <label class="text-center row items-center justify-start col-4"
+              >Assistant Message Start</label
+            >
+            <q-input
+              class="col"
+              dense
+              :model-value="this.settingsLocal.template?.assistantMessageStart"
+              @update:model-value="
+                updateTemplate('assistantMessageStart', $event)
+              "
+            ></q-input>
+          </div>
+          <div class="row full-width">
+            <label class="text-center row items-center justify-start col-4"
+              >Assistant Message End</label
+            >
+            <q-input
+              class="col"
+              dense
+              :model-value="this.settingsLocal.template?.assistantMessageEnd"
+              @update:model-value="
+                updateTemplate('assistantMessageEnd', $event)
+              "
+            ></q-input>
+          </div>
+          <div class="row full-width">
+            <label class="text-center row items-center justify-start col-4"
+              >System Message Start</label
+            >
+            <q-input
+              class="col"
+              dense
+              :model-value="this.settingsLocal.template?.systemMessageStart"
+              @update:model-value="updateTemplate('systemMessageStart', $event)"
+            ></q-input>
+          </div>
+          <div class="row full-width">
+            <label class="text-center row items-center justify-start col-4"
+              >System MessageEnd</label
+            >
+            <q-input
+              class="col"
+              dense
+              :model-value="this.settingsLocal.template?.systemMessageEnd"
+              @update:model-value="updateTemplate('systemMessageEnd', $event)"
+            ></q-input>
+          </div>
+          <div class="row full-width">
+            <label class="text-center row items-center justify-start col-4"
+              >User Message Start</label
+            >
+            <q-input
+              class="col"
+              dense
+              :model-value="this.settingsLocal.template?.userMessageStart"
+              @update:model-value="updateTemplate('userMessageStart', $event)"
+            ></q-input>
+          </div>
+          <div class="row full-width">
+            <label class="text-center row items-center justify-start col-4"
+              >User Message End</label
+            >
+            <q-input
+              class="col"
+              dense
+              :model-value="this.settingsLocal.template?.userMessageEnd"
+              @update:model-value="updateTemplate('userMessageEnd', $event)"
+            ></q-input>
+          </div>
         </div>
       </q-expansion-item>
       <q-separator />
@@ -343,7 +416,7 @@ export default {
                 <q-icon name="remove" color="black" />
               </q-badge>
             </q-tab>
-            <q-btn @click="addStep()" icon="add" flat> </q-btn>
+            <q-btn @click="addStep()" icon="add" flat></q-btn>
           </q-tabs>
           <q-tab-panels v-model="tab">
             <q-tab-panel
@@ -422,6 +495,7 @@ export default {
   .child {
     display: none;
   }
+
   &:hover {
     .child {
       display: block;

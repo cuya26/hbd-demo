@@ -25,15 +25,15 @@
               <q-item v-if="!scope.opt.group" v-bind="scope.itemProps">
                 <q-item-section>
                   <q-item-label class="q-pl-md">{{
-                      scope.opt.label
-                    }}</q-item-label>
+                    scope.opt.label
+                  }}</q-item-label>
                 </q-item-section>
               </q-item>
               <q-item v-if="scope.opt.group">
                 <q-item-section>
                   <q-item-label class="text-bold text-primary">{{
-                      scope.opt.group + ":"
-                    }}</q-item-label>
+                    scope.opt.group + ":"
+                  }}</q-item-label>
                 </q-item-section>
               </q-item>
             </template>
@@ -44,12 +44,12 @@
             outlined
             v-model="setupName"
             :options="
-                  taskName
-                    ? taskOptionGroups.filter(
-                        (optionTask) => optionTask.value === taskName
-                      )[0]['setupNames']
-                    : []
-                "
+              taskName
+                ? taskOptionGroups.filter(
+                    (optionTask) => optionTask.value === taskName
+                  )[0]['setupNames']
+                : []
+            "
             label="Choose a Model"
             @update:model-value="whenChangeSetupModel"
           />
@@ -86,7 +86,7 @@
                   </div> -->
                   <q-btn-toggle
                     v-model="inputMode"
-                    style="border: 1px solid #027be3;"
+                    style="border: 1px solid #027be3"
                     no-caps
                     dense
                     spread
@@ -181,7 +181,6 @@
           class="column no-wrap full-height"
           :style="{ width: 100 - this.resizableWidth + '%' }"
         >
-
           <DeidentificationClassic
             style="height: 100%"
             :inputLetter="inputLetter"
@@ -216,18 +215,15 @@
             v-model:inputLetter="inputLetter"
             v-model:inputMode="inputMode"
           />
-          <q-card
-            class=""
+          <medical-information-extraction
+            v-model:doc="inputLetter"
+            v-if="
+              taskName === 'Information Extraction' &&
+              setupName === 'Medication & Timeline with LLM'
+            "
             style="height: 100%"
-            v-if="setupName === 'Medical Information Extraction with LLM'"
-          >
-            <q-card-section class="" style="height: 100%">
-              <medical-information-extraction
-                v-model:doc="inputLetter"
-                ref="medicalInformationExtractionComponent"
-              ></medical-information-extraction>
-            </q-card-section>
-          </q-card>
+            ref="medicalInformationExtractionComponent"
+          ></medical-information-extraction>
           <q-card class="" style="height: 100%" v-if="setupName === null">
             <q-card-section class="row justify-between">
               <div class="col-2"></div>
@@ -263,7 +259,7 @@ export default defineComponent({
   },
   setup() {
     return {
-      modelName: ref(''),
+      modelName: ref(""),
 
       resizableWidth: ref(45),
       draggable: false,
@@ -314,6 +310,11 @@ export default defineComponent({
           ],
         },
         {
+          label: "Information Extraction",
+          value: "Information Extraction",
+          setupNames: ["Medication & Timeline with LLM"],
+        },
+        {
           label: "Question Answering",
           value: "question answering",
           setupNames: [
@@ -326,7 +327,7 @@ export default defineComponent({
         {
           label: "ChatBot",
           value: "ChatBot",
-          setupNames: ['mistral-7b-openorca-q5']
+          setupNames: ["mistral-7b-openorca-q5"],
         },
         {
           group: "Search",
@@ -417,8 +418,6 @@ export default defineComponent({
     // })
   },
   methods: {
-
-
     startDrag() {
       this.draggable = true;
       this.$refs.resizableBlock.addEventListener("mousemove", this.handleDrag);
