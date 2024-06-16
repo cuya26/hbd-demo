@@ -18,11 +18,11 @@ export let config = {
     //   url: "http://147.189.192.41:8080",
     //   OpenAI_API: false,
     // },
-    // {
-    //   name: "Mistral8kContext",
-    //   url: "http://147.189.192.78:8080",
-    //   OpenAI_API: false,
-    // },
+    {
+      name: "Llama3",
+      url: "http://147.189.192.78:8080",
+      OpenAI_API: false,
+    },
   ],
 
   selectedServer: {
@@ -96,6 +96,7 @@ export function askLLM(body) {
       {
         ...body,
         stream: false,
+        cache_prompt: true,
         stop: ["<|im_end|>", "###"],
       },
       {
