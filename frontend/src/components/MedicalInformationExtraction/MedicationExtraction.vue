@@ -8,7 +8,6 @@ import {
   applyTemplate,
   getProperties,
   getTasks,
-  isAdvanced,
   setProperties,
 } from "components/MedicalInformationExtraction/utils";
 import ModelInterface from "components/MedicalInformationExtraction/ModelInterface.vue";
@@ -55,6 +54,7 @@ export default {
           return s.replace("{file}", file);
         },
       ]),
+      showSettings: ref(false),
       separator: ref(";"),
       medExt: {
         taskName: "medExtIta",
@@ -79,8 +79,6 @@ export default {
     };
   },
   methods: {
-    isAdvanced,
-
     startEditingTable(start) {
       this.editableTable = start;
       if (this.editableTable) {
@@ -204,10 +202,16 @@ export default {
 
 <template>
   <div
+    v-show="!showSettings"
     id="child"
     class="q-pa-md full-height column flex q-ma-none no-wrap"
     style="height: 100% !important; flex-shrink: 0"
   >
+    <div class="flex full-width justify-between">
+      <h6 style="margin: 0">Medications</h6>
+      <q-icon name="settings" @click="showSettings = !showSettings" />
+    </div>
+
     <div>
       <div
         v-if="medExt.loading === true"
@@ -217,8 +221,8 @@ export default {
         <q-spinner-gears color="primary" size="8em" />
       </div>
       <q-table
+        dense
         class="col col-grow"
-        title="Medications"
         :rows="
           medExt.table.rows.length > 0
             ? medExt.table.rows
@@ -236,16 +240,6 @@ export default {
         row-key="name"
         :rows-per-page-options="[0, 10, 20, 30]"
       >
-        <template v-slot:top>
-          <div class="col-2 q-table__title">Medications</div>
-          <q-space />
-          <q-input
-            v-if="isAdvanced()"
-            v-model="separator"
-            label="Separator"
-            dense
-          />
-        </template>
         <template v-slot:body="props">
           <q-tr :props="props">
             <q-td key="name" :props="props">
@@ -346,27 +340,24 @@ export default {
         </div>
       </div>
     </div>
-    <div class="col-grow">
-      <div class="col-grow"></div>
+  </div>
+  <div v-show="showSettings" class="q-pa-md">
+    <div class="flex full-width justify-between">
+      <h6 style="margin: 0">Medication Extraction Settings</h6>
+      <q-icon name="close" @click="showSettings = false" />
     </div>
-    <div>
-      <div>
-        <model-interface
-          v-show="isAdvanced()"
-          ref="medExtPromptComponent"
-          v-model:settings="medExtSettings"
-          v-model:answer="medExt.answer"
-          @loading="medExt.loading = $event"
-          @update:answer="
-            this.medExt.table.rows = this.parseMedicationsAnswer(
-              this.medExt.answer
-            )
-          "
-          :map-prompt="mapPrompt"
-          :map-outputs="[]"
-        ></model-interface>
-      </div>
-    </div>
+    <model-interface
+      ref="medExtPromptComponent"
+      v-model:settings="medExtSettings"
+      v-model:answer="medExt.answer"
+      @loading="medExt.loading = $event"
+      @update:answer="
+        this.medExt.table.rows = this.parseMedicationsAnswer(this.medExt.answer)
+      "
+      :map-prompt="mapPrompt"
+      :map-outputs="[]"
+    ></model-interface>
+    <q-input v-model="separator" label="Separator" dense />
   </div>
 </template>
 

@@ -2,8 +2,8 @@
 import { ref } from "vue";
 import ModelInterface from "./ModelInterface.vue";
 import {
-  isAdvanced,
   getProperties,
+  isAdvanced,
 } from "components/MedicalInformationExtraction/utils";
 import ISLTimeline from "components/MedicalInformationExtraction/ISLTimeline.vue";
 import { useQuasar } from "quasar";
@@ -39,7 +39,7 @@ export default {
           return s.replace("{file}", file);
         },
       ]),
-
+      showSettings: ref(false),
       timeline: {
         taskName: "ISLTimelineItaThree",
         timelineProp: ref({}),
@@ -115,60 +115,70 @@ export default {
 </script>
 
 <template>
-  <div
-    id="child"
-    class="full-height q-pa-md column justify-between full-width no-wrap"
-  >
+  <div>
     <div
-      class="column no-wrap full-height overflow-hidden"
-      style="height: 100%"
+      v-show="!showSettings"
+      id="child"
+      class="full-height q-pa-md column justify-between full-width no-wrap"
     >
       <div
-        v-if="timeline.loading === true"
-        class="absolute-top-left bg-grey-3 row justify-center items-center"
-        style="height: 100%; width: 100%; z-index: 10; opacity: 50%"
+        class="column no-wrap full-height overflow-hidden"
+        style="height: 100%"
       >
-        <q-spinner-gears color="primary" size="8em" />
-      </div>
-
-      <q-timeline layout="comfortable" side="right" color="secondary">
-        <q-timeline-entry heading>Timeline</q-timeline-entry>
-        <q-timeline-entry v-if="timeline.times.length === 0">
-        </q-timeline-entry>
-        <q-timeline-entry
-          v-for="time in timeline.times"
-          :key="time"
-          :subtitle="time.dateValue"
-          :title="time.headline"
+        <div class="flex full-width justify-between">
+          <h6 style="margin: 0">Timeline</h6>
+          <q-icon name="settings" @click="showSettings = true" />
+        </div>
+        <div
+          v-if="timeline.loading === true"
+          class="absolute-top-left bg-grey-3 row justify-center items-center"
+          style="height: 100%; width: 100%; z-index: 10; opacity: 50%"
         >
-          <ul>
-            {{
-              time.description
-            }}
-          </ul>
-        </q-timeline-entry>
-      </q-timeline>
-      <div class="q-pa-lg">
-        <div class="flex justify-between">
+          <q-spinner-gears color="primary" size="8em" />
+        </div>
+
+        <q-timeline dense layout="comfortable" side="right" color="secondary">
+          <q-timeline-entry v-if="timeline.times.length === 0">
+          </q-timeline-entry>
+          <q-timeline-entry
+            v-for="time in timeline.times"
+            :key="time"
+            :subtitle="time.dateValue"
+            :title="time.headline"
+          >
+            <ul>
+              {{
+                time.description
+              }}
+            </ul>
+          </q-timeline-entry>
+        </q-timeline>
+        <div class="q-pa-lg">
           <div class="flex justify-between">
-            <div class="flex items-center" style="gap: 0.8em">
-              <q-btn
-                class="q-ma-sm"
-                color="primary"
-                @click="this.$refs.timelinePromptComponent.sendLLM()"
-                >Extract timeline
-              </q-btn>
-              <q-btn
-                v-if="timeline.times.length > 0"
-                @click="this.openInformationSourceLocalization"
-                >See source localization
-              </q-btn>
+            <div class="flex justify-between">
+              <div class="flex items-center" style="gap: 0.8em">
+                <q-btn
+                  class="q-ma-sm"
+                  color="primary"
+                  @click="this.$refs.timelinePromptComponent.sendLLM()"
+                  >Extract timeline
+                </q-btn>
+                <q-btn
+                  v-if="timeline.times.length > 0"
+                  @click="this.openInformationSourceLocalization"
+                  >See source localization
+                </q-btn>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-    <div v-show="isAdvanced()">
+    <div v-show="showSettings" class="q-pa-md">
+      <div class="flex full-width justify-between">
+        <h6 style="margin: 0">Timeline Extraction Settings</h6>
+        <q-icon name="close" @click="showSettings = false" />
+      </div>
       <model-interface
         ref="timelinePromptComponent"
         v-model:settings="timelineSettings"
