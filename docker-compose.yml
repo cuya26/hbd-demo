@@ -6,7 +6,7 @@ volumes:
 services:
     elasticsearch:
         image: elasticsearch:7.9.2
-        container_name: elasticsearch_clinical
+        container_name: hbd-demo-elasticsearch_clinical
         volumes:
             - elasticsearch-data:/usr/share/elasticsearch/data
         ports:
@@ -57,7 +57,7 @@ services:
             - ~/models/:/models/
         ports:
             - 51124:8000
-        command: sh -c "python3 -m llama_cpp.server --model /models/Meta-Llama-3-8B-Instruct.Q5_K_M.gguf --n_ctx 8182 --chat_format llama-3 --n_gpu_layers -1"
+        command: sh -c "python3 -m llama_cpp.server --model /models/Meta-Llama-3-8B-Instruct.Q5_K_M.gguf --n_ctx 8182 --cache true --chat_format llama-3 --n_gpu_layers -1"
         environment:
             - HOST=0.0.0.0
         deploy:
@@ -79,7 +79,7 @@ services:
         # npm install
         container_name: hbd-demo-frontend
         ports:
-            - 51118:8080
+            - 51118:51118
         restart: always
         command: sh -c "npm install && npm audit fix --force && quasar dev"
     backend:

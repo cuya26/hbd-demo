@@ -23,7 +23,7 @@ class Step(BaseModel):
     name: str
     userMessage: str
     completionInit: str
-    systemMessage: str
+    systemMessage: Optional[str]
 
 class Template(BaseModel):
     systemMessageStart:str
