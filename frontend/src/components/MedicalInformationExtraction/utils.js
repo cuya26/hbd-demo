@@ -1,4 +1,5 @@
 import * as axios from "boot/axios";
+import { llamaHost } from "boot/axios";
 
 export let config = {
   advanced: true,
@@ -107,6 +108,27 @@ export function askLLM(body) {
     .then(mapLLMAnswer);
 }
 
+export function sendMessageToLLM(chat, params) {
+  return fetch(llamaHost + "/v1/chat/completions", {
+    method: "POST",
+    body: JSON.stringify({
+      messages: chat,
+      stream: true,
+      cache_prompt: true,
+      ...params,
+    }),
+    headers: {
+      "Content-Type": "application/json",
+      timeout: 36000,
+    },
+  }).then((response) => {
+    if (!response.ok) {
+      throw new Error("Errore nella chiamata POST");
+    }
+    return response.body;
+  });
+}
+
 export function buildLLMUrl() {
   return (
     config.selectedServer.url +
@@ -134,32 +156,3 @@ export function saveServer() {
     reachable: false,
   };
 }
-
-//
-// export function checkCustomServerAvailability() {
-//   if (config.customServer.url === "") return;
-//   console.log(
-//     config.customServer.url + (config.customServer.OpenAI_API ? "/docs" : "")
-//   );
-//   axios.api
-//     .get(
-//       config.customServer.url + (config.customServer.OpenAI_API ? "/docs" : "")
-//     )
-//     .then(() => (config.customServer.reachable = true))
-//     .catch((err) => {
-//       console.log(err, err.code, err.code === "ERR_NETWORK");
-//       config.customServer.reachable = err.code !== "ERR_NETWORK";
-//     });
-// }
-//
-// export function checkServersAvailability() {
-//   for (let server of config.servers) {
-//     axios.api
-//       .get(server.url + (server.OpenAI_API ? "/docs" : ""))
-//       .then(() => (server.reachable = true))
-//       .catch((err) => {
-//         console.log(err, err.code, err.code === "ERR_NETWORK");
-//         server.reachable = err.code !== "ERR_NETWORK";
-//       });
-//   }
-// }

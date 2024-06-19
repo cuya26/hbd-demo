@@ -169,6 +169,9 @@ export default {
           console.log("Cancel");
         });
     },
+    toggleSettings() {
+      this.showSettings = !this.showSettings;
+    },
     saveMedExtFix() {
       setProperties("medExtFix", this.medExt.medExtFixProp);
     },
@@ -201,168 +204,209 @@ export default {
 </script>
 
 <template>
-  <div
-    v-show="!showSettings"
-    id="child"
-    class="q-pa-md full-height column flex q-ma-none no-wrap"
-    style="height: 100% !important; flex-shrink: 0"
-  >
-    <div class="flex full-width justify-between">
-      <h6 style="margin: 0">Medications</h6>
-      <q-icon name="settings" @click="showSettings = !showSettings" />
-    </div>
-
-    <div>
+  <div class="full-width full-height flip-card">
+    <div
+      class="full-width full-height flip-card-inner"
+      :class="{ rotate: showSettings }"
+    >
       <div
-        v-if="medExt.loading === true"
-        class="absolute-top-left bg-grey-3 row justify-center items-center"
-        style="height: 100%; width: 100%; z-index: 10; opacity: 50%"
+        id="child"
+        class="q-pa-md full-height column flex q-ma-none no-wrap flip-card-front"
+        style="height: 100% !important; flex-shrink: 0"
       >
-        <q-spinner-gears color="primary" size="8em" />
-      </div>
-      <q-table
-        dense
-        class="col col-grow"
-        :rows="
-          medExt.table.rows.length > 0
-            ? medExt.table.rows
-            : [
-                {
-                  name: 'No Data',
-                  dose: '',
-                  frequency: '',
-                  route: '',
-                  lines: [],
-                },
-              ]
-        "
-        :columns="medExt.table.columns"
-        row-key="name"
-        :rows-per-page-options="[0, 10, 20, 30]"
-      >
-        <template v-slot:body="props">
-          <q-tr :props="props">
-            <q-td key="name" :props="props">
-              {{ props.row.name }}
-              <q-popup-edit
-                :disable="!editableTable"
-                v-model="props.row.name"
-                v-slot="scope"
-              >
-                <q-input
-                  v-model="scope.value"
-                  dense
-                  autofocus
-                  title="Update Name"
-                  @keyup.enter="scope.set"
-                />
-              </q-popup-edit>
-            </q-td>
-            <q-td key="dose" :props="props">
-              {{ props.row.dose }}
-              <q-popup-edit
-                :disable="!editableTable"
-                v-model="props.row.dose"
-                v-slot="scope"
-              >
-                <q-input
-                  v-model="scope.value"
-                  dense
-                  autofocus
-                  title="Update dosage"
-                  @keyup.enter="scope.set"
-                />
-              </q-popup-edit>
-            </q-td>
-            <q-td key="frequency" :props="props">
-              {{ props.row.frequency }}
-              <q-popup-edit
-                :disable="!editableTable"
-                v-model="props.row.frequency"
-                v-slot="scope"
-              >
-                <q-input
-                  v-model="scope.value"
-                  dense
-                  autofocus
-                  title="Update dosage"
-                  @keyup.enter="scope.set"
-                />
-              </q-popup-edit>
-            </q-td>
-            <q-td key="route" :props="props">
-              {{ props.row.route }}
-              <q-popup-edit
-                :disable="!editableTable"
-                v-model="props.row.route"
-                v-slot="scope"
-              >
-                <q-input
-                  v-model="scope.value"
-                  dense
-                  autofocus
-                  title="Update dosage"
-                  @keyup.enter="scope.set"
-                />
-              </q-popup-edit>
-            </q-td>
-          </q-tr>
-        </template>
-      </q-table>
-      <div class="flex justify-between q-py-sm">
-        <div class="flex items-center" style="gap: 0.8em">
-          <q-btn
-            class=""
-            color="primary"
-            @click="this.$refs.medExtPromptComponent.sendLLM()"
-            >Extract medications
-          </q-btn>
-          <q-toggle
-            v-show="medExt.table.rows.length > 0"
-            :model-value="editableTable"
-            @update:model-value="startEditingTable($event)"
-            color="primary"
-            icon="edit"
-            label="Edit table"
-          />
-          <q-btn
-            v-if="medExt.table.rows.length > 0"
-            @click="this.openInformationSourceLocalization"
-            >See source localization
-          </q-btn>
-          <q-btn
-            v-if="editableTable"
-            @click="sendLog('medExt')"
-            class="q-ma-sm"
+        <div class="flex full-width justify-between">
+          <h6 style="margin: 0">Medications</h6>
+          <q-icon name="settings" @click="showSettings = !showSettings" />
+        </div>
+
+        <div>
+          <div
+            v-if="medExt.loading === true"
+            class="absolute-top-left bg-grey-3 row justify-center items-center"
+            style="height: 100%; width: 100%; z-index: 10; opacity: 50%"
           >
-            Save log
-          </q-btn>
+            <q-spinner-gears color="primary" size="8em" />
+          </div>
+          <q-table
+            dense
+            class="col col-grow"
+            :rows="
+              medExt.table.rows.length > 0
+                ? medExt.table.rows
+                : [
+                    {
+                      name: 'No Data',
+                      dose: '',
+                      frequency: '',
+                      route: '',
+                      lines: [],
+                    },
+                  ]
+            "
+            :columns="medExt.table.columns"
+            row-key="name"
+            :rows-per-page-options="[0, 10, 20, 30]"
+          >
+            <template v-slot:body="props">
+              <q-tr :props="props">
+                <q-td key="name" :props="props">
+                  {{ props.row.name }}
+                  <q-popup-edit
+                    :disable="!editableTable"
+                    v-model="props.row.name"
+                    v-slot="scope"
+                  >
+                    <q-input
+                      v-model="scope.value"
+                      dense
+                      autofocus
+                      title="Update Name"
+                      @keyup.enter="scope.set"
+                    />
+                  </q-popup-edit>
+                </q-td>
+                <q-td key="dose" :props="props">
+                  {{ props.row.dose }}
+                  <q-popup-edit
+                    :disable="!editableTable"
+                    v-model="props.row.dose"
+                    v-slot="scope"
+                  >
+                    <q-input
+                      v-model="scope.value"
+                      dense
+                      autofocus
+                      title="Update dosage"
+                      @keyup.enter="scope.set"
+                    />
+                  </q-popup-edit>
+                </q-td>
+                <q-td key="frequency" :props="props">
+                  {{ props.row.frequency }}
+                  <q-popup-edit
+                    :disable="!editableTable"
+                    v-model="props.row.frequency"
+                    v-slot="scope"
+                  >
+                    <q-input
+                      v-model="scope.value"
+                      dense
+                      autofocus
+                      title="Update dosage"
+                      @keyup.enter="scope.set"
+                    />
+                  </q-popup-edit>
+                </q-td>
+                <q-td key="route" :props="props">
+                  {{ props.row.route }}
+                  <q-popup-edit
+                    :disable="!editableTable"
+                    v-model="props.row.route"
+                    v-slot="scope"
+                  >
+                    <q-input
+                      v-model="scope.value"
+                      dense
+                      autofocus
+                      title="Update dosage"
+                      @keyup.enter="scope.set"
+                    />
+                  </q-popup-edit>
+                </q-td>
+              </q-tr>
+            </template>
+          </q-table>
+          <div class="flex justify-between q-py-sm">
+            <div class="flex items-center" style="gap: 0.8em">
+              <q-btn
+                class=""
+                color="primary"
+                @click="this.$refs.medExtPromptComponent.sendLLM()"
+                >Extract medications
+              </q-btn>
+              <q-toggle
+                v-show="medExt.table.rows.length > 0"
+                :model-value="editableTable"
+                @update:model-value="startEditingTable($event)"
+                color="primary"
+                icon="edit"
+                label="Edit table"
+              />
+              <q-btn
+                v-if="medExt.table.rows.length > 0"
+                @click="this.openInformationSourceLocalization"
+                >See source localization
+              </q-btn>
+              <q-btn
+                v-if="editableTable"
+                @click="sendLog('medExt')"
+                class="q-ma-sm"
+              >
+                Save log
+              </q-btn>
+            </div>
+          </div>
         </div>
       </div>
+      <div class="q-pa-md flex column flip-card-back full-height">
+        <div class="flex col-1 full-width justify-between">
+          <h6 style="margin: 0">Medication Extraction Settings</h6>
+          <q-icon name="close" @click="showSettings = false" />
+        </div>
+        <model-interface
+          class="col"
+          ref="medExtPromptComponent"
+          :enable-send="false"
+          v-model:settings="medExtSettings"
+          v-model:answer="medExt.answer"
+          @loading="medExt.loading = $event"
+          @update:answer="
+            this.medExt.table.rows = this.parseMedicationsAnswer(
+              this.medExt.answer
+            )
+          "
+          :map-prompt="mapPrompt"
+          :map-outputs="[]"
+        ></model-interface>
+        <q-input class="col-1" v-model="separator" label="Separator" dense />
+      </div>
     </div>
-  </div>
-  <div v-show="showSettings" class="q-pa-md">
-    <div class="flex full-width justify-between">
-      <h6 style="margin: 0">Medication Extraction Settings</h6>
-      <q-icon name="close" @click="showSettings = false" />
-    </div>
-    <model-interface
-      ref="medExtPromptComponent"
-      v-model:settings="medExtSettings"
-      v-model:answer="medExt.answer"
-      @loading="medExt.loading = $event"
-      @update:answer="
-        this.medExt.table.rows = this.parseMedicationsAnswer(this.medExt.answer)
-      "
-      :map-prompt="mapPrompt"
-      :map-outputs="[]"
-    ></model-interface>
-    <q-input v-model="separator" label="Separator" dense />
   </div>
 </template>
 
 <style scoped lang="scss">
 #child {
   min-height: inherit;
+}
+
+.flip-card {
+  background-color: transparent;
+  perspective: 4000px;
+}
+
+.flip-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  transition: transform 0.4s;
+  transform-style: preserve-3d;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+}
+
+.flip-card .flip-card-inner.rotate {
+  transform: rotateY(180deg);
+}
+
+.flip-card-front,
+.flip-card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+.flip-card-back {
+  transform: rotateY(180deg);
 }
 </style>

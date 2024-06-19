@@ -261,7 +261,7 @@ export default defineComponent({
     return {
       modelName: ref(""),
 
-      resizableWidth: ref(45),
+      resizableWidth: ref(30),
       draggable: false,
       inputMode: ref("edit"),
       dropzoneURL: ref(""),
@@ -272,7 +272,7 @@ export default defineComponent({
       inputLetter: ref(),
       letterNames: ref([]),
       letterDict: ref({}),
-      taskName: ref(null),
+      taskName: ref("Information Extraction"),
       taskNames: ref([
         "deidentification",
         "pharmacological event extraction",
@@ -340,7 +340,7 @@ export default defineComponent({
           // setupNames: ['Not ready yet...']
         },
       ],
-      setupName: ref(""),
+      setupName: ref("Medication & Timeline with LLM"),
       modelConfig: ref({
         "Track1 n2c2 Challenge (en)": {
           modelName: "track1 n2c2 pipeline1",

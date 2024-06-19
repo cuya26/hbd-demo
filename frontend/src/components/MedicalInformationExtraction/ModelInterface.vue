@@ -20,6 +20,7 @@ export default {
     accordion: Boolean,
     mapOutputs: Array,
     mapPrompt: Array,
+    enableSend: Boolean,
   },
   watch: {
     settings: function (newVal) {
@@ -205,6 +206,7 @@ export default {
   expose: ["sendLLM"],
   data() {
     return {
+      enableSendLocal: ref(this.enableSend),
       tab: "Step 1",
       template: ref(""),
       settingsLocal: ref(this.settings),
@@ -254,10 +256,10 @@ export default {
   <div
     class="full-height column justify-between full-width no-wrap overflow-auto"
   >
-    <q-list class="full-height column no-wrap">
-      <q-item class="q-pa-none flex justify-end">
+    <q-list class="full-height column no-wrap" dense>
+      <q-item class="q-pa-none flex justify-end" dense>
         <q-btn-dropdown flat icon="more_vert">
-          <q-list>
+          <q-list dense>
             <q-item clickable v-close-popup @click="loadSettings">
               <q-item-section> Load Settings</q-item-section>
             </q-item>
@@ -269,6 +271,7 @@ export default {
         </q-btn-dropdown>
       </q-item>
       <q-expansion-item
+        dense
         icon="settings"
         label="Model Settings"
         header-class=""
@@ -304,6 +307,7 @@ export default {
 
       <q-separator />
       <q-expansion-item
+        dense
         icon="edit_note"
         label="Template"
         header-class=""
@@ -385,6 +389,7 @@ export default {
       <q-separator />
 
       <q-expansion-item
+        dense
         icon="edit_note"
         label="Prompt"
         header-class=""
@@ -450,6 +455,7 @@ export default {
         <div class="q-pa-sm flex justify-end full-width">
           <q-btn class="q-mx-sm" flat icon="cleaning_services" />
           <q-btn
+            v-show="enableSend"
             class="q-mx-sm bg-primary text-white"
             flat
             label="Send"
@@ -462,6 +468,7 @@ export default {
       <q-separator />
 
       <q-expansion-item
+        dense
         icon="output"
         label="Model Output"
         :group="accordion ? 'group' : null"

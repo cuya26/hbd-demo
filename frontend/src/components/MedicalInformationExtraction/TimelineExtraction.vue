@@ -115,81 +115,87 @@ export default {
 </script>
 
 <template>
-  <div>
+  <div class="full-width full-height flip-card">
     <div
-      v-show="!showSettings"
-      id="child"
-      class="full-height q-pa-md column justify-between full-width no-wrap"
+      class="full-width full-height flip-card-inner"
+      :class="{ rotate: showSettings }"
     >
       <div
-        class="column no-wrap full-height overflow-hidden"
-        style="height: 100%"
+        id="child"
+        class="full-height flip-card-front q-pa-md column justify-between full-width no-wrap"
       >
-        <div class="flex full-width justify-between">
-          <h6 style="margin: 0">Timeline</h6>
-          <q-icon name="settings" @click="showSettings = true" />
-        </div>
         <div
-          v-if="timeline.loading === true"
-          class="absolute-top-left bg-grey-3 row justify-center items-center"
-          style="height: 100%; width: 100%; z-index: 10; opacity: 50%"
+          class="column no-wrap full-height overflow-auto"
+          style="height: 100%"
         >
-          <q-spinner-gears color="primary" size="8em" />
-        </div>
-
-        <q-timeline dense layout="comfortable" side="right" color="secondary">
-          <q-timeline-entry v-if="timeline.times.length === 0">
-          </q-timeline-entry>
-          <q-timeline-entry
-            v-for="time in timeline.times"
-            :key="time"
-            :subtitle="time.dateValue"
-            :title="time.headline"
+          <div class="flex full-width justify-between">
+            <h6 style="margin: 0">Timeline</h6>
+            <q-icon name="settings" @click="showSettings = true" />
+          </div>
+          <div
+            v-if="timeline.loading === true"
+            class="absolute-top-left bg-grey-3 row justify-center items-center"
+            style="height: 100%; width: 100%; z-index: 10; opacity: 50%"
           >
-            <ul>
-              {{
-                time.description
-              }}
-            </ul>
-          </q-timeline-entry>
-        </q-timeline>
-        <div class="q-pa-lg">
-          <div class="flex justify-between">
+            <q-spinner-gears color="primary" size="8em" />
+          </div>
+
+          <q-timeline dense layout="comfortable" side="right" color="secondary">
+            <q-timeline-entry v-if="timeline.times.length === 0">
+            </q-timeline-entry>
+            <q-timeline-entry
+              v-for="time in timeline.times"
+              :key="time"
+              :subtitle="time.dateValue"
+              :title="time.headline"
+            >
+              <ul>
+                {{
+                  time.description
+                }}
+              </ul>
+            </q-timeline-entry>
+          </q-timeline>
+          <div class="q-pa-lg">
             <div class="flex justify-between">
-              <div class="flex items-center" style="gap: 0.8em">
-                <q-btn
-                  class="q-ma-sm"
-                  color="primary"
-                  @click="this.$refs.timelinePromptComponent.sendLLM()"
-                  >Extract timeline
-                </q-btn>
-                <q-btn
-                  v-if="timeline.times.length > 0"
-                  @click="this.openInformationSourceLocalization"
-                  >See source localization
-                </q-btn>
+              <div class="flex justify-between">
+                <div class="flex items-center" style="gap: 0.8em">
+                  <q-btn
+                    class="q-ma-sm"
+                    color="primary"
+                    @click="this.$refs.timelinePromptComponent.sendLLM()"
+                    >Extract timeline
+                  </q-btn>
+                  <q-btn
+                    v-if="timeline.times.length > 0"
+                    @click="this.openInformationSourceLocalization"
+                    >See source localization
+                  </q-btn>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-    <div v-show="showSettings" class="q-pa-md">
-      <div class="flex full-width justify-between">
-        <h6 style="margin: 0">Timeline Extraction Settings</h6>
-        <q-icon name="close" @click="showSettings = false" />
+      <div class="q-pa-md flex column full-height flip-card-back">
+        <div class="flex col-1 full-width justify-between">
+          <h6 style="margin: 0">Timeline Extraction Settings</h6>
+          <q-icon name="close" @click="showSettings = false" />
+        </div>
+        <model-interface
+          class="col"
+          ref="timelinePromptComponent"
+          :enable-send="false"
+          v-model:settings="timelineSettings"
+          v-model:answer="timeline.answer"
+          @loading="timeline.loading = $event"
+          @update:answer="
+            this.timeline.times = this.parseTimelineAnswer(this.timeline.answer)
+          "
+          :map-prompt="mapPrompt"
+          :map-outputs="[]"
+        ></model-interface>
       </div>
-      <model-interface
-        ref="timelinePromptComponent"
-        v-model:settings="timelineSettings"
-        v-model:answer="timeline.answer"
-        @loading="timeline.loading = $event"
-        @update:answer="
-          this.timeline.times = this.parseTimelineAnswer(this.timeline.answer)
-        "
-        :map-prompt="mapPrompt"
-        :map-outputs="[]"
-      ></model-interface>
     </div>
   </div>
 </template>
@@ -197,5 +203,37 @@ export default {
 <style scoped lang="scss">
 #child {
   min-height: inherit;
+}
+
+.flip-card {
+  background-color: transparent;
+  perspective: 4000px;
+}
+
+.flip-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  transition: transform 0.4s;
+  transform-style: preserve-3d;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+}
+
+.flip-card .flip-card-inner.rotate {
+  transform: rotateY(180deg);
+}
+
+.flip-card-front,
+.flip-card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+.flip-card-back {
+  transform: rotateY(180deg);
 }
 </style>

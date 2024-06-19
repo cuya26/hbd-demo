@@ -7,8 +7,9 @@ import {
   saveServer,
 } from "components/MedicalInformationExtraction/utils";
 import * as docs from "./documents.json";
-import Chat from "components/MedicalInformationExtraction/Chat.vue";
+import Chat from "components/MedicalInformationExtraction/MIEChat.vue";
 import ChatBot from "components/ChatBot.vue";
+import MIEChat from "components/MedicalInformationExtraction/MIEChat.vue";
 
 let documents = Object.fromEntries(
   Object.entries(docs).filter(([key]) => !key.includes("default"))
@@ -17,7 +18,7 @@ let documents = Object.fromEntries(
 export default {
   name: "MedicalInformationExtraction",
 
-  components: { ChatBot, TimelineExtraction, MedicationExtraction },
+  components: { MIEChat, TimelineExtraction, MedicationExtraction },
   props: ["doc"],
   emits: ["update:doc"],
   mounted() {},
@@ -53,8 +54,8 @@ export default {
         ></timeline-extraction>
       </div>
     </q-card>
-    <q-card class="col-4 full-height overflow-scroll">
-      <ChatBot style="height: 100%" :inputLetter="doc" />
+    <q-card class="col-5 full-height overflow-scroll">
+      <MIEChat style="height: 100%" :doc="doc" />
     </q-card>
   </div>
 </template>
