@@ -23,6 +23,7 @@ class Step(BaseModel):
     name: str
     userMessage: str
     completionInit: str
+    systemMessage: Optional[str]
 
 class Template(BaseModel):
     systemMessageStart:str
@@ -34,7 +35,6 @@ class Template(BaseModel):
 
 
 class Properties(BaseModel):
-    systemMessage: str
     steps: List[Step]
     template: Template
     modelParameters: ModelParameters
