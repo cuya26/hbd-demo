@@ -272,7 +272,7 @@ export default defineComponent({
       inputLetter: ref(),
       letterNames: ref([]),
       letterDict: ref({}),
-      taskName: ref("Information Extraction"),
+      taskName: ref(""),
       taskNames: ref([
         "deidentification",
         "pharmacological event extraction",
@@ -340,7 +340,7 @@ export default defineComponent({
           // setupNames: ['Not ready yet...']
         },
       ],
-      setupName: ref("Medication & Timeline with LLM"),
+      setupName: ref(""),
       modelConfig: ref({
         "Track1 n2c2 Challenge (en)": {
           modelName: "track1 n2c2 pipeline1",
