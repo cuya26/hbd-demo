@@ -128,6 +128,13 @@ export default {
           class="column no-wrap full-height overflow-auto"
           style="height: 100%"
         >
+          <q-btn
+            class="q-ma-sm"
+            style="width: 30%; min-width: fit-content"
+            color="primary"
+            @click="this.$refs.timelinePromptComponent.sendLLM()"
+          >Extract timeline
+          </q-btn>
           <div class="flex full-width justify-between">
             <h6 style="margin: 0">Timeline</h6>
             <q-icon name="settings" @click="showSettings = true" />
@@ -160,16 +167,11 @@ export default {
             <div class="flex justify-between">
               <div class="flex justify-between">
                 <div class="flex items-center" style="gap: 0.8em">
-                  <q-btn
-                    class="q-ma-sm"
-                    color="primary"
-                    @click="this.$refs.timelinePromptComponent.sendLLM()"
-                    >Extract timeline
-                  </q-btn>
+
                   <q-btn
                     v-if="timeline.times.length > 0"
                     @click="this.openInformationSourceLocalization"
-                    >See source localization
+                    >View Times Locations
                   </q-btn>
                 </div>
               </div>
@@ -205,6 +207,7 @@ export default {
   min-height: inherit;
 }
 
+
 .flip-card {
   background-color: transparent;
   perspective: 4000px;
@@ -215,7 +218,7 @@ export default {
   width: 100%;
   height: 100%;
   text-align: center;
-  transition: transform 0.4s;
+  transition: transform .5s;
   transform-style: preserve-3d;
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
 }
@@ -227,6 +230,7 @@ export default {
 .flip-card-front,
 .flip-card-back {
   position: absolute;
+  transform: rotateX(0deg);
   width: 100%;
   height: 100%;
   -webkit-backface-visibility: hidden;
@@ -236,4 +240,5 @@ export default {
 .flip-card-back {
   transform: rotateY(180deg);
 }
+
 </style>

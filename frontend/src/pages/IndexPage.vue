@@ -195,11 +195,15 @@
             v-model:loadingSaliencyMap="loadingSaliencyMap"
             v-if="setupName === 'Track1 n2c2 Challenge (en)'"
           />
-          <ChatBot
-            style="height: 100%"
-            :inputLetter="inputLetter"
-            v-if="setupName === 'mistral-7b-openorca-q5'"
-          />
+          <q-card
+              style="height: 100%"
+              v-if="setupName === 'mistral-7b-openorca-q5'"
+          >
+            <MIEChat
+              :doc="inputLetter"
+            />
+          </q-card>
+
           <QuestionAnswering
             v-if="taskName === 'question answering' && setupName !== null"
             style="height: 100%"
@@ -246,14 +250,15 @@ import PharmacologicalEventExtraction from "components/PharmacologicalEventExtra
 import ChatBot from "components/ChatBot.vue";
 import QuestionAnswering from "components/QuestionAnswering.vue";
 import PatientSearch from "components/PatientSearch.vue";
+import MIEChat from "components/MedicalInformationExtraction/MIEChat.vue";
 
 export default defineComponent({
   name: "Health Big Data WG1 Demo",
   components: {
+    MIEChat,
     MedicalInformationExtraction,
     DeidentificationClassic,
     PharmacologicalEventExtraction,
-    ChatBot,
     QuestionAnswering,
     PatientSearch,
   },

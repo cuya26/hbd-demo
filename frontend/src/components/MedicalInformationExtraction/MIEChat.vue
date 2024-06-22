@@ -5,6 +5,13 @@ import { sendMessageToLLM } from "components/MedicalInformationExtraction/utils"
 export default {
   name: "MIEChat",
   props: { doc: String },
+  mounted() {
+    setTimeout(() =>{
+
+      this.chat[0].content = this.systemMessage.replace("{doc}", this.doc??'');
+
+    }, 10)
+  },
   data() {
     return {
       text: ref(""),
@@ -32,10 +39,13 @@ Le risposte sono coincise ed esaustive.
   },
   watch: {
     doc: function (newValue) {
-      this.chat[0].content = this.systemMessage.replace("{doc}", newValue);
+      this.chat[0].content = this.systemMessage.replace("{doc}", newValue??'');
     },
   },
   methods: {
+    clear(){
+      this.chat = [this.chat[0]]
+    },
     send() {
       this.chat.push({
         content: this.text,
@@ -45,7 +55,10 @@ Le risposte sono coincise ed esaustive.
         role: "assistant",
         content: "",
       });
-      sendMessageToLLM(this.chat, {}).then((response) => {
+
+      sendMessageToLLM(this.chat, {})
+        .then((response) => {
+          this.text = ""
         let reader = response.getReader();
         const processStream = ({ done, value }) => {
           if (done) {
@@ -84,7 +97,7 @@ Le risposte sono coincise ed esaustive.
           return reader.read().then(processStream);
         };
         reader.read().then(processStream);
-      });
+      })
     },
   },
 };
@@ -124,8 +137,15 @@ Le risposte sono coincise ed esaustive.
     <div class="col-grow">
       <div class="col-grow"></div>
     </div>
-    <q-input bottom-slots v-model="text" label="Message" :dense="dense">
+    <q-input bottom-slots v-on:keyup.enter="send"  v-model="text" label="Message" :dense="dense">
       <template v-slot:after>
+        <q-btn
+          round
+          dense
+          flat
+          icon="delete"
+          @click="clear()"
+        />
         <q-btn
           :disable="text.trim() === ''"
           round

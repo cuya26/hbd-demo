@@ -99,13 +99,13 @@ async def log(task: str, log: PromptingLog):
         last_log = '{}'
 
     last_prompt_log = json.loads(last_log)
-    current_prompt_log = json.loads(log.model_dump_json())
+    current_prompt_log = json.loads(log.json())
     if last_prompt_log == current_prompt_log:
         print('same log')
         return 'ok'
     else:
         print('new log')
         with open('./MedInfoExt/logs/' + now.strftime(task + "__%Y_%m_%d_%H_%M_%S.log"), 'w') as f:
-            f.write(log.model_dump_json() + '\n')
+            f.write(log.json() + '\n')
 
     return 'ok'

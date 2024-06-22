@@ -11,6 +11,8 @@ import {
   setProperties,
 } from "components/MedicalInformationExtraction/utils";
 import ModelInterface from "components/MedicalInformationExtraction/ModelInterface.vue";
+import * as axios from "boot/axios";
+
 
 // prettier-ignore
 const columns = [
@@ -92,8 +94,45 @@ export default {
       }
     },
     sendLog(task) {
+      let obj1 =  JSON.stringify(this.medExt.table.rows)
+      let obj2 =  JSON.stringify(this.parseMedicationsAnswer(this.medExt.answer))
+
+      if(obj1 === obj2)
+      {
+        Promise.resolve().then(() =>
+        this.$q.notify({
+          message: `Please edit table before send log`,
+          color: 'orange',
+          position: 'top-right',
+          actions: [
+            { label: 'Dismiss', color: 'white', handler: () => { /* ... */ } }
+          ]
+        }))
+        return
+      }
       this.medExt.log.expected = JSON.stringify(this.medExt.table.rows);
-      axios.api.post("/log/" + task, this.medExt.log);
+
+      axios.api.post("/log/" + task, this.medExt.log)
+        .then(({data}) =>{
+        this.$q.notify({
+          message: `Data has been sent`,
+          color: 'green',
+          position: 'top-right',
+          actions: [
+            { label: 'Dismiss', color: 'white', handler: () => { /* ... */ } }
+          ]
+        }
+      )})
+        .catch((err) =>
+          this.$q.notify({
+            message: `Error: ${err}`,
+            color: 'red',
+            position: 'top-right',
+            actions: [
+              { label: 'Dismiss', color: 'white', handler: () => { /* ... */ } }
+            ]
+          })
+        )
     },
 
     parseMedicationsAnswer(answer) {
@@ -214,6 +253,13 @@ export default {
         class="q-pa-md full-height column flex q-ma-none no-wrap flip-card-front"
         style="height: 100% !important; flex-shrink: 0"
       >
+        <q-btn
+          class="q-mb-sm"
+          style="width: 30%; min-width: fit-content"
+          color="primary"
+          @click="this.$refs.medExtPromptComponent.sendLLM()"
+        >Extract medications
+        </q-btn>
         <div class="flex full-width justify-between">
           <h6 style="margin: 0">Medications</h6>
           <q-icon name="settings" @click="showSettings = !showSettings" />
@@ -227,6 +273,7 @@ export default {
           >
             <q-spinner-gears color="primary" size="8em" />
           </div>
+
           <q-table
             dense
             class="col col-grow"
@@ -318,12 +365,7 @@ export default {
           </q-table>
           <div class="flex justify-between q-py-sm">
             <div class="flex items-center" style="gap: 0.8em">
-              <q-btn
-                class=""
-                color="primary"
-                @click="this.$refs.medExtPromptComponent.sendLLM()"
-                >Extract medications
-              </q-btn>
+
               <q-toggle
                 v-show="medExt.table.rows.length > 0"
                 :model-value="editableTable"
@@ -335,7 +377,7 @@ export default {
               <q-btn
                 v-if="medExt.table.rows.length > 0"
                 @click="this.openInformationSourceLocalization"
-                >See source localization
+                >View Medication Locations
               </q-btn>
               <q-btn
                 v-if="editableTable"
@@ -389,7 +431,7 @@ export default {
   width: 100%;
   height: 100%;
   text-align: center;
-  transition: transform 0.4s;
+  transition: transform .5s;
   transform-style: preserve-3d;
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
 }
@@ -401,12 +443,16 @@ export default {
 .flip-card-front,
 .flip-card-back {
   position: absolute;
+  transform: rotateX(0deg);
   width: 100%;
   height: 100%;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
 }
+
 .flip-card-back {
   transform: rotateY(180deg);
 }
+
+
 </style>
