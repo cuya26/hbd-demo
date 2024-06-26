@@ -311,7 +311,6 @@ export default defineComponent({
           value: "table extraction",
           setupNames: [
             "Track1 n2c2 Challenge (en)",
-            "Medical Information Extraction with LLM",
           ],
         },
         {

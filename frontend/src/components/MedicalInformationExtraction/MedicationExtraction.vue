@@ -18,8 +18,8 @@ import * as axios from "boot/axios";
 const columns = [
   {name: "name", label: "Name", field: "name", align: "left", sortable: true},
   {name: "dose", label: "Dose", field: "dose", align: "left", sortable: true},
+  {name: "route", label: "Mode", field: "route", align: "left", sortable: true},
   {name: "frequency", label: "Frequency", field: "frequency", align: "left", sortable: true},
-  {name: "route", label: "Route", field: "route", align: "left", sortable: true},
   {name: "lines", label: "Lines", field: "lines", align: "left", sortable: false},
 ]
 
