@@ -41,7 +41,7 @@ export default {
       ]),
       showSettings: ref(false),
       timeline: {
-        taskName: "ISLTimelineItaThree",
+        taskName: "ISLTimelineItaThree2",
         timelineProp: ref({}),
         timelineFixProp: ref({}),
         fixAnswer: {
@@ -50,7 +50,83 @@ export default {
 
         brokenOutput: false,
         loading: ref(false),
-        times: [],
+        times:
+
+          [
+            {
+              "dateValue": "2020-12-10",
+              "dateString": "December 10, 2020",
+              "description": "Accesso c/o PS di Vimercate per dolore toracico altalenante",
+              "line": 29
+            },
+            {
+              "dateValue": "2020-12-11",
+              "dateString": "November 11, 2020",
+              "description": "Ecocardiogramma eseguito in acuto",
+              "line": 31
+            },
+            {
+              "dateValue": "2020-12-09",
+              "dateString": "December 9, 2020",
+              "description": "EcoTSA",
+              "line": 50
+            },
+            {
+              "dateValue": "2021-01-01",
+              "dateString": "January 1, 2021",
+              "description": "Fever serotina",
+              "line": 51
+            },
+            {
+              "dateValue": "2021-01-02",
+              "dateString": "January 2, 2021",
+              "description": "Fever serotina",
+              "line": 52
+            },
+            {
+              "dateValue": "2021-01-03",
+              "dateString": "January 3, 2021",
+              "description": "Tampone per SARS-COV2 c/o nostro Centro",
+              "line": 61
+            },
+            {
+              "dateValue": "2021-01-04",
+              "dateString": "January 4, 2021",
+              "description": "Tampone per Sars-Cov2 e sierologia per Sars-Cov2",
+              "line": 62
+            },
+            {
+              "dateValue": "2021-01-05",
+              "dateString": "January 5, 2021",
+              "description": "Intervento cardiochirurgico",
+              "line": 79
+            },
+            {
+              "dateValue": "2021-01-07",
+              "dateString": "January 7, 2021",
+              "description": "Rientro in reparto",
+              "line": 89
+            },
+            {
+              "dateValue": "2021-01-10",
+              "dateString": "January 10, 2021",
+              "description": "Rx torace",
+              "line": 98
+            },
+            {
+              "dateValue": "2021-01-11",
+              "dateString": "January 11, 2021",
+              "description": "Ecocardiogramma TT",
+              "line": 101
+            },
+            {
+              "dateValue": "2021-01-12",
+              "dateString": "January 12, 2021",
+              "description": "Dimissione",
+              "line": 112
+            }
+          ]
+        ,
         answer: "",
       },
     };
@@ -146,23 +222,28 @@ export default {
           >
             <q-spinner-gears color="primary" size="8em" />
           </div>
+          <div class="full-width text-left">
 
-          <q-timeline dense layout="comfortable" side="right" color="secondary">
+
+          <q-timeline layout="dense" side="right" color="secondary">
             <q-timeline-entry v-if="timeline.times.length === 0">
             </q-timeline-entry>
             <q-timeline-entry
               v-for="time in timeline.times"
               :key="time"
-              :subtitle="time.dateValue"
-              :title="time.headline"
+              :title="time.dateString"
+              side="left"
+              class="q-pa-none"
             >
-              <ul>
+              <p class="text-left q-ma-none">
                 {{
                   time.description
                 }}
-              </ul>
+              </p>
             </q-timeline-entry>
           </q-timeline>
+          </div>
+
           <div class="q-pa-lg">
             <div class="flex justify-between">
               <div class="flex justify-between">

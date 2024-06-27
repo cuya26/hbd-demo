@@ -104,10 +104,10 @@
                   />
                 </div>
               </q-card-section>
-              <q-card-section style="height: 90%; width: 95%">
+              <q-card-section style="height: 90%; width: 95%; display: flex; flex-direction: column; flex-shrink: 0">
                 <div
                   v-if="!loadingSaliencyMap"
-                  style="overflow: auto; flex-grow: 1; max-height: 100%"
+                  style="overflow: auto; flex-grow: 1; height: 100%"
                 >
                   <q-input
                     @drop.prevent="this.dropFunction"
@@ -119,23 +119,24 @@
                     "
                     v-if="inputMode === 'edit'"
                     outlined
+                    id="pd"
                     placeholder="Insert text or drag and drop a pdf of txt file"
-                    class="text-grey-7"
+                    class="text-grey-7 full-height"
                     type="textarea"
-                    input-style="min-height: 560px;white-space: nowrap;overflow-x: scroll;font-family: monospace;font-size: small"
-                    style=""
+                    input-style="min-height: 560px; height: 100%;resize: none;overflow-x: scroll;font-family: monospace;font-size: small;"
+                    style="height: 100%; resize: none"
                     v-model="inputLetter"
                   />
                   <embed
                     :src="dropzoneURL"
-                    style="min-height: 560px; width: 100%"
+                    style="min-height: 560px; height: 100%; width: 100%"
                     class=""
                     v-if="inputMode === 'pdf'"
                     type="application/pdf"
                   />
                   <embed
                     :src="dropzoneURL2"
-                    style="min-height: 560px; width: 100%"
+                    style="min-height: 560px; height: 100%; width: 100%"
                     class=""
                     v-if="inputMode === 'regions'"
                     type="application/pdf"
@@ -241,6 +242,7 @@
   </q-page>
 </template>
 
+
 <script>
 import { defineComponent, ref } from "vue";
 import { api, llamaHost } from "boot/axios";
@@ -277,7 +279,7 @@ export default defineComponent({
       inputLetter: ref(),
       letterNames: ref([]),
       letterDict: ref({}),
-      taskName: ref(""),
+      taskName: ref("Information Extraction"),
       taskNames: ref([
         "deidentification",
         "pharmacological event extraction",
@@ -344,7 +346,7 @@ export default defineComponent({
           // setupNames: ['Not ready yet...']
         },
       ],
-      setupName: ref(""),
+      setupName: ref("Medication & Timeline with LLM"),
       modelConfig: ref({
         "Track1 n2c2 Challenge (en)": {
           modelName: "track1 n2c2 pipeline1",

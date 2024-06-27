@@ -29,7 +29,11 @@ export default {
       this.$nextTick(() => {
         let firstLine = document.getElementById("firstLine");
         if (firstLine) {
-          firstLine.scrollIntoView();
+          firstLine.scrollIntoView({
+            behavior: 'auto',
+            block: 'center',
+            inline: 'center'
+          });
         }
       });
     },
@@ -103,7 +107,7 @@ export default {
       style="max-width: unset; gap: 10px"
     >
       <div class="flex col" style="gap: 10px">
-        <q-card bordered class="full-height bg-grey-2 col rounded-borders">
+        <q-card bordered class="relative-position full-height bg-grey-2 col rounded-borders">
           <div
             style="white-space: pre-line; overflow: scroll; height: 100%"
             ref="text"
@@ -157,4 +161,5 @@ span[highlight="true"] {
   font-size: 1.1em;
   font-weight: bold;
 }
+
 </style>

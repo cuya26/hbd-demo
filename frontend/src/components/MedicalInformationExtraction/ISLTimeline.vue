@@ -33,7 +33,11 @@ export default {
       this.$nextTick(() => {
         let firstLine = document.getElementById("firstLine");
         if (firstLine) {
-          firstLine.scrollIntoView();
+          firstLine.scrollIntoView({
+            behavior: 'auto',
+            block: 'center',
+            inline: 'center'
+          });
         }
       });
     },

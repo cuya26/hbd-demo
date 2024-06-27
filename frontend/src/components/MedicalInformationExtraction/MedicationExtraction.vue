@@ -38,6 +38,7 @@ export default {
     getProperties(this.medExt.taskName).then((response) => {
       this.medExtSettings = JSON.parse(response.data);
     });
+    this.medExt.table.rows = this.parseMedicationsAnswer(this.medExt.answer)
   },
   data() {
     return {
@@ -76,7 +77,17 @@ export default {
           columns: columns,
           rows: ref([]),
         },
-        answer: "",
+        answer: `
+Pantoprazolo;20 mg;oral;1 cp alle ore 8;116
+Acido acetilsalicilico;100 mg;oral;1 cp dopo pranzo;117
+Ticagrelor;90 mg;oral;1 cp alle ore 8 e 1 cp alle ore 20;118
+Bisoprololo;1.25 mg;oral;1 cp alle ore 8 e 1 cp alle ore 20;119
+Furosemide;25 mg;oral;2 cp alle ore 8 e 1 cp alle ore 20;120
+Canrenato di potassio;100 mg;oral;½ cp alle ore 16;121
+Atorvastatina;40 mg;oral;1 cp alle ore 22;122
+Tiotropio RespiMat;2 inalazioni;inhalation;al mattino;123
+Prednisone;25 mg;oral;1 cp alle ore 8 per 5 giorni, quindi scalare;124
+`,
       },
     };
   },
@@ -290,7 +301,7 @@ export default {
                     },
                   ]
             "
-            :columns="medExt.table.columns"
+            :columns="medExt.table.columns.slice(0, -1)"
             row-key="name"
             :rows-per-page-options="[0, 10, 20, 30]"
           >
