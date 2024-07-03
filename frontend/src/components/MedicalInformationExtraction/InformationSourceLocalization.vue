@@ -112,6 +112,12 @@ export default {
             style="white-space: pre-line; overflow: scroll; height: 100%"
             ref="text"
           ></div>
+<!--          <div class="blur-top">-->
+
+<!--          </div>-->
+<!--          <div class="blur-bottom">-->
+
+<!--          </div>-->
         </q-card>
         <q-card bordered class="bg-grey-2 col">
           <h6 class="text-h6 q-my-sm q-pa-md">Click on row to see source</h6>
@@ -162,4 +168,19 @@ span[highlight="true"] {
   font-weight: bold;
 }
 
+.blur-top{
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 300px;
+  backdrop-filter: blur(22px);
+}
+.blur-bottom{
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+
+  height: 300px;
+  backdrop-filter: blur(22px);
+}
 </style>

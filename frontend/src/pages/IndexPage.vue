@@ -123,7 +123,7 @@
                     placeholder="Insert text or drag and drop a pdf of txt file"
                     class="text-grey-7 full-height"
                     type="textarea"
-                    input-style="min-height: 560px; height: 100%;resize: none;overflow-x: scroll;font-family: monospace;font-size: small;"
+                    input-style="min-height: 560px; height: 100%;overflow-x: scroll;font-family: monospace;font-size: small;"
                     style="height: 100%; resize: none"
                     v-model="inputLetter"
                   />
