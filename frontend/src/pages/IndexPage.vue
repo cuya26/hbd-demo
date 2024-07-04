@@ -24,16 +24,16 @@
             <template v-slot:option="scope">
               <q-item v-if="!scope.opt.group" v-bind="scope.itemProps">
                 <q-item-section>
-                  <q-item-label class="q-pl-md">{{
-                    scope.opt.label
-                  }}</q-item-label>
+                  <q-item-label class="q-pl-md"
+                    >{{ scope.opt.label }}
+                  </q-item-label>
                 </q-item-section>
               </q-item>
               <q-item v-if="scope.opt.group">
                 <q-item-section>
-                  <q-item-label class="text-bold text-primary">{{
-                    scope.opt.group + ":"
-                  }}</q-item-label>
+                  <q-item-label class="text-bold text-primary"
+                    >{{ scope.opt.group + ":" }}
+                  </q-item-label>
                 </q-item-section>
               </q-item>
             </template>
@@ -245,7 +245,7 @@
 
 <script>
 import { defineComponent, ref } from "vue";
-import { api, llamaHost } from "boot/axios";
+import { api } from "boot/axios";
 import MedicalInformationExtraction from "components/MedicalInformationExtraction/MedicalInformationExtraction.vue";
 import DeidentificationClassic from "components/DeidentificationClassic.vue";
 import PharmacologicalEventExtraction from "components/PharmacologicalEventExtraction.vue";
