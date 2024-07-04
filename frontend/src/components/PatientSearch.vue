@@ -331,7 +331,7 @@ tr:hover {
 
 <script>
 import { defineComponent, ref } from "vue";
-import { api, llamaHost } from "boot/axios";
+import { api, llamaServer } from "boot/axios";
 
 // import * as XLSX from 'xlsx';
 
@@ -503,7 +503,7 @@ export default defineComponent({
         this.$refs.chatWindow.scrollTop = this.$refs.chatWindow.scrollHeight;
       });
       // this.chatHistory.slice(-1)[0]['content'] = ''
-      fetch(api.baseURL + "/v1/chat/completions", {
+      fetch(llamaServer + "/v1/chat/completions", {
         // fetch('http://localhost:51124/v1/chat/completions', {
         method: "POST",
         body: JSON.stringify({
@@ -619,7 +619,7 @@ export default defineComponent({
         visible: false,
       });
       this.loadingChatResponse = true;
-      fetch(llamaHost + "/v1/chat/completions", {
+      fetch(llamaServer + "/v1/chat/completions", {
         // fetch('http://131.175.15.22:61111/hbd-demo-api/send_message/', {
         method: "POST",
         body: JSON.stringify({

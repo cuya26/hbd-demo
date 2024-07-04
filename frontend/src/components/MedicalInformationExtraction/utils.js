@@ -1,12 +1,12 @@
 import * as axios from "boot/axios";
-import {api, llamaHost} from "boot/axios";
+import { api, llamaServer } from "boot/axios";
 
 export let config = {
   advanced: true,
   servers: [
     {
       name: "polimi-llama-server",
-      url: axios.llamaHost,
+      url: llamaServer,
       OpenAI_API: true,
     },
     // {
@@ -28,7 +28,7 @@ export let config = {
 
   selectedServer: {
     name: "polimi-llama-server",
-    url: axios.llamaHost,
+    url: llamaServer,
     OpenAI_API: true,
   },
   customServer: {
@@ -109,7 +109,7 @@ export function askLLM(body) {
 }
 
 export function sendMessageToLLM(chat, params) {
-  return fetch( "llama-server/v1/chat/completions", {
+  return fetch(llamaServer + "/v1/chat/completions", {
     method: "POST",
     body: JSON.stringify({
       messages: chat,

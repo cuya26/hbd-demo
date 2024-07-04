@@ -1,12 +1,10 @@
 import { boot } from "quasar/wrappers";
 import axios from "axios";
 
-// to work in local use instead this ip
-// const api = axios.create({ baseURL: 'http://localhost:51119' })
-// const patientSearchApi = axios.create({ baseURL: 'http://localhost:51125' })
+const llamaServer = "/llama-server";
 const api = axios.create({
-  baseURL: '/api/'
-})
+  baseURL: "/api/",
+});
 export default boot(({ app }) => {
   // for use inside Vue files (Options API) through this.$axios and this.$api
   app.config.globalProperties.$axios = axios;
@@ -14,7 +12,6 @@ export default boot(({ app }) => {
   //       so you won't necessarily have to import axios in each vue file
 
   app.config.globalProperties.$api = api;
-  app.config.globalProperties.$api = patientSearchApi;
 });
 
-export { axios, api};
+export { axios, api, llamaServer };

@@ -341,11 +341,7 @@ export default defineComponent({
       }),
     };
   },
-  mounted() {
-    // api.get(llamaHost+'/v1/models').then(data =>{
-    //   this.modelName = data.data.data[0].id.split('/').slice(1)
-    // })
-  },
+  mounted() {},
   methods: {
     updateTaskName() {
       this.setupName = null;
