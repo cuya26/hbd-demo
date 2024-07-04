@@ -57,7 +57,8 @@ services:
             - ~/models/:/models/
         ports:
             - 51124:8000
-        command: sh -c "python3 -m llama_cpp.server --model /models/Meta-Llama-3-8B-Instruct.Q5_K_M.gguf --n_ctx 8182 --cache true --chat_format llama-3 --n_gpu_layers -1"
+        command: sh -c "python3 -m llama_cpp.server --model /models/Meta-Llama-3-8B-Instruct.Q8_0.gguf --n_ctx 8182 --cache true --chat_format llama-3 --n_gpu_layers -1"
+
         environment:
             - HOST=0.0.0.0
         deploy:
@@ -67,7 +68,7 @@ services:
                 reservations:
                     devices:
                         - driver: nvidia
-                          device_ids: [ '1' ]
+                          count: 1
                           capabilities: [ gpu ]
     frontend:
         image: hbd-demo-frontend:latest
