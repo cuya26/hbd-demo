@@ -12,11 +12,11 @@ import json
 import transformers
 
 from MedInfoExt.medInfoExt import app  as medInfoExt_app
-from patientSearch.patientSearch import app as patientSearch_app
+# from patientSearch.patientSearch import app as patientSearch_app
 app = FastAPI()
 
 app.include_router(medInfoExt_app)
-app.include_router(patientSearch_app)
+# app.include_router(patientSearch_app)
 
 
 # print(os.listdir('./models'))

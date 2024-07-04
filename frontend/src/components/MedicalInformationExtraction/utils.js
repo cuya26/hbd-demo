@@ -1,5 +1,5 @@
 import * as axios from "boot/axios";
-import { llamaHost } from "boot/axios";
+import {api, llamaHost} from "boot/axios";
 
 export let config = {
   advanced: true,
@@ -109,7 +109,7 @@ export function askLLM(body) {
 }
 
 export function sendMessageToLLM(chat, params) {
-  return fetch(llamaHost + "/v1/chat/completions", {
+  return fetch( "llama-server/v1/chat/completions", {
     method: "POST",
     body: JSON.stringify({
       messages: chat,

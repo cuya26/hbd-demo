@@ -10,9 +10,18 @@ services:
         volumes:
             - ./nginx.conf:/etc/nginx/nginx.conf
         ports:
-            - "80:80"
+            - "8080:8080"
         networks:
             - hbd-demo-network
+        depends_on:
+            elasticsearch:
+                condition: service_started
+            frontend:
+                condition: service_started
+            backend:
+                condition: service_started
+            llamacpp:
+                condition: service_started
 
     elasticsearch:
         image: elasticsearch:7.9.2
@@ -23,7 +32,6 @@ services:
             - "9202:9200"
         environment:
             - discovery.type=single-node
-
         deploy:
             resources:
                 limits:
@@ -31,36 +39,16 @@ services:
         restart: always
         healthcheck:
             test:
-                [
-                    "CMD-SHELL",
-                    "curl --silent --fail localhost:9200/_cluster/health || exit 1"
-                ]
+              [
+                  "CMD-SHELL",
+                  "curl --silent --fail localhost:9200/_cluster/health || exit 1"
+              ]
             interval: 30s
             timeout: 30s
             retries: 3
         networks:
             - hbd-demo-network
-    patient-search:
-        build:
-            context: ./patient-search-python-server/
-            dockerfile: Dockerfile
-        image: hbd-demo-patient-search:latest
-        container_name: hbd-demo-patient-search
-        volumes:
-            - ./patient-search-python-server/:/workspace/
-            - ./backend/data/checkpoints/:/models/
-        environment:
-            - PYTHONUNBUFFERED=1
-        ports:
-            - 51125:5003
-        extra_hosts:
-            - "host.docker.internal:host-gateway"
-        restart: always
-        depends_on:
-            elasticsearch:
-                condition: service_healthy
-        networks:
-            - hbd-demo-network
+
     llamacpp:
         container_name: llama-server
         image: llama-cpp-python:latest
@@ -71,7 +59,7 @@ services:
             - ~/models/:/models/
         ports:
             - 51124:8000
-        command: sh -c "python3 -m llama_cpp.server --model /models/Meta-Llama-3-8B-Instruct.Q5_K_M.gguf --n_ctx 8182 --cache true --chat_format llama-3 --n_gpu_layers -1"
+        command: sh -c "python3 -m llama_cpp.server --model /models/Meta-Llama-3-8B-Instruct.Q8_0.gguf --n_ctx 8182 --cache true --chat_format llama-3 --n_gpu_layers -1"
         environment:
             - HOST=0.0.0.0
         deploy:
@@ -81,8 +69,11 @@ services:
                 reservations:
                     devices:
                         - driver: nvidia
-                          device_ids: [ '1' ]
+                          count: 1
                           capabilities: [ gpu ]
+        networks:
+            - hbd-demo-network
+
     frontend:
         image: hbd-demo-frontend:latest
         build:
@@ -93,7 +84,7 @@ services:
         # npm install
         container_name: hbd-demo-frontend
         ports:
-            - 51118:51118
+            - "51118:51118"
         restart: always
         command: sh -c "npm install && npm audit fix --force && quasar dev"
         networks:
@@ -110,7 +101,7 @@ services:
         environment:
             - PYTHONUNBUFFERED=1
         ports:
-            - 51119:5003
+            - "51119:5003"
         extra_hosts:
             - "host.docker.internal:host-gateway"
         restart: always
@@ -121,11 +112,10 @@ services:
                 reservations:
                     devices:
                         - driver: nvidia
-                          device_ids: [ '0' ]
+                          count: 1
                           capabilities: [ gpu ]
         networks:
             - hbd-demo-network
-
 
 networks:
     hbd-demo-network:

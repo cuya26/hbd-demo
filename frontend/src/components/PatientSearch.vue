@@ -503,7 +503,7 @@ export default defineComponent({
         this.$refs.chatWindow.scrollTop = this.$refs.chatWindow.scrollHeight;
       });
       // this.chatHistory.slice(-1)[0]['content'] = ''
-      fetch(llamaHost + "/v1/chat/completions", {
+      fetch(api.baseURL + "/v1/chat/completions", {
         // fetch('http://localhost:51124/v1/chat/completions', {
         method: "POST",
         body: JSON.stringify({
