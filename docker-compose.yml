@@ -27,13 +27,7 @@ services:
     image: elasticsearch:7.9.2
     container_name: hbd-demo-elasticsearch_clinical
     volumes:
-      [
-        elasticsearch-data:/usr/share/elasticsearch/data,
-        # Mount a directory for data import scripts
-        elasticsearch-import-data:/backend/scripts/load_documents.py,
-        # Mount a directory containing your data files
-        elasticsearch-data-files:/backend/data/Asclepius-Synthetic/
-      ]
+      - elasticsearch-data:/usr/share/elasticsearch/data,
     ports:
       - "9202:9200"
     environment:
