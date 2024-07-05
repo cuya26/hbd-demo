@@ -27,6 +27,8 @@ pipe = ExtractiveQAPipeline(reader, retriever)
 # cache: Dict[str, List[Dict]] = {}
 
 outputs_list = []
+
+
 @app.post('/patient_search')
 async def patient_search(request: Request):
     request_data = await request.json()
@@ -56,7 +58,6 @@ async def patient_search(request: Request):
     outputs_list.append(outputs)
     # cache[query] = outputs
     return {'output': outputs}
-
 
 
 @app.post('/criteria_check')
@@ -98,3 +99,37 @@ async def criteria_check(request: Request):
 
     return {'criteria': in_criteria}
 
+
+def ask_to_llm(prompt, system_message="You are a helpful assistant and a medical expert"):
+    data = {
+        "messages": [
+            {
+                "content": system_message,
+                "role": "system"
+            },
+            {
+                "content": prompt,
+                "role": "user"
+            }
+        ],
+        'temperature': 0,
+        'max_tokens': 500,
+        # 'mirostat_tau': 0.0
+    }
+    headers = {
+        "accept": "application/json",
+        "Content-Type": "application/json",
+    }
+    response = requests.post(
+        "http://131.175.15.22:61111/llama-server/v1/chat/completions/",
+        # "http://host.docker.internal:51124/v1/chat/completions",
+        headers=headers,
+        json=data
+    )
+
+    if response.ok:
+        completion_json = json.loads(response.text)
+        completion_text = completion_json['choices'][0]['message']['content']
+        return completion_text
+    else:
+        raise ValueError(f"Request problem. Status Code: {response.status_code}")
