@@ -18,7 +18,7 @@ This demo contains NLP models and system studied by the members of the working g
 - Move into the cloned folder using the command ```cd hbd-demo/```
 - Run the command ```sudo chmod 666 /var/run/docker.sock``` to give permission to the docker socket
 - Run the command ```docker network create hbd-demo-network``` to create the network through which the containers will communicate
-- Run the command ```docker-compose -f docker-compose.yml up -d``` to start the demo
+- Run the command ```docker-compose -f docker-compose.yml up -d``` to start the demo  (with newer versions of docker the command is `docker compose` instead of `docker-compose`)
 
 [//]: # (#### Load document into patient search engine)
 
