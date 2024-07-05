@@ -13,7 +13,7 @@ This demo contains NLP models and system studied by the members of the working g
 ### Installation with Ubuntu
 - Install the last version of Docker([How to install](https://docs.docker.com/engine/install/ubuntu/))
 - Install the last version of Docker-Compose([How to install](https://docs.docker.com/compose/install/linux/))
-- Install the NVIDIA Container Toolkit([How to install](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html))
+- Install and Configure the NVIDIA Container Toolkit([How to install](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html))
 - Open terminal and clone the repo using the command ```git clone https://github.com/cuya26/hbd-demo```
 - Move into the cloned folder using the command ```cd hbd-demo/```
 - Checkout the branch ```deploy``` using the command ```git checkout deploy```
