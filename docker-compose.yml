@@ -1,110 +1,122 @@
 version: '3.1'
 
 volumes:
-    elasticsearch-data:
-        driver: local
+  elasticsearch-data:
+    driver: local
 services:
-    elasticsearch:
-        image: elasticsearch:7.9.2
-        container_name: hbd-demo-elasticsearch_clinical
-        volumes:
-            - elasticsearch-data:/usr/share/elasticsearch/data
-        ports:
-            - "9202:9200"
-        environment:
-            - discovery.type=single-node
 
-        deploy:
-            resources:
-                limits:
-                    memory: 5G
-        restart: always
-        healthcheck:
-            test:
-                [
-                    "CMD-SHELL",
-                    "curl --silent --fail localhost:9200/_cluster/health || exit 1"
-                ]
-            interval: 30s
-            timeout: 30s
-            retries: 3
-    patient-search:
-        build:
-            context: ./patient-search-python-server/
-            dockerfile: Dockerfile
-        image: hbd-demo-patient-search:latest
-        container_name: hbd-demo-patient-search
-        volumes:
-            - ./patient-search-python-server/:/workspace/
-            - ./backend/data/checkpoints/:/models/
-        environment:
-            - PYTHONUNBUFFERED=1
-        ports:
-            - 51125:5003
-        extra_hosts:
-            - "host.docker.internal:host-gateway"
-        restart: always
-        depends_on:
-            elasticsearch:
-                condition: service_healthy
-    llamacpp:
-        container_name: llama-server
-        image: llama-cpp-python:latest
-        build:
-            context: ./llama-server/
-            dockerfile: Dockerfile
-        volumes:
-            - ~/models/:/models/
-        ports:
-            - 51124:8000
-        command: sh -c "python3 -m llama_cpp.server --model /models/Meta-Llama-3-8B-Instruct.Q8_0.gguf --n_ctx 8182 --cache true --chat_format llama-3 --n_gpu_layers -1"
+  nginx:
+    image: nginx
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - "8080:8080"
+    networks:
+      - hbd-demo-network
+    depends_on:
+      elasticsearch:
+        condition: service_started
+      frontend:
+        condition: service_started
+      backend:
+        condition: service_started
+      llamacpp:
+        condition: service_started
 
-        environment:
-            - HOST=0.0.0.0
-        deploy:
-            resources:
-                limits:
-                    memory: 32GB
-                reservations:
-                    devices:
-                        - driver: nvidia
-                          count: 1
-                          capabilities: [ gpu ]
-    frontend:
-        image: hbd-demo-frontend:latest
-        build:
-            context: ./frontend/
-            dockerfile: Dockerfile
-        volumes:
-            - ./frontend/:/usr/src/app/
-        # npm install
-        container_name: hbd-demo-frontend
-        ports:
-            - 51118:51118
-        restart: always
-        command: sh -c "npm install && npm audit fix --force && quasar dev"
-    backend:
-        build:
-            context: ./backend/
-            dockerfile: Dockerfile
-        image: hbd-demo-backend:latest
-        container_name: hbd-demo-backend
-        volumes:
-            - ./backend/:/workspace/
-            - ~/models/:/models/
-        environment:
-            - PYTHONUNBUFFERED=1
-        ports:
-            - 51119:5003
-        extra_hosts:
-            - "host.docker.internal:host-gateway"
-        restart: always
-        deploy:
-            resources:
-                limits:
-                    memory: 20GB
-                reservations:
-                    devices:
-                        - driver: nvidia
-                          device_ids: [ '0' ]
-                          capabilities: [ gpu ]
+  elasticsearch:
+    image: elasticsearch:7.9.2
+    container_name: hbd-demo-elasticsearch_clinical
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data,
+    ports:
+      - "9202:9200"
+    environment:
+      - discovery.type=single-node
+    deploy:
+      resources:
+        limits:
+          memory: 5G
+    restart: always
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "curl --silent --fail localhost:9200/_cluster/health || exit 1"
+        ]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    networks:
+      - hbd-demo-network
+
+  llamacpp:
+    container_name: llama-server
+    image: llama-cpp-python:latest
+    build:
+      context: ./llama-server/
+      dockerfile: Dockerfile
+    volumes:
+      - ~/models/:/models/
+    ports:
+      - 51124:8000
+    command: sh -c "python3 -m llama_cpp.server --model /models/Meta-Llama-3-8B-Instruct.Q8_0.gguf --n_ctx 8182 --cache true --chat_format llama-3 --n_gpu_layers -1"
+    environment:
+      - HOST=0.0.0.0
+    deploy:
+      resources:
+        limits:
+          memory: 32GB
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
+    networks:
+      - hbd-demo-network
+
+  frontend:
+    image: hbd-demo-frontend:latest
+    build:
+      context: ./frontend/
+      dockerfile: Dockerfile
+    volumes:
+      - ./frontend/:/usr/src/app/
+    # npm install
+    container_name: hbd-demo-frontend
+    ports:
+      - "51118:51118"
+    restart: always
+    command: sh -c "npm install && npm audit fix --force && quasar dev"
+    networks:
+      - hbd-demo-network
+  backend:
+    build:
+      context: ./backend/
+      dockerfile: Dockerfile
+    image: hbd-demo-backend:latest
+    container_name: hbd-demo-backend
+    volumes:
+      - ./backend/:/workspace/
+      - ~/models/:/models/
+    environment:
+      - PYTHONUNBUFFERED=1
+    ports:
+      - "51119:5003"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 20GB
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
+    networks:
+      - hbd-demo-network
+
+networks:
+  hbd-demo-network:
+    external: true

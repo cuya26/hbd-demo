@@ -13,23 +13,49 @@ This demo contains NLP models and system studied by the members of the working g
 ### Installation with Ubuntu
 - Install the last version of Docker([How to install](https://docs.docker.com/engine/install/ubuntu/))
 - Install the last version of Docker-Compose([How to install](https://docs.docker.com/compose/install/linux/))
+- Install and Configure the NVIDIA Container Toolkit([How to install](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html))
 - Open terminal and clone the repo using the command ```git clone https://github.com/cuya26/hbd-demo```
 - Move into the cloned folder using the command ```cd hbd-demo/```
-- Modify in file axios.js the variable server_ip with the ip address of the machine that runs the demo
-- Run the command ```docker-compose -f docker-compose-deploy.yml up -d``` to start the demo
+- Checkout the branch ```deploy``` using the command ```git checkout deploy```
+- Run the command ```sudo chmod 666 /var/run/docker.sock``` to give permission to the docker socket
+- Run the command ```docker network create hbd-demo-network``` to create the network through which the containers will communicate
+- Run the command ```docker-compose -f docker-compose.yml up -d``` to start the demo  (with newer versions of docker the command is `docker compose` instead of `docker-compose`)
 
-#### Load document into patient search engine
-- Copy your documents into ```patient-elastic-search/data/documents``` folder
-- Install Python
-- Move into the patient-elastic-search folder
-- Install the python requirements with the command ```pip install -r requirements.txt```
-- Move into the folder ```scripts```
-- Run the script to load your documents ```python giuseppe_load_documents.py```
+[//]: # (#### Load document into patient search engine)
+
+[//]: # (- Copy your documents into ```patient-elastic-search/data/documents``` folder)
+
+[//]: # (- Install Python)
+
+[//]: # (- Move into the patient-elastic-search folder)
+
+[//]: # (- Install the python requirements with the command ```pip install -r requirements.txt```)
+
+[//]: # (- Move into the folder ```scripts```)
+
+[//]: # (- Run the script to load your documents ```python giuseppe_load_documents.py```)
 
 
 
 ### Usage
-- Open a browser with ```ip_of_the_demo_machine:51118```
+- Open a browser with ```ip_of_the_demo_machine:8080```
+If you need change the port of the demo, you can change the port nginx.conf as follow:
+```nginx
+...
+server {
+    listen <new-port>;
+    ...
+}
+```
+and also change the port in the docker-compose.yml file
+```yaml
+  nginx:
+    image: nginx
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - "<new-port>:<new-port>"
+```
 
 ## Instruction for Development
 

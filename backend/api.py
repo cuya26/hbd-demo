@@ -12,10 +12,11 @@ import json
 import transformers
 
 from MedInfoExt.medInfoExt import app  as medInfoExt_app
-
+# from patientSearch.patientSearch import app as patientSearch_app
 app = FastAPI()
 
 app.include_router(medInfoExt_app)
+# app.include_router(patientSearch_app)
 
 
 # print(os.listdir('./models'))
@@ -324,4 +325,5 @@ async def llama_tokenizer(request: Request):
     text_truncated = tokenizer.decode(text_ids_truncated, skip_special_tokens=True)
     # print(text_truncated)
     return { 'text': text_truncated}
+
 
