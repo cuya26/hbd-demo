@@ -1,5 +1,5 @@
 import * as axios from "boot/axios";
-import { api, llamaServer } from "boot/axios";
+import { api, llamaServer, baseApi } from "boot/axios";
 
 export let config = {
   advanced: true,
@@ -91,14 +91,14 @@ export async function getTasks() {
 }
 
 export function askLLM(body) {
-  return axios.api
+  return axios.baseApi
     .post(
       buildLLMUrl(),
       {
         ...body,
         stream: false,
         cache_prompt: true,
-        stop: ["<|im_end|>", "###"],
+        stop: ["<|im_end|>", "###", '<|eot_id|>'],
       },
       {
         "Content-Type": "application/json",
